@@ -1,5 +1,18 @@
 package com.traffic.gat1049.model.entity.runtime;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.model.entity.base.BaseState;
+import com.traffic.gat1049.model.enums.LaneMovement;
+import com.traffic.gat1049.model.enums.VarLaneMode;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  * 可变车道运行信息
  * 对应文档中的 VarLaneStatus

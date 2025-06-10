@@ -1,6 +1,6 @@
 # traffic-signal-client/src/main/resources/application.yml
 server:
-  port: 8081
+  port: 8082
 
 spring:
   application:
@@ -18,6 +18,10 @@ tcp:
 client:
   cross-id: "110100001"
   signal-controller-id: "110100001001"
+  system-type: "UTCS"
+  auto-login: true
+  password: "tsc123"
+  username: "tsc_client"
   data-directory: "./data"
   report-interval: 300000  # 5分钟上报一次
 

@@ -2,6 +2,7 @@ package com.traffic.gat1049.protocol.util;
 
 import com.traffic.gat1049.model.constants.GatConstants;
 import com.traffic.gat1049.protocol.model.Message;
+import com.traffic.gat1049.protocol.model.Operation;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -90,13 +91,13 @@ public final class ProtocolUtils {
      */
     public static boolean isFromTsc(Message message) {
         return message != null && message.getFrom() != null &&
-                GatConstants.SystemAddress.TSC.equals(message.getFrom().getSys());
+                GatConstants.SystemAddress.UTCS.equals(message.getFrom().getSys());
     }
 
     /**
      * 提取消息中的第一个操作
      */
-    public static com.traffic.gat1049.protocol.model.Operation getFirstOperation(Message message) {
+    public static Operation getFirstOperation(Message message) {
         if (message == null || message.getBody() == null ||
                 message.getBody().getOperations() == null ||
                 message.getBody().getOperations().isEmpty()) {
@@ -109,7 +110,7 @@ public final class ProtocolUtils {
      * 获取操作名称
      */
     public static String getOperationName(Message message) {
-        com.traffic.gat1049.protocol.model.Operation operation = getFirstOperation(message);
+        Operation operation = getFirstOperation(message);
         return operation != null ? operation.getName() : null;
     }
 
@@ -117,7 +118,7 @@ public final class ProtocolUtils {
      * 获取操作数据
      */
     public static Object getOperationData(Message message) {
-        com.traffic.gat1049.protocol.model.Operation operation = getFirstOperation(message);
+        Operation operation = getFirstOperation(message);
         return operation != null ? operation.getData() : null;
     }
 

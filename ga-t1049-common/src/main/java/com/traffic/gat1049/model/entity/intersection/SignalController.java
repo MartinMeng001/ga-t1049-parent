@@ -1,5 +1,17 @@
 package com.traffic.gat1049.model.entity.intersection;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.model.entity.base.BaseParam;
+import com.traffic.gat1049.model.enums.CommMode;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
+import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 信号机参数
  * 对应文档中的 SignalController

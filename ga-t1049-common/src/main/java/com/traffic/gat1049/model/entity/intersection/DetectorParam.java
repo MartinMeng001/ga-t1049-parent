@@ -1,4 +1,16 @@
 package com.traffic.gat1049.model.entity.intersection;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.model.entity.base.BaseParam;
+import com.traffic.gat1049.model.enums.DetectorPosition;
+import com.traffic.gat1049.model.enums.DetectorType;
+
+import javax.validation.constraints.*;
+import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 检测器参数
  * 对应文档中的 DetectorParam

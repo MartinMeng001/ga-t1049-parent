@@ -2,7 +2,6 @@ package com.traffic.client.network.client;
 import com.traffic.gat1049.model.constants.GatConstants;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.codec.MessageCodec;
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
 import com.traffic.gat1049.protocol.model.Message;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -56,7 +55,7 @@ public class GatTcpClient {
         this.port = port;
         this.clientId = clientId;
         this.responseHandler = new MessageResponseHandler();
-        this.codec = new MessageCodec();
+        this.codec = MessageCodec.getInstance();
         this.reconnectExecutor = Executors.newSingleThreadScheduledExecutor(
                 r -> new Thread(r, "GatTcpClient-Reconnect"));
     }
@@ -172,25 +171,44 @@ public class GatTcpClient {
     /**
      * 发送登录请求
      */
+//    private void sendLoginRequest() {
+//        try {
+//            Message loginMessage = MessageBuilder.create()
+//                    .request()
+//                    .fromUtcs()
+//                    .toTicp()
+//                    .operation("Login", new Object() {
+//                        public String getClientId() { return clientId; }
+//                        public String getVersion() { return GatConstants.PROTOCOL_VERSION; }
+//                    })
+//                    .build();
+//            logger.info(loginMessage.toString());
+//            sendMessage(loginMessage);
+//            logger.info("Login request sent");
+//        } catch (Exception e) {
+//            logger.error("Failed to send login request", e);
+//        }
+//    }
     private void sendLoginRequest() {
         try {
+            // 使用具体的 SdoUser 对象
+            com.traffic.gat1049.model.entity.sdo.SdoUser user =
+                    new com.traffic.gat1049.model.entity.sdo.SdoUser(/*clientId*/"tsc_client", "tsc123");
+
             Message loginMessage = MessageBuilder.create()
                     .request()
-                    .fromTsc()
+                    .fromUtcs()
                     .toTicp()
-                    .operation("Login", new Object() {
-                        public String getClientId() { return clientId; }
-                        public String getVersion() { return GatConstants.PROTOCOL_VERSION; }
-                    })
+                    .operation("Login", user)  // 使用具体对象而不是匿名内部类
                     .build();
 
+            logger.info(loginMessage.toString());
             sendMessage(loginMessage);
             logger.info("Login request sent");
         } catch (Exception e) {
             logger.error("Failed to send login request", e);
         }
     }
-
     /**
      * 发送消息
      */
@@ -235,7 +253,7 @@ public class GatTcpClient {
         try {
             Message heartbeat = MessageBuilder.create()
                     .request()
-                    .fromTsc()
+                    .fromUtcs()
                     .toTicp()
                     .seq(generateSequence())
                     .operation("Heartbeat", new Object() {

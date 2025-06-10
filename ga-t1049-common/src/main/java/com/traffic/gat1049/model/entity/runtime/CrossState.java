@@ -1,5 +1,10 @@
 package com.traffic.gat1049.model.entity.runtime;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.model.entity.base.BaseState;
+import com.traffic.gat1049.model.enums.SystemState;
+
 import javax.validation.constraints.*;
 import javax.xml.bind.annotation.*;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;

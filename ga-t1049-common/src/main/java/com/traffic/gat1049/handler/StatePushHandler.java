@@ -1,16 +1,17 @@
 package com.traffic.gat1049.handler;
 
 import com.traffic.gat1049.exception.BusinessException;
+import com.traffic.gat1049.exception.GatProtocolException;
+import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.model.constants.GatConstants;
 import com.traffic.gat1049.model.entity.runtime.*;
 import com.traffic.gat1049.model.entity.system.SysState;
 import com.traffic.gat1049.model.entity.traffic.CrossTrafficData;
+import com.traffic.gat1049.model.entity.traffic.LaneTrafficData;
 import com.traffic.gat1049.model.entity.traffic.StageTrafficData;
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
 import com.traffic.gat1049.protocol.handler.AbstractProtocolHandler;
-import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
-import com.traffic.gat1049.service.ServiceFactory;
+import com.traffic.gat1049.service.interfaces.ServiceFactory;
 
 /**
  * 状态推送处理器
@@ -214,7 +215,7 @@ public class StatePushHandler extends AbstractProtocolHandler {
 
     private void analyzeTrafficData(CrossTrafficData trafficData) {
         // 分析交通流数据
-        for (var laneData : trafficData.getDataList()) {
+        for (LaneTrafficData laneData : trafficData.getDataList()) {
             // 检查饱和度
             if (laneData.getSaturation() != null && laneData.getSaturation().doubleValue() > 0.85) {
                 logger.warn("High saturation detected: crossId={}, laneNo={}, saturation={}%",

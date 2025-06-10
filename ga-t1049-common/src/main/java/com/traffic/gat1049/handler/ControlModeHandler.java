@@ -1,15 +1,16 @@
 package com.traffic.gat1049.handler;
 
 import com.traffic.gat1049.exception.BusinessException;
+import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.exception.ValidationException;
+import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.model.constants.GatConstants;
 import com.traffic.gat1049.model.entity.runtime.CrossModePlan;
+import com.traffic.gat1049.model.entity.signal.PlanParam;
 import com.traffic.gat1049.model.enums.ControlMode;
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
 import com.traffic.gat1049.protocol.handler.AbstractProtocolHandler;
-import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
-import com.traffic.gat1049.service.ServiceFactory;
+import com.traffic.gat1049.service.interfaces.ServiceFactory;
 
 /**
  * 控制方式处理器
@@ -110,7 +111,7 @@ public class ControlModeHandler extends AbstractProtocolHandler {
 
         // 如果需要方案号，验证方案是否存在
         if (!isSpecialControlMode(mode) && planNo != null && planNo > 0) {
-            var plan = serviceFactory.getPlanService().findByCrossIdAndPlanNo(crossId, planNo);
+            PlanParam plan = serviceFactory.getPlanService().findByCrossIdAndPlanNo(crossId, planNo);
             if (plan == null) {
                 throw new ValidationException("planNo",
                         String.format("Plan %d not found for cross %s", planNo, crossId));

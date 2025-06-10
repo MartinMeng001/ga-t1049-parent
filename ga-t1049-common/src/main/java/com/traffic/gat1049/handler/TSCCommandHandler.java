@@ -2,14 +2,14 @@ package com.traffic.gat1049.handler;
 
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
+import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.exception.ValidationException;
+import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.model.constants.GatConstants;
 import com.traffic.gat1049.model.entity.command.TSCCmd;
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
 import com.traffic.gat1049.protocol.handler.AbstractProtocolHandler;
-import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
-import com.traffic.gat1049.service.ServiceFactory;
+import com.traffic.gat1049.service.interfaces.ServiceFactory;
 
 /**
  * TSCCmd命令处理器基类
@@ -66,9 +66,12 @@ public class TSCCommandHandler extends AbstractProtocolHandler {
         if (tscCmd.getObjName() == null || tscCmd.getObjName().trim().isEmpty()) {
             throw new ValidationException("objName", "Object name cannot be null or empty");
         }
-
-        validator.validateObjectName(tscCmd.getObjName());
-        validator.validateId(tscCmd.getObjName(), tscCmd.getId());
+        try {
+            validator.validateObjectName(tscCmd.getObjName());
+            validator.validateId(tscCmd.getObjName(), tscCmd.getId());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     /**

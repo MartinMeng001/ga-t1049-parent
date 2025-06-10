@@ -1,5 +1,14 @@
 package com.traffic.gat1049.model.entity.traffic;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import javax.validation.constraints.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import java.math.BigDecimal;
+
 /**
  * 车道交通流数据
  * 包含单个车道的交通流统计信息

@@ -1,5 +1,9 @@
 package com.traffic.gat1049.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.model.enums.SystemState;
+
 /**
  * 路口查询DTO
  */

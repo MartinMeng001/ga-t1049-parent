@@ -1,10 +1,10 @@
 package com.traffic.gat1049.handler;
 
-import com.traffic.gat1049.protocol.exception.MessageEncodingException;
+import com.traffic.gat1049.exception.MessageEncodingException;
 import com.traffic.gat1049.protocol.handler.ProtocolHandler;
 import com.traffic.gat1049.protocol.processor.DefaultMessageProcessor;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
-import com.traffic.gat1049.service.ServiceFactory;
+import com.traffic.gat1049.service.interfaces.ServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

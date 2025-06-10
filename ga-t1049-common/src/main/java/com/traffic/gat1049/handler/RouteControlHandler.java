@@ -1,16 +1,17 @@
 package com.traffic.gat1049.handler;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
+import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.exception.ValidationException;
+import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.model.constants.GatConstants;
+import com.traffic.gat1049.model.entity.runtime.RoadSectionSpeed;
 import com.traffic.gat1049.model.entity.runtime.RouteControlModeStatus;
 import com.traffic.gat1049.model.entity.runtime.RouteSpeed;
 import com.traffic.gat1049.model.enums.RouteControlMode;
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
 import com.traffic.gat1049.protocol.handler.AbstractProtocolHandler;
-import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
-import com.traffic.gat1049.service.ServiceFactory;
+import com.traffic.gat1049.service.interfaces.ServiceFactory;
 
 /**
  * 干线控制处理器
@@ -134,7 +135,7 @@ public class RouteControlHandler extends AbstractProtocolHandler {
         }
 
         // 验证每个路段的推荐车速
-        for (var section : routeSpeed.getRoadSectionSpeedList()) {
+        for (RoadSectionSpeed section : routeSpeed.getRoadSectionSpeedList()) {
             if (section.getUpCrossId() == null || section.getUpCrossId().trim().isEmpty()) {
                 throw new ValidationException("upCrossId", "Upstream cross ID cannot be null or empty");
             }

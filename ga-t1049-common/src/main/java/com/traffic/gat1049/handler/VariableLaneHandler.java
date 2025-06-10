@@ -2,16 +2,17 @@ package com.traffic.gat1049.handler;
 
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
+import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.exception.ValidationException;
+import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.model.constants.GatConstants;
+import com.traffic.gat1049.model.entity.intersection.LaneParam;
 import com.traffic.gat1049.model.entity.runtime.VarLaneStatus;
 import com.traffic.gat1049.model.enums.LaneMovement;
 import com.traffic.gat1049.model.enums.VarLaneMode;
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
 import com.traffic.gat1049.protocol.handler.AbstractProtocolHandler;
-import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
-import com.traffic.gat1049.service.ServiceFactory;
+import com.traffic.gat1049.service.interfaces.ServiceFactory;
 
 /**
  * 可变车道控制处理器
@@ -96,7 +97,7 @@ public class VariableLaneHandler extends AbstractProtocolHandler {
         Integer laneNo = varLaneStatus.getLaneNo();
 
         // 获取车道参数
-        var laneParam = serviceFactory.getLaneService().findByCrossIdAndLaneNo(crossId, laneNo);
+        LaneParam laneParam = serviceFactory.getLaneService().findByCrossIdAndLaneNo(crossId, laneNo);
 
         if (laneParam == null) {
             throw new DataNotFoundException("Lane",

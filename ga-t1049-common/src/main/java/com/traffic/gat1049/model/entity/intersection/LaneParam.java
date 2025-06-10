@@ -1,5 +1,21 @@
 package com.traffic.gat1049.model.entity.intersection;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.model.entity.base.BaseParam;
+import com.traffic.gat1049.model.enums.Direction;
+import com.traffic.gat1049.model.enums.LaneAttribute;
+import com.traffic.gat1049.model.enums.LaneFeature;
+import com.traffic.gat1049.model.enums.LaneMovement;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 车道参数
  * 对应文档中的 LaneParam

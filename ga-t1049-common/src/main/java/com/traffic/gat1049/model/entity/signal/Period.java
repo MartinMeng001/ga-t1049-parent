@@ -1,5 +1,15 @@
 package com.traffic.gat1049.model.entity.signal;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import java.time.LocalTime;
+
 /**
  * 时段信息
  * 日计划中的时段配置
