@@ -1,5 +1,15 @@
 package com.traffic.gat1049.model.entity.runtime;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.model.entity.base.BaseState;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 干线路段推荐车速
  * 对应文档中的 RouteSpeed

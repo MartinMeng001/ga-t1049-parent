@@ -1,5 +1,16 @@
 package com.traffic.gat1049.model.entity.runtime;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.model.entity.base.BaseState;
+import com.traffic.gat1049.model.entity.signal.SignalGroupStatus;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 路口信号组灯态
  * 对应文档中的 CrossSignalGroupStatus

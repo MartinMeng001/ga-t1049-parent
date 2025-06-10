@@ -1,5 +1,14 @@
 package com.traffic.gat1049.model.entity.signal;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.model.entity.base.BaseParam;
+
+import javax.validation.constraints.*;
+import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 日计划参数
  * 对应文档中的 DayPlanParam

@@ -1,5 +1,11 @@
 package com.traffic.gat1049.model.entity.base;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
 /**
  * 配置参数基类
  */

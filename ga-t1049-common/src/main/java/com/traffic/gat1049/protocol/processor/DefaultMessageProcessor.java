@@ -1,11 +1,11 @@
 package com.traffic.gat1049.protocol.processor;
 
+import com.traffic.gat1049.exception.GatProtocolException;
+import com.traffic.gat1049.exception.MessageDecodingException;
+import com.traffic.gat1049.exception.MessageEncodingException;
 import com.traffic.gat1049.model.constants.GatConstants;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.codec.MessageCodec;
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
-import com.traffic.gat1049.protocol.exception.MessageDecodingException;
-import com.traffic.gat1049.protocol.exception.MessageEncodingException;
 import com.traffic.gat1049.protocol.handler.ProtocolHandler;
 import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
@@ -26,7 +26,7 @@ public class DefaultMessageProcessor implements MessageProcessor {
     private final List<ProtocolHandler> handlers;
 
     public DefaultMessageProcessor() throws MessageEncodingException {
-        this.codec = new MessageCodec();
+        this.codec = MessageCodec.getInstance();
         this.handlers = new CopyOnWriteArrayList<>();
     }
 
@@ -152,7 +152,7 @@ public class DefaultMessageProcessor implements MessageProcessor {
     private Message createUnsupportedResponse(Message request) {
         return MessageBuilder.create()
                 .error()
-                .fromTsc()
+                .fromUtcs()
                 .toTicp()
                 .seq(request.getSeq())
                 .token(request.getToken())
@@ -173,7 +173,7 @@ public class DefaultMessageProcessor implements MessageProcessor {
 
         return MessageBuilder.create()
                 .error()
-                .fromTsc()
+                .fromUtcs()
                 .toTicp()
                 .seq(request != null ? request.getSeq() : ProtocolUtils.generateSequence())
                 .token(request != null ? request.getToken() : null)
@@ -184,12 +184,15 @@ public class DefaultMessageProcessor implements MessageProcessor {
     /**
      * 创建错误数据对象
      */
+//    private Object createErrorData(String code, String message) {
+//        return new Object() {
+//            public String getCode() { return code; }
+//            public String getMessage() { return message; }
+//            public String getTimestamp() { return ProtocolUtils.formatDateTime(java.time.LocalDateTime.now()); }
+//        };
+//    }
     private Object createErrorData(String code, String message) {
-        return new Object() {
-            public String getCode() { return code; }
-            public String getMessage() { return message; }
-            public String getTimestamp() { return ProtocolUtils.formatDateTime(java.time.LocalDateTime.now()); }
-        };
+        return new com.traffic.gat1049.model.entity.sdo.SdoError("", code, message);
     }
 
     /**

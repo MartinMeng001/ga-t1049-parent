@@ -1,5 +1,13 @@
 package com.traffic.gat1049.model.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.List;
+
 /**
  * 信号状态视图对象
  */

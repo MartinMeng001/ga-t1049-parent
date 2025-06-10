@@ -1,9 +1,9 @@
 package com.traffic.gat1049.protocol.handler;
 
+import com.traffic.gat1049.exception.GatProtocolException;
+import com.traffic.gat1049.exception.MessageValidationException;
 import com.traffic.gat1049.model.constants.GatConstants;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
-import com.traffic.gat1049.protocol.exception.MessageValidationException;
 import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
 import com.traffic.gat1049.protocol.validator.MessageValidator;
@@ -59,7 +59,7 @@ public abstract class AbstractProtocolHandler implements ProtocolHandler {
     protected Message createSuccessResponse(Message request, Object data) {
         return MessageBuilder.create()
                 .response()
-                .fromTsc()
+                .fromUtcs()
                 .toTicp()
                 .seq(request.getSeq())
                 .token(request.getToken())
@@ -72,12 +72,12 @@ public abstract class AbstractProtocolHandler implements ProtocolHandler {
      */
     protected Message createErrorResponse(Message request, String errorCode, String errorMessage) {
         if (request == null) {
-            return MessageBuilder.createErrorResponse(ProtocolUtils.generateSequence(), errorCode, errorMessage);
+            return MessageBuilder.createErrorResponse(ProtocolUtils.generateSequence(), request.getToken(), errorCode, errorMessage);
         }
 
         return MessageBuilder.create()
                 .error()
-                .fromTsc()
+                .fromUtcs()
                 .toTicp()
                 .seq(request.getSeq())
                 .token(request.getToken())

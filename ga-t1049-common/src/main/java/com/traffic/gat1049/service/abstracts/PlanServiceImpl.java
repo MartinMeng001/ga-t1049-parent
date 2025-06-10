@@ -14,7 +14,6 @@ import com.traffic.gat1049.model.enums.OperationType;
 import com.traffic.gat1049.service.interfaces.PlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -25,7 +24,7 @@ import java.util.stream.Collectors;
 /**
  * 配时方案服务实现
  */
-@Service
+
 public class PlanServiceImpl implements PlanService {
 
     private static final Logger logger = LoggerFactory.getLogger(PlanServiceImpl.class);

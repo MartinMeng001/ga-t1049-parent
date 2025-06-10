@@ -1,7 +1,5 @@
 package com.traffic.gat1049.exception;
 
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
-
 /**
  * 业务异常基类
  */

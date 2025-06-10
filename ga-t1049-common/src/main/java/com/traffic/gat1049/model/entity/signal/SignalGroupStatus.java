@@ -1,5 +1,14 @@
 package com.traffic.gat1049.model.entity.signal;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.model.enums.LampStatus;
+
+import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
 /**
  * 信号组灯态
  * 表示阶段中信号组的灯态状态

@@ -1,4 +1,14 @@
 package com.traffic.gat1049.model.entity.runtime;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
 /**
  * 路段推荐车速
  * 线路中路段的推荐车速信息

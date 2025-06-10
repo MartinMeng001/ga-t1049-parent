@@ -1,16 +1,16 @@
 package com.traffic.gat1049.handler;
 
 import com.traffic.gat1049.exception.BusinessException;
+import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.exception.ValidationException;
+import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.model.constants.GatConstants;
 import com.traffic.gat1049.model.entity.command.LockFlowDirection;
 import com.traffic.gat1049.model.entity.command.UnlockFlowDirection;
 import com.traffic.gat1049.model.entity.command.StageCtrl;
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
 import com.traffic.gat1049.protocol.handler.AbstractProtocolHandler;
-import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
-import com.traffic.gat1049.service.ServiceFactory;
+import com.traffic.gat1049.service.interfaces.ServiceFactory;
 
 /**
  * 交通流向控制命令处理器

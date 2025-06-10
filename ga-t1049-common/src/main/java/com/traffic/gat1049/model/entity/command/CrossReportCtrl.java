@@ -1,5 +1,16 @@
 package com.traffic.gat1049.model.entity.command;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.model.entity.base.BaseCommand;
+import com.traffic.gat1049.model.enums.ReportCommand;
+import com.traffic.gat1049.model.enums.ReportDataType;
+
+import javax.validation.constraints.NotEmpty;
+import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 路口周期、阶段、信号组灯态、交通流数据上传设置命令
  * 对应文档中的 CrossReportCtrl

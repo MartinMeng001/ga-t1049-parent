@@ -1,12 +1,12 @@
 package com.traffic.gat1049.handler;
 import com.traffic.gat1049.exception.BusinessException;
+import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.exception.ValidationException;
+import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.model.constants.GatConstants;
 import com.traffic.gat1049.model.entity.system.SysInfo;
 import com.traffic.gat1049.model.entity.system.SysState;
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
 import com.traffic.gat1049.protocol.handler.AbstractProtocolHandler;
-import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
 import com.traffic.gat1049.service.interfaces.ServiceFactory;
 

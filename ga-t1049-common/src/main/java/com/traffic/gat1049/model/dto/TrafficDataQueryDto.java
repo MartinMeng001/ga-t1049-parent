@@ -1,5 +1,12 @@
 package com.traffic.gat1049.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import javax.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
+import java.util.List;
+
 /**
  * 交通流数据查询DTO
  */

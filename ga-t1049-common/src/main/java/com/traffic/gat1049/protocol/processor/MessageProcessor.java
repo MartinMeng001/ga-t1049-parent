@@ -1,6 +1,6 @@
 package com.traffic.gat1049.protocol.processor;
 
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
+import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.protocol.model.Message;
 
 /**

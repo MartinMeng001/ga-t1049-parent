@@ -14,7 +14,6 @@ import com.traffic.gat1049.model.vo.CrossInfoVo;
 import com.traffic.gat1049.service.interfaces.CrossService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -24,7 +23,6 @@ import java.util.stream.Collectors;
 /**
  * 路口服务实现
  */
-@Service
 public class CrossServiceImpl implements CrossService {
 
     private static final Logger logger = LoggerFactory.getLogger(CrossServiceImpl.class);
@@ -165,12 +163,11 @@ public class CrossServiceImpl implements CrossService {
 
     @Override
     public List<CrossInfoVo> findByCriteria(CrossQueryDto queryDto) throws BusinessException {
-        if (queryDto == null) {
-            queryDto = new CrossQueryDto();
-        }
+        // 确保queryDto是final或effectively final
+        final CrossQueryDto finalQueryDto = queryDto != null ? queryDto : new CrossQueryDto();
 
         return crossStorage.values().stream()
-                .filter(cross -> matchesCriteria(cross, queryDto))
+                .filter(cross -> matchesCriteria(cross, finalQueryDto))
                 .map(this::convertToVo)
                 .collect(Collectors.toList());
     }

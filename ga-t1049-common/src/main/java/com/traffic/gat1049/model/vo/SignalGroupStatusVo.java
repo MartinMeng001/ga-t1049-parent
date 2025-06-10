@@ -1,5 +1,10 @@
 package com.traffic.gat1049.model.vo;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.io.Serializable;
+
 /**
  * 信号组状态视图对象
  */

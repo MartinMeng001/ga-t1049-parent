@@ -1,40 +1,75 @@
 package com.traffic.gat1049.service.abstracts;
 import com.traffic.gat1049.service.interfaces.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * 默认服务工厂实现
+ * 注意：这个实现不使用Spring注解，需要在使用的模块中手动配置
  */
-@Component
 public class DefaultServiceFactory implements ServiceFactory {
 
-    @Autowired
     private SystemService systemService;
-    @Autowired
     private RegionService regionService;
-    @Autowired
     private SubRegionService subRegionService;
-    @Autowired
     private RouteService routeService;
-    @Autowired
     private CrossService crossService;
-    @Autowired
     private SignalControllerService signalControllerService;
-    @Autowired
     private LaneService laneService;
-    @Autowired
     private DetectorService detectorService;
-    @Autowired
     private SignalGroupService signalGroupService;
-    @Autowired
     private PlanService planService;
-    @Autowired
     private TrafficDataService trafficDataService;
-    @Autowired
     private ControlService controlService;
-    @Autowired
     private RouteControlService routeControlService;
+
+    // 构造函数注入
+    public DefaultServiceFactory(
+            SystemService systemService,
+            RegionService regionService,
+            SubRegionService subRegionService,
+            RouteService routeService,
+            CrossService crossService,
+            SignalControllerService signalControllerService,
+            LaneService laneService,
+            DetectorService detectorService,
+            SignalGroupService signalGroupService,
+            PlanService planService,
+            TrafficDataService trafficDataService,
+            ControlService controlService,
+            RouteControlService routeControlService) {
+
+        this.systemService = systemService;
+        this.regionService = regionService;
+        this.subRegionService = subRegionService;
+        this.routeService = routeService;
+        this.crossService = crossService;
+        this.signalControllerService = signalControllerService;
+        this.laneService = laneService;
+        this.detectorService = detectorService;
+        this.signalGroupService = signalGroupService;
+        this.planService = planService;
+        this.trafficDataService = trafficDataService;
+        this.controlService = controlService;
+        this.routeControlService = routeControlService;
+    }
+
+    // 默认构造函数，创建默认实现
+    public DefaultServiceFactory() {
+        this.systemService = new SystemServiceImpl();
+        this.crossService = new CrossServiceImpl();
+        this.planService = new PlanServiceImpl();
+        this.controlService = new ControlServiceImpl();
+
+        // 其他服务暂时设为null，需要时再实现
+        this.regionService = null;
+        this.subRegionService = null;
+        this.routeService = null;
+        this.signalControllerService = null;
+        this.laneService = null;
+        this.detectorService = null;
+        this.signalGroupService = null;
+        this.trafficDataService = null;
+        this.routeControlService = null;
+    }
 
     @Override
     public SystemService getSystemService() {

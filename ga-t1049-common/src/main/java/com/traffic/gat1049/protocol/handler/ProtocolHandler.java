@@ -1,5 +1,5 @@
 package com.traffic.gat1049.protocol.handler;
-import com.traffic.gat1049.protocol.exception.GatProtocolException;
+import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.protocol.model.Message;
 
 /**
