@@ -4,22 +4,25 @@ import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.exception.ValidationException;
+import com.traffic.gat1049.protocol.handler.TokenRequiredHandler;
 import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.model.constants.GatConstants;
 import com.traffic.gat1049.model.entity.command.TSCCmd;
 import com.traffic.gat1049.protocol.handler.AbstractProtocolHandler;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
 import com.traffic.gat1049.service.interfaces.ServiceFactory;
+import com.traffic.gat1049.session.SessionManager;
 
 /**
  * TSCCmd命令处理器基类
  * 处理配置参数和运行信息的查询、通知命令
  */
-public class TSCCommandHandler extends AbstractProtocolHandler {
+public class TSCCommandHandler extends TokenRequiredHandler {
 
     protected final ServiceFactory serviceFactory;
 
-    public TSCCommandHandler(ServiceFactory serviceFactory) {
+    public TSCCommandHandler(ServiceFactory serviceFactory, SessionManager sessionManager) {
+        super(sessionManager);
         this.serviceFactory = serviceFactory;
     }
 
@@ -34,17 +37,20 @@ public class TSCCommandHandler extends AbstractProtocolHandler {
     }
 
     @Override
-    protected Message doHandle(Message message) throws GatProtocolException {
-        TSCCmd tscCmd = (TSCCmd) ProtocolUtils.getOperationData(message);
+    protected Message doHandleWithSession(Message message, SessionManager.SessionInfo sessionInfo)
+            throws GatProtocolException {
+
+        logger.info("处理TSC查询请求: user={}, seq={}",
+                sessionInfo.getUserName(), message.getSeq());
 
         try {
-            // 验证TSCCmd
-            validateTSCCmd(tscCmd);
+            // 1. 验证TSC命令（Handler内验证，简化版本）
+            TSCCmd tscCmd = validateTSCCmd(message);
 
-            // 根据对象名称分发处理
-            Object result = dispatchQuery(tscCmd);
+            // 2. 分发查询（按原设计思路）
+            Object result = dispatchQuery(tscCmd, sessionInfo);
 
-            // 创建成功响应
+            // 3. 返回响应
             return createSuccessResponse(message, result);
 
         } catch (ValidationException e) {
@@ -62,108 +68,156 @@ public class TSCCommandHandler extends AbstractProtocolHandler {
     /**
      * 验证TSCCmd参数
      */
-    private void validateTSCCmd(TSCCmd tscCmd) throws ValidationException {
-        if (tscCmd.getObjName() == null || tscCmd.getObjName().trim().isEmpty()) {
+    private TSCCmd validateTSCCmd(Message message) throws ValidationException {
+        // 1. 获取原始数据
+        Object operationData = ProtocolUtils.getOperationData(message);
+        if (operationData == null) {
             throw new ValidationException("objName", "Object name cannot be null or empty");
         }
-        try {
-            validator.validateObjectName(tscCmd.getObjName());
-            validator.validateId(tscCmd.getObjName(), tscCmd.getId());
-        }catch (Exception e){
-            e.printStackTrace();
+
+        // 2. 类型转换（这是必需的，因为ProtocolUtils返回Object）
+        TSCCmd cmd;
+        if (operationData instanceof TSCCmd) {
+            cmd = (TSCCmd) operationData;
+            // 3. 业务验证（只验证这个Handler关心的字段）
+            try {
+                messageValidator.validateObjectName(cmd.getObjName());
+                messageValidator.validateId(cmd.getObjName(), cmd.getId());
+            }catch (Exception e){
+                e.printStackTrace();
+                //throw new GatProtocolException("INVALID_PARAMETER", "查询参数错误");
+            }
+            logger.debug("TSC命令验证通过: objName={}, id={}, no={}",
+                    cmd.getObjName(), cmd.getId(), cmd.getNo());
+            return cmd;
         }
+
+        throw new ValidationException("INVALID_PARAMETER", "查询参数无法识别");
     }
 
     /**
      * 根据对象名称分发查询请求
      */
-    private Object dispatchQuery(TSCCmd tscCmd) throws BusinessException {
+    private Object dispatchQuery(TSCCmd tscCmd, SessionManager.SessionInfo sessionInfo) throws BusinessException {
         String objName = tscCmd.getObjName();
         String id = tscCmd.getId();
         Integer no = tscCmd.getNo();
 
+        logger.debug("分发TSC查询: objName={}, id={}, no={}, user={}",
+                objName, id, no, sessionInfo.getUserName());
+
+        Object result = null;
         switch (objName) {
             case GatConstants.ObjectName.SYS_INFO:
-                return serviceFactory.getSystemService().getSystemInfo();
+                result = serviceFactory.getSystemService().getSystemInfo();
+                break;
 
             case GatConstants.ObjectName.SYS_STATE:
-                return serviceFactory.getSystemService().getSystemState();
+                result = serviceFactory.getSystemService().getSystemState();
+                break;
 
             case GatConstants.ObjectName.REGION_PARAM:
-                return handleRegionParam(id);
-
+                result = handleRegionParam(id);
+                break;
             case GatConstants.ObjectName.SUB_REGION_PARAM:
-                return handleSubRegionParam(id);
-
+                result = handleSubRegionParam(id);
+                break;
             case GatConstants.ObjectName.ROUTE_PARAM:
-                return handleRouteParam(id);
+                result = handleRouteParam(id);
+                break;
+            case GatConstants.ObjectName.SIGNAL_CONTROLLER:
+                result = handleSignalController(id);
+                break;
+            case GatConstants.ObjectName.LAMP_GROUP:
+                result = handleLampGroup(id, no);
+                break;
+            case GatConstants.ObjectName.DETECTOR_PARAM:
+                result = handleDetectorParam(id, no);
+                break;
+            case GatConstants.ObjectName.LANE_PARAM:
+                result = handleLaneParam(id, no);
+                break;
+            case GatConstants.ObjectName.PEDESTRIAN_PARAM:
+                result = handlePedestrianParam(id, no);
+                break;
+            case GatConstants.ObjectName.SIGNAL_GROUP_PARAM:
+                result = handleSignalGroupParam(id, no);
+                break;
+            case GatConstants.ObjectName.STAGE_PARAM:
+                result = handleStageParam(id, no);
+                break;
+            case GatConstants.ObjectName.DAY_PLAN_PARAM:
+                result = handleDayPlanParam(id, no);
+                break;
+            case GatConstants.ObjectName.SCHEDULE_PARAM:
+                result = handleScheduleParam(id, no);
+                break;
+            case GatConstants.ObjectName.CROSS_MODE_PLAN:
+                result = handleCrossModePlan(id);
+                break;
+            case GatConstants.ObjectName.CROSS_CYCLE:
+                result = handleCrossCycle(id);
+                break;
+            case GatConstants.ObjectName.CROSS_STAGE:
+                result = handleCrossState(id);
+                break;
+            case GatConstants.ObjectName.CROSS_SIGNAL_GROUP_STATUS:
+                result = handleCrossSignalGroupStatus(id);
+                break;
+            case GatConstants.ObjectName.CROSS_TRAFFIC_DATA:
+                result = handleCrossTrafficData(id);
+                break;
+            case GatConstants.ObjectName.STAGE_TRAFFIC_DATA:
+                result = handleStageTrafficData(id, no);
+                break;
+            case GatConstants.ObjectName.VAR_LANE_STATUS:
+                result = handleVarLaneStatus(id, no);
+                break;
+            case GatConstants.ObjectName.ROUTE_CONTROL_MODE:
+                result = handleRouteControlMode(id);
+                break;
+            case GatConstants.ObjectName.ROUTE_SPEED:
+                result = handleRouteSpeed(id);
+                break;
+
 
             case GatConstants.ObjectName.CROSS_PARAM:
-                return handleCrossParam(id);
-
-            case GatConstants.ObjectName.SIGNAL_CONTROLLER:
-                return handleSignalController(id);
-
-            case GatConstants.ObjectName.LAMP_GROUP:
-                return handleLampGroup(id, no);
-
-            case GatConstants.ObjectName.DETECTOR_PARAM:
-                return handleDetectorParam(id, no);
-
-            case GatConstants.ObjectName.LANE_PARAM:
-                return handleLaneParam(id, no);
-
-            case GatConstants.ObjectName.PEDESTRIAN_PARAM:
-                return handlePedestrianParam(id, no);
-
-            case GatConstants.ObjectName.SIGNAL_GROUP_PARAM:
-                return handleSignalGroupParam(id, no);
-
-            case GatConstants.ObjectName.STAGE_PARAM:
-                return handleStageParam(id, no);
+                if (id != null) {
+                    result = serviceFactory.getCrossService().findById(id);
+                } else {
+                    result = serviceFactory.getCrossService().findAll();
+                }
+                break;
 
             case GatConstants.ObjectName.PLAN_PARAM:
-                return handlePlanParam(id, no);
-
-            case GatConstants.ObjectName.DAY_PLAN_PARAM:
-                return handleDayPlanParam(id, no);
-
-            case GatConstants.ObjectName.SCHEDULE_PARAM:
-                return handleScheduleParam(id, no);
+                if (id != null) {
+                    if (no != null) {
+                        result = serviceFactory.getPlanService().findByCrossIdAndPlanNo(id, no);
+                    } else {
+                        result = serviceFactory.getPlanService().findByCrossId(id);
+                    }
+                } else {
+                    throw new ValidationException("INVALID_PARAMETER", "查询配时方案必须指定路口ID");
+                }
+                break;
 
             case GatConstants.ObjectName.CROSS_STATE:
-                return handleCrossState(id);
-
-            case GatConstants.ObjectName.CROSS_MODE_PLAN:
-                return handleCrossModePlan(id);
-
-            case GatConstants.ObjectName.CROSS_CYCLE:
-                return handleCrossCycle(id);
-
-            case GatConstants.ObjectName.CROSS_STAGE:
-                return handleCrossStage(id);
-
-            case GatConstants.ObjectName.CROSS_SIGNAL_GROUP_STATUS:
-                return handleCrossSignalGroupStatus(id);
-
-            case GatConstants.ObjectName.CROSS_TRAFFIC_DATA:
-                return handleCrossTrafficData(id);
-
-            case GatConstants.ObjectName.STAGE_TRAFFIC_DATA:
-                return handleStageTrafficData(id, no);
-
-            case GatConstants.ObjectName.VAR_LANE_STATUS:
-                return handleVarLaneStatus(id, no);
-
-            case GatConstants.ObjectName.ROUTE_CONTROL_MODE:
-                return handleRouteControlMode(id);
-
-            case GatConstants.ObjectName.ROUTE_SPEED:
-                return handleRouteSpeed(id);
+                if (id != null) {
+                    result = serviceFactory.getCrossService().getCrossState(id);
+                } else {
+                    throw new ValidationException("INVALID_PARAMETER", "查询路口状态必须指定路口ID");
+                }
+                break;
 
             default:
                 throw new ValidationException("objName", "Unsupported object name: " + objName);
         }
+        logger.debug("TSC查询完成: objName={}, resultType={}, user={}",
+                objName,
+                result != null ? result.getClass().getSimpleName() : "null",
+                sessionInfo.getUserName());
+
+        return result;
     }
 
     // ==================== 配置参数处理方法 ====================

@@ -1,5 +1,6 @@
 package com.traffic.server;
 import com.traffic.gat1049.connection.ConnectionManager;
+import com.traffic.gat1049.exception.MessageEncodingException;
 import com.traffic.gat1049.handler.HandlerRegistry;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
 import com.traffic.gat1049.service.abstracts.DefaultServiceFactory;
@@ -52,9 +53,8 @@ public class TrafficSignalServerApplication {
     }
 
     @Bean
-    public HandlerRegistry handlerRegistry(@Autowired DefaultServiceFactory serviceFactory)
-            throws Exception {
-        return new HandlerRegistry(serviceFactory);
+    public HandlerRegistry handlerRegistry(DefaultServiceFactory serviceFactory, SessionManager sessionManager) throws MessageEncodingException {
+        return new HandlerRegistry(serviceFactory, sessionManager);
     }
 
     @Bean

@@ -7,28 +7,37 @@ import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
 import com.traffic.gat1049.protocol.validator.MessageValidator;
+import com.traffic.gat1049.protocol.validator.TokenValidator;
+import com.traffic.gat1049.session.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 协议处理器抽象基类
+ * 协议处理器抽象基类 - 集成Token验证
+ * 现在集成了MessageValidator和TokenValidator两个协议层验证器
  */
 public abstract class AbstractProtocolHandler implements ProtocolHandler {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    protected final MessageValidator validator = new MessageValidator();
+    protected final MessageValidator messageValidator = new MessageValidator();
+    protected TokenValidator tokenValidator; // 可选的token验证器
 
     @Override
     public Message handleMessage(Message message) throws GatProtocolException {
         try {
-            // 验证消息
-            validator.validate(message);
+            // 1. 基础消息格式验证
+            messageValidator.validate(message);
 
-            // 记录日志
+            // 2. Token验证（如果配置了TokenValidator且需要验证）
+            if (tokenValidator != null && TokenValidator.requiresTokenValidation(message)) {
+                tokenValidator.validateToken(message);
+            }
+
+            // 3. 记录日志
             logger.debug("Handling message: type={}, seq={}, operation={}",
                     message.getType(), message.getSeq(), ProtocolUtils.getOperationName(message));
 
-            // 调用具体处理逻辑
+            // 4. 调用具体处理逻辑
             Message response = doHandle(message);
 
             if (response != null) {
@@ -46,6 +55,14 @@ public abstract class AbstractProtocolHandler implements ProtocolHandler {
             return createErrorResponse(message, GatConstants.ErrorCode.SYSTEM_ERROR,
                     "Internal server error: " + e.getMessage());
         }
+    }
+
+    /**
+     * 设置Token验证器（可选）
+     * 不是所有Handler都需要token验证，比如LoginHandler就不需要
+     */
+    public void setTokenValidator(TokenValidator tokenValidator) {
+        this.tokenValidator = tokenValidator;
     }
 
     /**
@@ -72,7 +89,13 @@ public abstract class AbstractProtocolHandler implements ProtocolHandler {
      */
     protected Message createErrorResponse(Message request, String errorCode, String errorMessage) {
         if (request == null) {
-            return MessageBuilder.createErrorResponse(ProtocolUtils.generateSequence(), request.getToken(), errorCode, errorMessage);
+            return MessageBuilder.create()
+                    .error()
+                    .fromUtcs()
+                    .toTicp()
+                    .seq("ERROR_" + System.currentTimeMillis())
+                    .operation("Error", createErrorData(errorCode, errorMessage))
+                    .build();
         }
 
         return MessageBuilder.create()
@@ -86,34 +109,48 @@ public abstract class AbstractProtocolHandler implements ProtocolHandler {
     }
 
     /**
-     * 创建错误数据对象
+     * 创建错误数据
      */
-    private Object createErrorData(String code, String message) {
-        return new Object() {
-            public String getCode() { return code; }
-            public String getMessage() { return message; }
-            public String getTimestamp() { return ProtocolUtils.formatDateTime(java.time.LocalDateTime.now()); }
-        };
+    private Object createErrorData(String errorCode, String errorMessage) {
+        return new java.util.HashMap<String, Object>() {{
+            put("errorCode", errorCode);
+            put("errorMessage", errorMessage);
+            put("timestamp", java.time.LocalDateTime.now());
+        }};
     }
 
     /**
-     * 检查是否为查询请求
+     * 获取当前消息的会话信息（如果有TokenValidator且消息需要验证）
+     */
+    protected SessionManager.SessionInfo getCurrentSession(Message message) throws MessageValidationException {
+        if (tokenValidator != null && TokenValidator.requiresTokenValidation(message)) {
+            return tokenValidator.validateAndGetSession(message);
+        }
+        return null;
+    }
+
+    /**
+     * 检查当前消息是否为查询请求
      */
     protected boolean isQueryRequest(Message message) {
-        return ProtocolUtils.isRequest(message) && ProtocolUtils.isGetOperation(message);
+        return ProtocolUtils.isRequest(message) &&
+                GatConstants.Operation.GET.equals(ProtocolUtils.getOperationName(message));
     }
 
     /**
-     * 检查是否为设置请求
+     * 检查当前消息是否为设置请求
      */
     protected boolean isSetRequest(Message message) {
-        return ProtocolUtils.isRequest(message) && ProtocolUtils.isSetOperation(message);
+        return ProtocolUtils.isRequest(message) &&
+                GatConstants.Operation.SET.equals(ProtocolUtils.getOperationName(message));
     }
 
     /**
-     * 提取TSCCmd对象
+     * 检查当前消息是否为通知消息
      */
-    protected Object extractTscCmd(Message message) {
-        return ProtocolUtils.getOperationData(message);
+    protected boolean isNotifyMessage(Message message) {
+        return ProtocolUtils.isPush(message) &&
+                GatConstants.Operation.NOTIFY.equals(ProtocolUtils.getOperationName(message));
     }
 }
+

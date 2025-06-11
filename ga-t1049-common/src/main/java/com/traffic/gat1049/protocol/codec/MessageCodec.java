@@ -79,7 +79,13 @@ public class MessageCodec {
                                 com.traffic.gat1049.model.entity.sdo.SdoError.class,
                                 com.traffic.gat1049.model.entity.sdo.SdoUser.class,
                                 com.traffic.gat1049.model.entity.sdo.SdoHeartBeat.class,
-                                com.traffic.gat1049.model.entity.sdo.SdoMsgEntity.class
+                                com.traffic.gat1049.model.entity.sdo.SdoMsgEntity.class,
+                                com.traffic.gat1049.model.dto.response.LoginResponse.class,
+                                com.traffic.gat1049.model.dto.response.LogoutResponse.class,
+                                com.traffic.gat1049.model.entity.sdo.SdoHeartBeat.class,
+                                com.traffic.gat1049.model.entity.sdo.SdoMsgEntity.class,
+                                com.traffic.gat1049.model.entity.sdo.SdoTimeServer.class,
+                                com.traffic.gat1049.model.entity.sdo.SdoTimeOut.class
                                 // 根据需要添加其他 SDO 类
                         };
 

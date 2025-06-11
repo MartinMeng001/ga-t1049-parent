@@ -151,6 +151,10 @@ public class MessageValidator {
         return GatConstants.Operation.GET.equals(name) ||
                 GatConstants.Operation.SET.equals(name) ||
                 GatConstants.Operation.NOTIFY.equals(name) ||
+                GatConstants.Operation.LOGIN.equals(name) ||
+                GatConstants.Operation.LOGOUT.equals(name) ||
+                GatConstants.Operation.SUBSCRIBE.equals(name) ||
+                GatConstants.Operation.UNSUBSCRIBE.equals(name) ||
                 "Error".equals(name);
     }
 
