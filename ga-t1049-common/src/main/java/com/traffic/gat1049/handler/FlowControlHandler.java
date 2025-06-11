@@ -3,6 +3,7 @@ package com.traffic.gat1049.handler;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.exception.ValidationException;
+import com.traffic.gat1049.protocol.handler.TokenRequiredHandler;
 import com.traffic.gat1049.protocol.model.Message;
 import com.traffic.gat1049.model.constants.GatConstants;
 import com.traffic.gat1049.model.entity.command.LockFlowDirection;
@@ -11,15 +12,17 @@ import com.traffic.gat1049.model.entity.command.StageCtrl;
 import com.traffic.gat1049.protocol.handler.AbstractProtocolHandler;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
 import com.traffic.gat1049.service.interfaces.ServiceFactory;
+import com.traffic.gat1049.session.SessionManager;
 
 /**
  * 交通流向控制命令处理器
  */
-public class FlowControlHandler extends AbstractProtocolHandler {
+public class FlowControlHandler extends TokenRequiredHandler {
 
     private final ServiceFactory serviceFactory;
 
-    public FlowControlHandler(ServiceFactory serviceFactory) {
+    public FlowControlHandler(ServiceFactory serviceFactory, SessionManager sessionManager) {
+        super(sessionManager);
         this.serviceFactory = serviceFactory;
     }
 
@@ -35,10 +38,35 @@ public class FlowControlHandler extends AbstractProtocolHandler {
                 data instanceof StageCtrl;
     }
 
-    @Override
-    protected Message doHandle(Message message) throws GatProtocolException {
-        Object data = ProtocolUtils.getOperationData(message);
+//    @Override
+//    protected Message doHandle(Message message) throws GatProtocolException {
+//        Object data = ProtocolUtils.getOperationData(message);
+//
+//        try {
+//            Object result = null;
+//
+//            if (data instanceof LockFlowDirection) {
+//                result = handleLockFlowDirection((LockFlowDirection) data);
+//            } else if (data instanceof UnlockFlowDirection) {
+//                result = handleUnlockFlowDirection((UnlockFlowDirection) data);
+//            } else if (data instanceof StageCtrl) {
+//                result = handleStageCtrl((StageCtrl) data);
+//            }
+//
+//            return createSuccessResponse(message, result);
+//
+//        } catch (ValidationException e) {
+//            logger.error("Flow control validation failed: {}", e.getMessage());
+//            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage());
+//        } catch (BusinessException e) {
+//            logger.error("Flow control business error: {}", e.getMessage());
+//            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage());
+//        }
+//    }
 
+    protected Message doHandleWithSession(Message message, SessionManager.SessionInfo sessionInfo)
+            throws GatProtocolException {
+        Object data = ProtocolUtils.getOperationData(message);
         try {
             Object result = null;
 
@@ -49,7 +77,7 @@ public class FlowControlHandler extends AbstractProtocolHandler {
             } else if (data instanceof StageCtrl) {
                 result = handleStageCtrl((StageCtrl) data);
             }
-
+            // 3. 返回响应
             return createSuccessResponse(message, result);
 
         } catch (ValidationException e) {

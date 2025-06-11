@@ -103,6 +103,7 @@ public final class GatConstants {
         public static final String PERMISSION_DENIED = "1004";
         public static final String TIMEOUT = "1005";
         public static final String SYSTEM_ERROR = "9999";
+
     }
     /**
      * 错误消息常量

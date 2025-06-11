@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class TrafficSignalClientApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(TrafficSignalClientApplication.class);
-
+    private static String token = null;
     public static void main(String[] args) {
         SpringApplication.run(TrafficSignalClientApplication.class, args);
     }
@@ -72,7 +72,8 @@ public class TrafficSignalClientApplication {
             Message loginResponse = client.sendRequest(loginRequest, 10, TimeUnit.SECONDS);
 
             if (loginResponse != null && "RESPONSE".equals(loginResponse.getType())) {
-                String token = loginResponse.getToken();
+                token = loginResponse.getToken();
+                GatTcpClient.tocken = token;
                 logger.info("登录成功，获得Token: {}", token);
 
                 // 2. 订阅操作
@@ -104,6 +105,8 @@ public class TrafficSignalClientApplication {
 
             } else {
                 logger.error("登录失败");
+                token = null;
+                GatTcpClient.tocken = null;
             }
 
         } catch (Exception e) {
@@ -275,7 +278,7 @@ public class TrafficSignalClientApplication {
         String objName = scanner.nextLine().trim();
 
         // 这里需要一个有效的token，实际应用中应该从登录响应中获取
-        String token = "sample_token";
+        //String token = "sample_token";
         Message subscribeRequest = MessageBuilder.createSubscribeRequest(token, msgType, operName, objName);
         Message response = client.sendRequest(subscribeRequest, 10, TimeUnit.SECONDS);
 
@@ -287,14 +290,14 @@ public class TrafficSignalClientApplication {
     }
 
     private void performGat1049Heartbeat(GatTcpClient client) throws Exception {
-        String token = "sample_token";
+        //String token = "sample_token";
         Message heartbeat = MessageBuilder.createHeartbeatMessage(token);
         client.sendMessage(heartbeat);
         System.out.println("心跳已发送");
     }
 
     private void performGat1049Query(GatTcpClient client, Scanner scanner) throws Exception {
-        String token = "sample_token";
+        //String token = "sample_token";
         SdoTimeServer timeServerQuery = new SdoTimeServer("", "", null);
         Message queryRequest = MessageBuilder.createQueryRequest(token, timeServerQuery);
         Message response = client.sendRequest(queryRequest, 10, TimeUnit.SECONDS);
@@ -310,7 +313,7 @@ public class TrafficSignalClientApplication {
         System.out.print("超时时间（秒）: ");
         int timeoutSeconds = Integer.parseInt(scanner.nextLine().trim());
 
-        String token = "sample_token";
+        //String token = "sample_token";
         SdoTimeOut timeout = new SdoTimeOut(timeoutSeconds);
         Message setRequest = MessageBuilder.createSetRequest(token, timeout);
         Message response = client.sendRequest(setRequest, 10, TimeUnit.SECONDS);

@@ -1,10 +1,12 @@
 package com.traffic.gat1049.handler;
 
 import com.traffic.gat1049.exception.MessageEncodingException;
+import com.traffic.gat1049.handler.common.LogoutHandler;
 import com.traffic.gat1049.protocol.handler.ProtocolHandler;
 import com.traffic.gat1049.protocol.processor.DefaultMessageProcessor;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
 import com.traffic.gat1049.service.interfaces.ServiceFactory;
+import com.traffic.gat1049.session.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +22,13 @@ public class HandlerRegistry {
     private static final Logger logger = LoggerFactory.getLogger(HandlerRegistry.class);
 
     private final ServiceFactory serviceFactory;
+    private final SessionManager sessionManager;
     private final MessageProcessor messageProcessor;
     private final List<ProtocolHandler> handlers;
 
-    public HandlerRegistry(ServiceFactory serviceFactory) throws MessageEncodingException {
+    public HandlerRegistry(ServiceFactory serviceFactory, SessionManager sessionManager) throws MessageEncodingException {
         this.serviceFactory = serviceFactory;
+        this.sessionManager = sessionManager;
         this.messageProcessor = new DefaultMessageProcessor();
         this.handlers = new ArrayList<>();
 
@@ -36,11 +40,17 @@ public class HandlerRegistry {
      * 注册所有处理器
      */
     private void registerAllHandlers() {
+        // 注册LoginHandler
+        registerHandler(new LoginHandler(sessionManager));
+
+        // 注册LogoutHandler
+        registerHandler(new LogoutHandler(sessionManager));
+
         // 1. 查询处理器 - 处理配置参数和运行信息查询
-        registerHandler(new TSCCommandHandler(serviceFactory));
+        registerHandler(new TSCCommandHandler(serviceFactory, sessionManager));
 
         // 2. 流向控制处理器 - 处理锁定/解锁交通流向、阶段干预
-        registerHandler(new FlowControlHandler(serviceFactory));
+        registerHandler(new FlowControlHandler(serviceFactory, sessionManager));
 
         // 3. 配时方案控制处理器 - 处理配时方案、日计划、调度参数设置
         registerHandler(new PlanControlHandler(serviceFactory));
@@ -71,7 +81,14 @@ public class HandlerRegistry {
         handlers.add(handler);
         logger.debug("Registered handler: {}", handler.getHandlerName());
     }
-
+    /**
+     * 注册Login处理器
+     */
+    private void registerLoginHandler() {
+        LoginHandler loginHandler = new LoginHandler(sessionManager);
+        registerHandler(loginHandler);
+        logger.info("已注册LoginHandler");
+    }
     /**
      * 获取消息处理器
      */
@@ -125,5 +142,16 @@ public class HandlerRegistry {
         // 重新注册
         registerAllHandlers();
         logger.info("Reloaded all handlers");
+    }
+    /**
+     * 关闭Handler注册器
+     */
+    public void shutdown() {
+        logger.info("正在关闭HandlerRegistry...");
+
+        // 清理所有处理器
+        handlers.clear();
+
+        logger.info("HandlerRegistry已关闭");
     }
 }

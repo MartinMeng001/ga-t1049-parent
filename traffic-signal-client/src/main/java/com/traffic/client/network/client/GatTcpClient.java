@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class GatTcpClient {
 
     private static final Logger logger = LoggerFactory.getLogger(GatTcpClient.class);
-
+    public static String tocken = null;
     private final String host;
     private final int port;
     private final String clientId;
@@ -116,7 +116,7 @@ public class GatTcpClient {
             logger.info("Connected to GA/T 1049.2 server at {}:{}", host, port);
 
             // 连接成功后发送登录请求
-            sendLoginRequest();
+            // sendLoginRequest();
 
         } catch (Exception e) {
             logger.error("Failed to connect to server at {}:{}", host, port, e);
@@ -251,18 +251,9 @@ public class GatTcpClient {
      */
     private void sendHeartbeat() {
         try {
-            Message heartbeat = MessageBuilder.create()
-                    .request()
-                    .fromUtcs()
-                    .toTicp()
-                    .seq(generateSequence())
-                    .operation("Heartbeat", new Object() {
-                        public String getClientId() { return clientId; }
-                        public Long getTimestamp() { return System.currentTimeMillis(); }
-                    })
-                    .build();
-
+            Message heartbeat = MessageBuilder.createHeartbeatMessage(tocken);
             sendMessage(heartbeat);
+
             logger.debug("Heartbeat sent");
         } catch (Exception e) {
             logger.error("Failed to send heartbeat", e);

@@ -70,8 +70,8 @@ public class RuntimeInfoHandler extends AbstractProtocolHandler {
             throw new ValidationException("objName", "Object name cannot be null or empty");
         }
         try {
-            validator.validateObjectName(tscCmd.getObjName());
-            validator.validateId(tscCmd.getObjName(), tscCmd.getId());
+            messageValidator.validateObjectName(tscCmd.getObjName());
+            messageValidator.validateId(tscCmd.getObjName(), tscCmd.getId());
         }catch (Exception e){
             e.printStackTrace();
         }
