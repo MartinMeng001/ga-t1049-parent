@@ -1,7 +1,6 @@
 package com.traffic.client.config;
 
 import com.traffic.client.service.ClientDataPushService;
-import com.traffic.gat1049.protocol.processor.DefaultMessageProcessor;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
@@ -15,23 +14,12 @@ import org.slf4j.LoggerFactory;
 /**
  * 客户端订阅配置
  * 配置客户端接收服务端订阅请求，向服务端推送数据的功能
- *
- * 放置位置：traffic-signal-client/src/main/java/com/traffic/client/config/
  */
 @Configuration
 @ConditionalOnProperty(name = "app.role", havingValue = "client", matchIfMissing = true)
 public class ClientSubscriptionConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientSubscriptionConfig.class);
-
-    /**
-     * 客户端数据推送服务 - 负责向服务端推送数据
-     */
-    @Bean
-    public ClientDataPushService clientDataPushService() {
-        logger.info("创建客户端数据推送服务");
-        return new ClientDataPushService();
-    }
 
     /**
      * 客户端订阅请求处理器 - 处理来自服务端的订阅请求
@@ -41,23 +29,6 @@ public class ClientSubscriptionConfig {
             ClientDataPushService pushService) {
         logger.info("创建客户端订阅请求处理器");
         return new ClientSubscriptionHandler(pushService);
-    }
-
-    /**
-     * 配置客户端消息处理器
-     */
-    @Bean
-    public DefaultMessageProcessor configureClientMessageProcessor(
-            DefaultMessageProcessor messageProcessor,
-            ClientSubscriptionHandler subscriptionHandler) {
-
-        logger.info("配置客户端消息处理器");
-
-        // 注册订阅请求处理器
-        messageProcessor.registerHandler(subscriptionHandler);
-
-        logger.info("客户端消息处理器配置完成");
-        return messageProcessor;
     }
 
     /**
