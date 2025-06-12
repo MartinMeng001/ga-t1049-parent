@@ -31,11 +31,11 @@ public class ServerSubscriptionConfig {
     /**
      * 服务端订阅服务 - 负责向客户端发送订阅请求
      */
-    @Bean
-    public ServerSubscriptionService serverSubscriptionService() {
-        logger.info("创建服务端订阅服务");
-        return new ServerSubscriptionService();
-    }
+//    @Bean
+//    public ServerSubscriptionService serverSubscriptionService() {
+//        logger.info("创建服务端订阅服务");
+//        return new ServerSubscriptionService();
+//    }
 
     /**
      * 服务端接收客户端订阅请求的处理器
@@ -85,6 +85,7 @@ public class ServerSubscriptionConfig {
         // 注册订阅相关处理器
         messageProcessor.registerHandler(subscribeHandler);
         messageProcessor.registerHandler(unsubscribeHandler);
+        messageProcessor.registerHandler(pushHandler);
 
         // 注册推送消息处理器
         messageProcessor.registerHandler(pushHandler);
