@@ -1,8 +1,8 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
-import com.traffic.gat1049.model.entity.system.SysInfo;
-import com.traffic.gat1049.model.entity.system.SysState;
+import com.traffic.gat1049.protocol.model.system.SysInfo;
+import com.traffic.gat1049.protocol.model.system.SysState;
 import com.traffic.gat1049.model.enums.SystemState;
 
 /**

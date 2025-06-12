@@ -1,12 +1,10 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
-import com.traffic.gat1049.model.entity.runtime.RouteControlModeStatus;
-import com.traffic.gat1049.model.entity.runtime.RouteSpeed;
-import com.traffic.gat1049.model.entity.runtime.RoadSectionSpeed;
+import com.traffic.gat1049.protocol.model.runtime.RouteControlModeStatus;
+import com.traffic.gat1049.protocol.model.runtime.RouteSpeed;
+import com.traffic.gat1049.protocol.model.runtime.RoadSectionSpeed;
 import com.traffic.gat1049.model.enums.RouteControlMode;
-
-import java.util.List;
 
 /**
  * 干线控制服务接口

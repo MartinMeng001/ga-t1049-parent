@@ -1,8 +1,8 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
-import com.traffic.gat1049.model.entity.intersection.LaneParam;
-import com.traffic.gat1049.model.entity.runtime.VarLaneStatus;
+import com.traffic.gat1049.protocol.model.intersection.LaneParam;
+import com.traffic.gat1049.protocol.model.runtime.VarLaneStatus;
 import com.traffic.gat1049.model.enums.Direction;
 import com.traffic.gat1049.model.enums.LaneAttribute;
 import com.traffic.gat1049.model.enums.LaneMovement;

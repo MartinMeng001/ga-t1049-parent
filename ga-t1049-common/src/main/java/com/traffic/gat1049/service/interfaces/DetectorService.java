@@ -1,7 +1,7 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
-import com.traffic.gat1049.model.entity.intersection.DetectorParam;
+import com.traffic.gat1049.protocol.model.intersection.DetectorParam;
 import com.traffic.gat1049.model.enums.DetectorPosition;
 import com.traffic.gat1049.model.enums.DetectorType;
 

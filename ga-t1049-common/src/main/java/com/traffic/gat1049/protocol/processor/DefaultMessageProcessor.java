@@ -3,11 +3,12 @@ package com.traffic.gat1049.protocol.processor;
 import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.exception.MessageDecodingException;
 import com.traffic.gat1049.exception.MessageEncodingException;
-import com.traffic.gat1049.model.constants.GatConstants;
+import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.codec.MessageCodec;
-import com.traffic.gat1049.protocol.handler.ProtocolHandler;
-import com.traffic.gat1049.protocol.model.Message;
+import com.traffic.gat1049.protocol.handler.base.ProtocolHandler;
+import com.traffic.gat1049.protocol.model.core.Message;
+import com.traffic.gat1049.protocol.model.sdo.SdoError;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -192,7 +193,7 @@ public class DefaultMessageProcessor implements MessageProcessor {
 //        };
 //    }
     private Object createErrorData(String code, String message) {
-        return new com.traffic.gat1049.model.entity.sdo.SdoError("", code, message);
+        return new SdoError("", code, message);
     }
 
     /**

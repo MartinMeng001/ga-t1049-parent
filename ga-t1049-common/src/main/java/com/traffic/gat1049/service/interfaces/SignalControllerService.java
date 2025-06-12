@@ -1,8 +1,8 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
-import com.traffic.gat1049.model.entity.intersection.SignalController;
-import com.traffic.gat1049.model.entity.runtime.SignalControllerError;
+import com.traffic.gat1049.protocol.model.intersection.SignalController;
+import com.traffic.gat1049.protocol.model.runtime.SignalControllerError;
 import com.traffic.gat1049.model.enums.CommMode;
 import com.traffic.gat1049.model.enums.ControllerErrorType;
 

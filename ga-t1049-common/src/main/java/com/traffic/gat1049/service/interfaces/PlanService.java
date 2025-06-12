@@ -1,10 +1,10 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
-import com.traffic.gat1049.model.entity.signal.PlanParam;
-import com.traffic.gat1049.model.entity.signal.DayPlanParam;
-import com.traffic.gat1049.model.entity.signal.ScheduleParam;
-import com.traffic.gat1049.model.entity.runtime.CrossModePlan;
+import com.traffic.gat1049.protocol.model.signal.PlanParam;
+import com.traffic.gat1049.protocol.model.signal.DayPlanParam;
+import com.traffic.gat1049.protocol.model.signal.ScheduleParam;
+import com.traffic.gat1049.protocol.model.runtime.CrossModePlan;
 import com.traffic.gat1049.model.enums.ControlMode;
 import com.traffic.gat1049.model.enums.OperationType;
 

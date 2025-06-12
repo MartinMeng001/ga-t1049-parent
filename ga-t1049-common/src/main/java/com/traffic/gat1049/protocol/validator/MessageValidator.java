@@ -1,9 +1,9 @@
 package com.traffic.gat1049.protocol.validator;
 
 import com.traffic.gat1049.exception.MessageValidationException;
-import com.traffic.gat1049.model.constants.GatConstants;
-import com.traffic.gat1049.protocol.model.Message;
-import com.traffic.gat1049.protocol.model.Operation;
+import com.traffic.gat1049.protocol.constants.GatConstants;
+import com.traffic.gat1049.protocol.model.core.Message;
+import com.traffic.gat1049.protocol.model.core.Operation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

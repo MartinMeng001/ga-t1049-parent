@@ -4,8 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.traffic.gat1049.exception.MessageDecodingException;
 import com.traffic.gat1049.exception.MessageEncodingException;
-import com.traffic.gat1049.model.constants.GatConstants;
-import com.traffic.gat1049.protocol.model.Message;
+import com.traffic.gat1049.protocol.constants.GatConstants;
+import com.traffic.gat1049.protocol.model.core.Message;
+import com.traffic.gat1049.protocol.model.core.Address;
+import com.traffic.gat1049.protocol.model.core.MessageBody;
+import com.traffic.gat1049.protocol.model.core.Operation;
+import com.traffic.gat1049.protocol.model.sdo.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,19 +77,19 @@ public class MessageCodec {
                         //this.jaxbContext = JAXBContext.newInstance(Message.class);
                         Class<?>[] classes = {
                                 Message.class,
-                                com.traffic.gat1049.protocol.model.Address.class,
-                                com.traffic.gat1049.protocol.model.MessageBody.class,
-                                com.traffic.gat1049.protocol.model.Operation.class,
-                                com.traffic.gat1049.model.entity.sdo.SdoError.class,
-                                com.traffic.gat1049.model.entity.sdo.SdoUser.class,
-                                com.traffic.gat1049.model.entity.sdo.SdoHeartBeat.class,
-                                com.traffic.gat1049.model.entity.sdo.SdoMsgEntity.class,
-                                com.traffic.gat1049.model.dto.response.LoginResponse.class,
-                                com.traffic.gat1049.model.dto.response.LogoutResponse.class,
-                                com.traffic.gat1049.model.entity.sdo.SdoHeartBeat.class,
-                                com.traffic.gat1049.model.entity.sdo.SdoMsgEntity.class,
-                                com.traffic.gat1049.model.entity.sdo.SdoTimeServer.class,
-                                com.traffic.gat1049.model.entity.sdo.SdoTimeOut.class
+                                Address.class,
+                                MessageBody.class,
+                                Operation.class,
+                                SdoError.class,
+                                SdoUser.class,
+                                SdoHeartBeat.class,
+                                SdoMsgEntity.class,
+                                //com.traffic.gat1049.model.dto.response.LoginResponse.class,
+                                //com.traffic.gat1049.model.dto.response.LogoutResponse.class,
+                                SdoHeartBeat.class,
+                                SdoMsgEntity.class,
+                                SdoTimeServer.class,
+                                SdoTimeOut.class
                                 // 根据需要添加其他 SDO 类
                         };
 

@@ -1,8 +1,8 @@
 package com.traffic.gat1049.protocol.validator;
 
 import com.traffic.gat1049.exception.MessageValidationException;
-import com.traffic.gat1049.protocol.model.Message;
-import com.traffic.gat1049.session.SessionManager;
+import com.traffic.gat1049.protocol.model.core.Message;
+import com.traffic.gat1049.application.session.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

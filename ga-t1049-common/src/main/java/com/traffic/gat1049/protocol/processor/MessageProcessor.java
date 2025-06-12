@@ -1,7 +1,8 @@
 package com.traffic.gat1049.protocol.processor;
 
 import com.traffic.gat1049.exception.GatProtocolException;
-import com.traffic.gat1049.protocol.model.Message;
+import com.traffic.gat1049.protocol.handler.base.ProtocolHandler;
+import com.traffic.gat1049.protocol.model.core.Message;
 
 /**
  * 消息处理器接口
@@ -31,7 +32,7 @@ public interface MessageProcessor {
      *
      * @param handler 协议处理器
      */
-    void registerHandler(com.traffic.gat1049.protocol.handler.ProtocolHandler handler);
+    void registerHandler(ProtocolHandler handler);
 
     /**
      * 移除协议处理器

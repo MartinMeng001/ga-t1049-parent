@@ -4,11 +4,11 @@ import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.model.constants.BusinessConstants;
-import com.traffic.gat1049.model.entity.signal.PlanParam;
-import com.traffic.gat1049.model.entity.signal.DayPlanParam;
-import com.traffic.gat1049.model.entity.signal.ScheduleParam;
-import com.traffic.gat1049.model.entity.signal.StageTiming;
-import com.traffic.gat1049.model.entity.runtime.CrossModePlan;
+import com.traffic.gat1049.protocol.model.signal.PlanParam;
+import com.traffic.gat1049.protocol.model.signal.DayPlanParam;
+import com.traffic.gat1049.protocol.model.signal.ScheduleParam;
+import com.traffic.gat1049.protocol.model.signal.StageTiming;
+import com.traffic.gat1049.protocol.model.runtime.CrossModePlan;
 import com.traffic.gat1049.model.enums.ControlMode;
 import com.traffic.gat1049.model.enums.OperationType;
 import com.traffic.gat1049.service.interfaces.PlanService;
@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * 配时方案服务实现

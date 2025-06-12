@@ -1,9 +1,9 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
-import com.traffic.gat1049.model.entity.signal.SignalGroupParam;
-import com.traffic.gat1049.model.entity.runtime.CrossSignalGroupStatus;
-import com.traffic.gat1049.model.entity.signal.SignalGroupStatus;
+import com.traffic.gat1049.protocol.model.signal.SignalGroupParam;
+import com.traffic.gat1049.protocol.model.runtime.CrossSignalGroupStatus;
+import com.traffic.gat1049.protocol.model.signal.SignalGroupStatus;
 
 import java.util.List;
 

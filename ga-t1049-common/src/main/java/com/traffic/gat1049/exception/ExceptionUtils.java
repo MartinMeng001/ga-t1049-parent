@@ -1,6 +1,6 @@
 package com.traffic.gat1049.exception;
 
-import com.traffic.gat1049.model.constants.GatConstants;
+import com.traffic.gat1049.protocol.constants.GatConstants;
 
 /**
  * 异常工具类
