@@ -1,6 +1,13 @@
 package com.traffic.gat1049.protocol.builder;
-import com.traffic.gat1049.model.constants.GatConstants;
-import com.traffic.gat1049.protocol.model.*;
+import com.traffic.gat1049.protocol.constants.GatConstants;
+import com.traffic.gat1049.protocol.model.core.Address;
+import com.traffic.gat1049.protocol.model.core.Message;
+import com.traffic.gat1049.protocol.model.core.MessageBody;
+import com.traffic.gat1049.protocol.model.core.Operation;
+import com.traffic.gat1049.protocol.model.sdo.SdoError;
+import com.traffic.gat1049.protocol.model.sdo.SdoHeartBeat;
+import com.traffic.gat1049.protocol.model.sdo.SdoMsgEntity;
+import com.traffic.gat1049.protocol.model.sdo.SdoUser;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
 
 import java.util.UUID;
@@ -13,15 +20,9 @@ public class MessageBuilder {
 
     private Message message;
 
-//    private MessageBuilder() {
-//        this.message = new Message();
-//        this.message.setVersion(GatConstants.PROTOCOL_VERSION);
-//        this.message.setBody(new MessageBody());
-//    }
     private MessageBuilder() {
         this.message = new Message();
         this.message.setVersion(GatConstants.PROTOCOL_VERSION);
-        this.message.setSeq(generateSequence());
         this.message.setBody(new MessageBody());
     }
 
@@ -206,20 +207,13 @@ public class MessageBuilder {
     public Message build() {
         return this.message;
     }
-    /**
-     * 生成序列号
-     */
-    private String generateSequence() {
-        return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
-    }
-    // ========== 静态工厂方法 ==========
 
     /**
      * 创建登录请求消息
      */
     public static Message createLoginRequest(String userName, String password) {
-        com.traffic.gat1049.model.entity.sdo.SdoUser user =
-                new com.traffic.gat1049.model.entity.sdo.SdoUser(userName, password);
+        SdoUser user =
+                new SdoUser(userName, password);
 
         return MessageBuilder.create()
                 .request()
@@ -228,19 +222,29 @@ public class MessageBuilder {
                 .login(user)
                 .build();
     }
+    public static Message createLogoutRequest(String userName, String password, String token) {
+        SdoUser user =
+                new SdoUser(userName, password);
 
+        return MessageBuilder.create()
+                .request()
+                .fromUtcs()
+                .toTicp()
+                .token(token)
+                .logout(user)
+                .build();
+    }
     /**
      * 创建登录成功响应
      */
-    public static Message createLoginSuccessResponse(String seq, String token, String userName) {
-        com.traffic.gat1049.model.entity.sdo.SdoUser user =
-                new com.traffic.gat1049.model.entity.sdo.SdoUser(userName, "");
+    public static Message createLoginSuccessResponse(Message request, String token, String userName) {
+        SdoUser user =
+                new SdoUser(userName, "");
 
         return MessageBuilder.create()
                 .response()
-                .fromTicp()
-                .toUtcs()
-                .seq(seq)
+                .reverseAddress(request)
+                .seq(request.getSeq())
                 .token(token)
                 .login(user)
                 .build();
@@ -249,16 +253,15 @@ public class MessageBuilder {
     /**
      * 创建登录失败响应
      */
-    public static Message createLoginErrorResponse(String seq, String errorType, String errorDesc) {
-        com.traffic.gat1049.model.entity.sdo.SdoError error =
-                new com.traffic.gat1049.model.entity.sdo.SdoError(
+    public static Message createLoginErrorResponse(Message request, String errorType, String errorDesc) {
+        SdoError error =
+                new SdoError(
                         GatConstants.SystemObject.SDO_USER, errorType, errorDesc);
 
         return MessageBuilder.create()
                 .error()
-                .fromTicp()
-                .toUtcs()
-                .seq(seq)
+                .reverseAddress(request)
+                .seq(request.getSeq())
                 .operation("Login", error)
                 .build();
     }
@@ -267,8 +270,8 @@ public class MessageBuilder {
      * 创建心跳消息
      */
     public static Message createHeartbeatMessage(String token) {
-        com.traffic.gat1049.model.entity.sdo.SdoHeartBeat heartbeat =
-                new com.traffic.gat1049.model.entity.sdo.SdoHeartBeat();
+        SdoHeartBeat heartbeat =
+                new SdoHeartBeat();
 
         return MessageBuilder.create()
                 .push()
@@ -283,8 +286,8 @@ public class MessageBuilder {
      * 创建订阅请求消息
      */
     public static Message createSubscribeRequest(String token, String msgType, String operName, String objName) {
-        com.traffic.gat1049.model.entity.sdo.SdoMsgEntity subscription =
-                new com.traffic.gat1049.model.entity.sdo.SdoMsgEntity(msgType, operName, objName);
+        SdoMsgEntity subscription =
+                new SdoMsgEntity(msgType, operName, objName);
 
         return MessageBuilder.create()
                 .request()
@@ -326,8 +329,7 @@ public class MessageBuilder {
     public static Message createSuccessResponse(Message request, Object data) {
         return MessageBuilder.create()
                 .response()
-                .fromUtcs()  // 注意：响应应该从TICP发回UTCS
-                .toTicp()
+                .reverseAddress(request)
                 .seq(request.getSeq())
                 .token(request.getToken())
                 .operation(ProtocolUtils.getOperationName(request), data)
@@ -337,8 +339,8 @@ public class MessageBuilder {
      * 创建错误响应消息
      */
     public static Message createErrorResponse(String seq, String token, String errorCode, String errorMessage) {
-        com.traffic.gat1049.model.entity.sdo.SdoError error =
-                new com.traffic.gat1049.model.entity.sdo.SdoError("", errorCode, errorMessage);
+        SdoError error =
+                new SdoError("", errorCode, errorMessage);
 
         return MessageBuilder.create()
                 .error()
@@ -348,5 +350,53 @@ public class MessageBuilder {
                 .token(token)
                 .operation("Error", error)
                 .build();
+    }
+
+
+    /**
+     * 响应构建器 - 专门用于构建响应消息
+     */
+    public static ResponseBuilder responseFor(Message request) {
+        return new ResponseBuilder(request);
+    }
+    /**
+     * 响应构建器内部类
+     */
+    public static class ResponseBuilder {
+        private final Message request;
+        private final MessageBuilder builder;
+
+        public ResponseBuilder(Message request) {
+            this.request = request;
+            this.builder = MessageBuilder.create()
+                    .seq(request.getSeq())
+                    .token(request.getToken())
+                    .reverseAddress(request);
+        }
+
+        public ResponseBuilder success(Object data) {
+            return success(ProtocolUtils.getOperationName(request), data);
+        }
+
+        public ResponseBuilder success(String operation, Object data) {
+            builder.response().operation(operation, data);
+            return this;
+        }
+
+        public ResponseBuilder error(String errorCode, String errorMessage) {
+            SdoError error = new SdoError("", errorCode, errorMessage);
+            builder.error().operation("Error", error);
+            return this;
+        }
+
+        public Message build() {
+            return builder.build();
+        }
+    }
+    private MessageBuilder reverseAddress(Message request) {
+        // 自动处理响应的地址方向，避免手动错误
+        this.message.setFrom(request.getTo());
+        this.message.setTo(request.getFrom());
+        return this;
     }
 }

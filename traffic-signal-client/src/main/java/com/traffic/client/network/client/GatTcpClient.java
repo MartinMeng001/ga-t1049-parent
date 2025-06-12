@@ -1,8 +1,9 @@
 package com.traffic.client.network.client;
-import com.traffic.gat1049.model.constants.GatConstants;
+import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.codec.MessageCodec;
-import com.traffic.gat1049.protocol.model.Message;
+import com.traffic.gat1049.protocol.model.core.Message;
+import com.traffic.gat1049.protocol.model.sdo.SdoUser;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -192,8 +193,8 @@ public class GatTcpClient {
     private void sendLoginRequest() {
         try {
             // 使用具体的 SdoUser 对象
-            com.traffic.gat1049.model.entity.sdo.SdoUser user =
-                    new com.traffic.gat1049.model.entity.sdo.SdoUser(/*clientId*/"tsc_client", "tsc123");
+            SdoUser user =
+                    new SdoUser(/*clientId*/"tsc_client", "tsc123");
 
             Message loginMessage = MessageBuilder.create()
                     .request()
@@ -230,7 +231,7 @@ public class GatTcpClient {
             throw new Exception("Not connected to server");
         }
 
-        String seq = request.getSeq();
+        String seq = request.getSeq();//request.generateSequence();
         CompletableFuture<Message> future = new CompletableFuture<>();
         pendingRequests.put(seq, future);
 

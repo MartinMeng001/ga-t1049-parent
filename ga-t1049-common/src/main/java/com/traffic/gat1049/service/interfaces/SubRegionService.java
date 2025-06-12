@@ -1,7 +1,7 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
-import com.traffic.gat1049.model.entity.system.SubRegionParam;
+import com.traffic.gat1049.protocol.model.system.SubRegionParam;
 
 import java.util.List;
 

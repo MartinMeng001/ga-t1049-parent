@@ -1,27 +1,11 @@
 package com.traffic.server.network;
 
-import com.traffic.gat1049.connection.ConnectionManager;
-import com.traffic.gat1049.model.constants.GatConstants;
+import com.traffic.gat1049.application.connection.ConnectionManager;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
-import com.traffic.gat1049.session.SessionManager;
-import com.traffic.gat1049.subscription.SubscriptionManager;
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import io.netty.handler.codec.LengthFieldPrepender;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
-import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.CharsetUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.traffic.gat1049.application.session.SessionManager;
+import com.traffic.gat1049.application.subscription.SubscriptionManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;

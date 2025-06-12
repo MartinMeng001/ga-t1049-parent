@@ -1,9 +1,8 @@
 package com.traffic.client.integration;
 
-import com.traffic.gat1049.model.entity.sdo.*;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.codec.MessageCodec;
-import com.traffic.gat1049.protocol.model.Message;
+import com.traffic.gat1049.protocol.model.core.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

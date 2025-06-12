@@ -1,13 +1,13 @@
 package com.traffic.server.integration;
 
-import com.traffic.gat1049.connection.ConnectionManager;
-import com.traffic.gat1049.handler.HandlerRegistry;
-import com.traffic.gat1049.handler.common.CommonOperationHandler;
+import com.traffic.gat1049.application.connection.ConnectionManager;
+import com.traffic.gat1049.application.HandlerRegistry;
+import com.traffic.gat1049.protocol.model.core.Message;
+import com.traffic.gat1049.protocol.handler.main.common.CommonOperationHandler;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
 import com.traffic.gat1049.service.abstracts.DefaultServiceFactory;
-import com.traffic.gat1049.session.SessionManager;
-import com.traffic.gat1049.subscription.SubscriptionManager;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.traffic.gat1049.application.session.SessionManager;
+import com.traffic.gat1049.application.subscription.SubscriptionManager;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -78,7 +78,7 @@ public class ServerGat1049Integration {
     /**
      * 推送消息给订阅的客户端
      */
-    private void pushMessageToClient(String token, com.traffic.gat1049.protocol.model.Message message) {
+    private void pushMessageToClient(String token, Message message) {
         // 这里实现实际的消息推送逻辑
         // 例如通过WebSocket、TCP连接等方式发送给客户端
         //logger.info("推送消息给客户端: token={}, seq={}", token, message.getSeq());
@@ -96,7 +96,7 @@ public class ServerGat1049Integration {
                 "  <From><Sys>TICP</Sys></From>\n" +
                 "  <To><Sys>UTCS</Sys></To>\n" +
                 "  <Type>ERROR</Type>\n" +
-                "  <Seq>" + com.traffic.gat1049.protocol.model.Message.generateSequence() + "</Seq>\n" +
+                "  <Seq>" + Message.generateSequence() + "</Seq>\n" +
                 "  <Body>\n" +
                 "    <Operation order=\"1\" name=\"Error\">\n" +
                 "      <SDO_Error>\n" +

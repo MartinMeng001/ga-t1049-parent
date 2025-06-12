@@ -1,8 +1,8 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
-import com.traffic.gat1049.model.entity.system.RouteParam;
-import com.traffic.gat1049.model.entity.system.RouteCross;
+import com.traffic.gat1049.protocol.model.system.RouteParam;
+import com.traffic.gat1049.protocol.model.system.RouteCross;
 import com.traffic.gat1049.model.enums.RouteType;
 
 import java.util.List;

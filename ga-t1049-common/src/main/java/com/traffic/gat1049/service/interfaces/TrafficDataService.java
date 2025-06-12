@@ -2,10 +2,10 @@ package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.model.dto.TrafficDataQueryDto;
-import com.traffic.gat1049.model.entity.traffic.CrossTrafficData;
-import com.traffic.gat1049.model.entity.traffic.StageTrafficData;
-import com.traffic.gat1049.model.entity.runtime.CrossCycle;
-import com.traffic.gat1049.model.entity.runtime.CrossStage;
+import com.traffic.gat1049.protocol.model.traffic.CrossTrafficData;
+import com.traffic.gat1049.protocol.model.traffic.StageTrafficData;
+import com.traffic.gat1049.protocol.model.runtime.CrossCycle;
+import com.traffic.gat1049.protocol.model.runtime.CrossStage;
 import com.traffic.gat1049.model.vo.TrafficStatisticsVo;
 
 import java.time.LocalDateTime;

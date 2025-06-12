@@ -1,8 +1,8 @@
 package com.traffic.gat1049.protocol.util;
 
-import com.traffic.gat1049.model.constants.GatConstants;
-import com.traffic.gat1049.protocol.model.Message;
-import com.traffic.gat1049.protocol.model.Operation;
+import com.traffic.gat1049.protocol.constants.GatConstants;
+import com.traffic.gat1049.protocol.model.core.Message;
+import com.traffic.gat1049.protocol.model.core.Operation;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

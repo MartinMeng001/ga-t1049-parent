@@ -1,13 +1,13 @@
 package com.traffic.gat1049.example;
 
-import com.traffic.gat1049.connection.ConnectionManager;
-import com.traffic.gat1049.handler.common.CommonOperationHandler;
-import com.traffic.gat1049.model.entity.sdo.*;
+import com.traffic.gat1049.application.connection.ConnectionManager;
+import com.traffic.gat1049.protocol.model.sdo.SdoTimeServer;
+import com.traffic.gat1049.protocol.handler.main.common.CommonOperationHandler;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
-import com.traffic.gat1049.protocol.model.Message;
+import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.processor.DefaultMessageProcessor;
-import com.traffic.gat1049.session.SessionManager;
-import com.traffic.gat1049.subscription.SubscriptionManager;
+import com.traffic.gat1049.application.session.SessionManager;
+import com.traffic.gat1049.application.subscription.SubscriptionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

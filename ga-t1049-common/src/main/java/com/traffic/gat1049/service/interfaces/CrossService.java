@@ -2,8 +2,8 @@ package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.model.dto.CrossQueryDto;
-import com.traffic.gat1049.model.entity.intersection.CrossParam;
-import com.traffic.gat1049.model.entity.runtime.CrossState;
+import com.traffic.gat1049.protocol.model.intersection.CrossParam;
+import com.traffic.gat1049.protocol.model.runtime.CrossState;
 import com.traffic.gat1049.model.enums.CrossFeature;
 import com.traffic.gat1049.model.enums.CrossGrade;
 import com.traffic.gat1049.model.enums.SystemState;

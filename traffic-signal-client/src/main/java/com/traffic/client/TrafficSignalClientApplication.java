@@ -1,9 +1,11 @@
 package com.traffic.client;
 
 import com.traffic.client.network.client.GatTcpClient;
-import com.traffic.gat1049.model.entity.sdo.*;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
-import com.traffic.gat1049.protocol.model.Message;
+import com.traffic.gat1049.protocol.model.core.Message;
+import com.traffic.gat1049.protocol.model.sdo.SdoTimeOut;
+import com.traffic.gat1049.protocol.model.sdo.SdoTimeServer;
+import com.traffic.gat1049.protocol.model.sdo.SdoUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -105,8 +107,8 @@ public class TrafficSignalClientApplication {
 
             } else {
                 logger.error("登录失败");
-                token = null;
-                GatTcpClient.tocken = null;
+                //token = null;
+                //hGatTcpClient.tocken = null;
             }
 
         } catch (Exception e) {
@@ -184,6 +186,10 @@ public class TrafficSignalClientApplication {
                             performGat1049Login(client, scanner);
                             break;
 
+                        case "logout":
+                            performGat1049Logout(client, scanner);
+                            break;
+
                         case "subscribe":
                             performGat1049Subscribe(client, scanner);
                             break;
@@ -230,6 +236,7 @@ public class TrafficSignalClientApplication {
         System.out.println("  quit (q)       - 退出客户端");
         System.out.println("  status         - 显示连接状态");
         System.out.println("  login          - 手动登录");
+        System.out.println("  logout         - 退出登录");
         System.out.println("  subscribe      - 订阅消息");
         System.out.println("  heartbeat      - 发送心跳");
         System.out.println("  query          - 查询对时服务器");
@@ -261,11 +268,30 @@ public class TrafficSignalClientApplication {
         if (response != null) {
             if ("RESPONSE".equals(response.getType())) {
                 System.out.println("登录成功，Token: " + response.getToken());
+                token=response.getToken();
             } else {
                 System.out.println("登录失败: " + response.getType());
             }
         } else {
             System.out.println("登录请求超时");
+        }
+    }
+    private void performGat1049Logout(GatTcpClient client, Scanner scanner) throws Exception {
+        System.out.print("用户名: ");
+        String username = scanner.nextLine().trim();
+
+        Message logoutRequest = MessageBuilder.createLogoutRequest(username, "", token);
+        Message response = client.sendRequest(logoutRequest, 10, TimeUnit.SECONDS);
+
+        if (response != null) {
+            if ("RESPONSE".equals(response.getType())) {
+                System.out.println("退出登录成功");
+                token = null;
+            } else {
+                System.out.println("退出登录失败: " + response.getType());
+            }
+        } else {
+            System.out.println("退出登录请求超时");
         }
     }
 

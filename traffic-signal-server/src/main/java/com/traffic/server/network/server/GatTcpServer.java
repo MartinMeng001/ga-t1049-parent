@@ -1,6 +1,7 @@
 package com.traffic.server.network.server;
 
-import com.traffic.gat1049.model.constants.GatConstants;
+import com.traffic.gat1049.protocol.constants.GatConstants;
+import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -188,7 +189,7 @@ public class GatTcpServer {
                     "  <From><Sys>TICP</Sys></From>\n" +
                     "  <To><Sys>UTCS</Sys></To>\n" +
                     "  <Type>ERROR</Type>\n" +
-                    "  <Seq>" + com.traffic.gat1049.protocol.model.Message.generateSequence() + "</Seq>\n" +
+                    "  <Seq>" + Message.generateSequence() + "</Seq>\n" +
                     "  <Body>\n" +
                     "    <Operation order=\"1\" name=\"Error\">\n" +
                     "      <SDO_Error>\n" +
