@@ -2,7 +2,20 @@
 server:
   port: 8080
 
+app:
+  role: server
+
+gat1049:
+  subscription:
+    auto-subscribe: true
+    default-objects:
+      - CrossState
+      - CrossTrafficData
+      - SignalControllerError
+
 spring:
+  profiles:
+    active: server
   application:
     name: traffic-signal-server
 
