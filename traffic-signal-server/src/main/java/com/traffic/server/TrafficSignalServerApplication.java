@@ -6,13 +6,19 @@ import com.traffic.gat1049.protocol.processor.MessageProcessor;
 import com.traffic.gat1049.service.abstracts.DefaultServiceFactory;
 import com.traffic.gat1049.application.session.SessionManager;
 import com.traffic.gat1049.application.subscription.SubscriptionManager;
+import com.traffic.server.config.ServerSubscriptionConfig;
+import com.traffic.server.service.ServerSubscriptionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
+
+import javax.annotation.PostConstruct;
 
 /**
  * GA/T 1049.2交通信号控制系统服务端应用
@@ -23,9 +29,24 @@ import org.springframework.context.annotation.ComponentScan;
         "com.traffic.server",
         "com.traffic.gat1049"
 })
+@Import(ServerSubscriptionConfig.class)
 public class TrafficSignalServerApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(TrafficSignalServerApplication.class);
+
+    @Autowired
+    private ServerSubscriptionService subscriptionService;
+
+    @PostConstruct
+    public void initSubscriptions() {
+        // 启动后自动订阅客户端数据
+        subscriptionService.subscribeTrafficSignalData("CLIENT001");
+
+        // 注册自定义数据处理器
+        subscriptionService.registerDataHandler((data, message) -> {
+            logger.info("接收到客户端数据: {}", data.getClass().getSimpleName());
+        });
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(TrafficSignalServerApplication.class, args);

@@ -1,6 +1,8 @@
 package com.traffic.client;
 
+import com.traffic.client.config.ClientSubscriptionConfig;
 import com.traffic.client.network.client.GatTcpClient;
+import com.traffic.client.service.ClientDataPushService;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.model.sdo.SdoTimeOut;
@@ -8,12 +10,15 @@ import com.traffic.gat1049.protocol.model.sdo.SdoTimeServer;
 import com.traffic.gat1049.protocol.model.sdo.SdoUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 
+import javax.annotation.PostConstruct;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
@@ -22,10 +27,21 @@ import java.util.concurrent.TimeUnit;
  * 支持GA/T 1049.1通用通信协议
  */
 @SpringBootApplication
+@Import(ClientSubscriptionConfig.class)
 public class TrafficSignalClientApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(TrafficSignalClientApplication.class);
     private static String token = null;
+
+    @Autowired
+    private ClientDataPushService pushService;
+
+    @PostConstruct
+    public void initPushService() {
+        logger.info("客户端推送服务已就绪，等待服务端订阅请求");
+        // 客户端无需主动配置，会自动处理服务端的订阅请求
+    }
+
     public static void main(String[] args) {
         SpringApplication.run(TrafficSignalClientApplication.class, args);
     }
