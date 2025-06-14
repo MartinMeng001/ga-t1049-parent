@@ -25,6 +25,7 @@ public class DefaultMessageProcessor implements MessageProcessor {
 
     private final MessageCodec codec;
     private final List<ProtocolHandler> handlers;
+    private String tempToken = "";
 
     public DefaultMessageProcessor() throws MessageEncodingException {
         this.codec = MessageCodec.getInstance();
@@ -85,15 +86,15 @@ public class DefaultMessageProcessor implements MessageProcessor {
             // 查找合适的处理器
             ProtocolHandler handler = findHandler(message);
 
-            if (handler == null) {
+            if (handler == null) {  // 无需返回
                 logger.warn("No handler found for message: type={}, operation={}",
                         message.getType(), ProtocolUtils.getOperationName(message));
-                return createUnsupportedResponse(message);
+                return null;
             }
 
             // 处理消息
             Message response = handler.handleMessage(message);
-
+            tempToken = response.getToken();
             if (response != null) {
                 logger.debug("Message processed successfully by handler: {}", handler.getHandlerName());
             } else {
@@ -133,6 +134,11 @@ public class DefaultMessageProcessor implements MessageProcessor {
 
         handlers.removeIf(handler -> handlerName.equals(handler.getHandlerName()));
         logger.info("Removed protocol handler: {}", handlerName);
+    }
+
+    @Override
+    public String getTempToken() {
+        return tempToken;
     }
 
     /**

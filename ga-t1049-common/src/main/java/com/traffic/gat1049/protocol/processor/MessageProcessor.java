@@ -40,4 +40,5 @@ public interface MessageProcessor {
      * @param handlerName 处理器名称
      */
     void removeHandler(String handlerName);
+    String getTempToken();
 }

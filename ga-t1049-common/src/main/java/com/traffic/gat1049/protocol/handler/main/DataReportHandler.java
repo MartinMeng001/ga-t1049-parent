@@ -39,7 +39,6 @@ public class DataReportHandler extends AbstractProtocolHandler {
     @Override
     protected Message doHandle(Message message) throws GatProtocolException {
         CrossReportCtrl reportCtrl = (CrossReportCtrl) ProtocolUtils.getOperationData(message);
-
         try {
             // 验证参数
             validateReportCtrl(reportCtrl);
@@ -52,10 +51,10 @@ public class DataReportHandler extends AbstractProtocolHandler {
 
         } catch (ValidationException e) {
             logger.error("Report control validation failed: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage(), "");
         } catch (BusinessException e) {
             logger.error("Report control business error: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage(), "");
         }
     }
 

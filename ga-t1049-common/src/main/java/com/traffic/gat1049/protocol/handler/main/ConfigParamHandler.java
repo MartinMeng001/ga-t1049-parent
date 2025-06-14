@@ -54,7 +54,7 @@ public class ConfigParamHandler extends AbstractProtocolHandler {
     @Override
     protected Message doHandle(Message message) throws GatProtocolException {
         TSCCmd tscCmd = (TSCCmd) ProtocolUtils.getOperationData(message);
-
+        String objName = tscCmd.getObjName();
         try {
             validateTSCCmd(tscCmd);
             Object result = dispatchConfigQuery(tscCmd);
@@ -62,10 +62,10 @@ public class ConfigParamHandler extends AbstractProtocolHandler {
 
         } catch (ValidationException e) {
             logger.error("Config param validation failed: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage(), objName);
         } catch (BusinessException e) {
             logger.error("Config param business error: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage(), objName);
         }
     }
 

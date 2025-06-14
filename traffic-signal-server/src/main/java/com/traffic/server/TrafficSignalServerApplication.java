@@ -1,20 +1,15 @@
 package com.traffic.server;
-import com.traffic.gat1049.application.connection.ConnectionManager;
-import com.traffic.gat1049.exception.MessageEncodingException;
-import com.traffic.gat1049.application.HandlerRegistry;
-import com.traffic.gat1049.protocol.processor.MessageProcessor;
-import com.traffic.gat1049.service.abstracts.DefaultServiceFactory;
-import com.traffic.gat1049.application.session.SessionManager;
-import com.traffic.gat1049.application.subscription.SubscriptionManager;
+
+import com.traffic.server.config.ApplicationConfig;
+import com.traffic.server.config.MessageProcessingConfig;
+import com.traffic.server.config.ServerConfig;
 import com.traffic.server.config.ServerSubscriptionConfig;
-import com.traffic.server.service.ServerSubscriptionService;
+import com.traffic.server.service.EnhancedServerSubscriptionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 
@@ -29,88 +24,34 @@ import javax.annotation.PostConstruct;
         "com.traffic.server",
         "com.traffic.gat1049"
 })
-@Import(ServerSubscriptionConfig.class)
+@Import({
+        ApplicationConfig.class,
+        MessageProcessingConfig.class,
+        ServerConfig.class,
+        ServerSubscriptionConfig.class
+})
 public class TrafficSignalServerApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(TrafficSignalServerApplication.class);
 
     @Autowired
-    private ServerSubscriptionService subscriptionService;
+    private EnhancedServerSubscriptionService subscriptionService;
 
     @PostConstruct
     public void initSubscriptions() {
-        // 启动后自动订阅客户端数据
-        subscriptionService.subscribeTrafficSignalData("CLIENT001");
+        try {
+            subscriptionService.subscribeTrafficSignalData("CLIENT001");
 
-        // 注册自定义数据处理器
-        subscriptionService.registerDataHandler((data, message) -> {
-            logger.info("接收到客户端数据: {}", data.getClass().getSimpleName());
-        });
+            // 注册自定义数据处理器
+            subscriptionService.registerDataHandler((data, message) -> {
+                logger.info("接收到客户端数据: {}", data.getClass().getSimpleName());
+            });
+        } catch (Exception e) {
+            logger.warn("初始化订阅服务时出错: {}", e.getMessage());
+        }
     }
 
     public static void main(String[] args) {
         SpringApplication.run(TrafficSignalServerApplication.class, args);
-    }
-
-    @Bean
-    public DefaultServiceFactory defaultServiceFactory() {
-        return new DefaultServiceFactory();
-    }
-
-    @Bean
-    public SessionManager sessionManager() {
-        return new SessionManager();
-    }
-
-    @Bean
-    public SubscriptionManager subscriptionManager() {
-        return new SubscriptionManager();
-    }
-
-    @Bean
-    public ConnectionManager connectionManager(SessionManager sessionManager) {
-        return new ConnectionManager(sessionManager);
-    }
-
-    @Bean
-    public HandlerRegistry handlerRegistry(DefaultServiceFactory serviceFactory, SessionManager sessionManager) throws MessageEncodingException {
-        return new HandlerRegistry(serviceFactory, sessionManager);
-    }
-
-    @Bean
-    public MessageProcessor messageProcessor(HandlerRegistry handlerRegistry) {
-        return handlerRegistry.getMessageProcessor();
-    }
-
-    @Bean
-    public CommandLineRunner serverRunner(
-            SessionManager sessionManager,
-            SubscriptionManager subscriptionManager,
-            ConnectionManager connectionManager,
-            MessageProcessor messageProcessor) {
-
-        return args -> {
-            logger.info("启动GA/T 1049.2交通信号控制系统服务端...");
-
-            // 设置订阅推送回调
-            subscriptionManager.setPushCallback((token, message) -> {
-                logger.info("推送消息给订阅者: token={}, seq={}", token, message.getSeq());
-                // 这里可以实现实际的消息推送逻辑
-            });
-
-            // 启动TCP服务器
-            startTcpServer(messageProcessor);
-
-            logger.info("GA/T 1049.2交通信号控制系统服务端启动完成");
-            logger.info("TCP端口: 9999");
-            logger.info("HTTP端口: 8080");
-            logger.info("支持的协议版本: GA/T 1049.1-2013, GA/T 1049.2");
-        };
-    }
-
-    private void startTcpServer(MessageProcessor messageProcessor) {
-        // 这里启动TCP服务器来处理客户端连接
-        // 实际实现需要使用Netty或其他网络框架
-        logger.info("TCP服务器启动在端口 9999");
     }
 }

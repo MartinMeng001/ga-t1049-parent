@@ -71,7 +71,7 @@ public class ClientSubscriptionConfig {
             }
 
             return createErrorResponse(message, "UNSUPPORTED_OPERATION",
-                    "不支持的操作: " + operationName);
+                    "不支持的操作: " + operationName, "");
         }
 
         @Override

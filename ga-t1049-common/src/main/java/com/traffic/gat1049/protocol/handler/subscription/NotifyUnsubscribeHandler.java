@@ -2,6 +2,7 @@ package com.traffic.gat1049.protocol.handler.subscription;
 
 import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.exception.ValidationException;
+import com.traffic.gat1049.protocol.handler.base.TokenRequiredHandler;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.model.sdo.SdoMsgEntity;
 import com.traffic.gat1049.protocol.constants.GatConstants;
@@ -14,14 +15,13 @@ import com.traffic.gat1049.application.session.SessionManager;
  * Notify取消订阅处理器
  * 专门处理msgType为PUSH、operName为Notify的取消订阅请求
  */
-public class NotifyUnsubscribeHandler extends AbstractProtocolHandler {
+public class NotifyUnsubscribeHandler extends TokenRequiredHandler {
 
     private final SubscriptionManager subscriptionManager;
-    private final SessionManager sessionManager;
 
     public NotifyUnsubscribeHandler(SubscriptionManager subscriptionManager, SessionManager sessionManager) {
+        super(sessionManager);
         this.subscriptionManager = subscriptionManager;
-        this.sessionManager = sessionManager;
     }
 
     @Override
@@ -49,14 +49,12 @@ public class NotifyUnsubscribeHandler extends AbstractProtocolHandler {
     }
 
     @Override
-    protected Message doHandle(Message message) throws GatProtocolException {
+    protected Message doHandleWithSession(Message message, SessionManager.SessionInfo sessionInfo) throws GatProtocolException {
+        String objName = GatConstants.Operation.NOTIFY.toString();
         try {
-            // 验证token
-            String token = message.getToken();
-            if (token == null || !sessionManager.validateToken(token)) {
-                return createErrorResponse(message,
-                        GatConstants.ErrorCode.SDE_TOKEN,
-                        "无效令牌或会话已过期");
+            if(supports(message)==false) {
+                logger.info("{}消息无需处理", message.getType());
+                return null;
             }
 
             // 获取取消订阅数据
@@ -64,7 +62,7 @@ public class NotifyUnsubscribeHandler extends AbstractProtocolHandler {
 
             // 验证取消订阅参数
             validateUnsubscription(subscription);
-
+            String token = message.getToken();
             // 执行取消订阅
             boolean success = subscriptionManager.unsubscribe(token, subscription);
 
@@ -72,7 +70,7 @@ public class NotifyUnsubscribeHandler extends AbstractProtocolHandler {
                 logger.info("成功取消Notify订阅: token={}, objName={}", token, subscription.getObjName());
                 return createSuccessResponse(message, subscription);
             } else {
-                logger.warn("取消订阅失败（可能不存在）: token={}, subscription={}", token, subscription);
+                logger.warn("取消订阅失败（可能不存在）: token={}, subscription={}", token, subscription, objName);
                 // 即使订阅不存在，也返回成功，这是幂等操作
                 return createSuccessResponse(message, subscription);
             }
@@ -81,12 +79,12 @@ public class NotifyUnsubscribeHandler extends AbstractProtocolHandler {
             logger.error("取消订阅参数验证失败: {}", e.getMessage());
             return createErrorResponse(message,
                     GatConstants.ErrorCode.SDE_OPER_NAME,
-                    e.getMessage());
+                    e.getMessage(), objName);
         } catch (Exception e) {
             logger.error("处理Notify取消订阅请求失败", e);
             return createErrorResponse(message,
                     GatConstants.ErrorCode.SDE_FAILURE,
-                    "取消订阅处理失败: " + e.getMessage());
+                    "取消订阅处理失败: " + e.getMessage(), objName);
         }
     }
 

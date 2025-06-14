@@ -54,13 +54,13 @@ public class TSCCommandHandler extends TokenRequiredHandler {
 
         } catch (ValidationException e) {
             logger.error("TSCCmd validation failed: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage(),"");
         } catch (DataNotFoundException e) {
             logger.error("Data not found: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.OBJECT_NOT_FOUND, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.OBJECT_NOT_FOUND, e.getMessage(),"");
         } catch (BusinessException e) {
             logger.error("Business error: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage(),"");
         }
     }
 

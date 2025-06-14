@@ -86,6 +86,29 @@ public class SessionManager {
         return LoginResult.success(token, user.getUserName());
     }
 
+    public boolean registerLogin(String username, SystemType systemType, String clientAddress, String token){
+        String existingSessionId = userToSessionId.get(username);
+        if (existingSessionId != null) {
+            SessionInfo existingSession = sessions.get(existingSessionId);
+            if (existingSession != null && !existingSession.isExpired()) {
+                // 用户已登录，返回现有令牌
+                logger.info("用户 {} 已存在，返回现有会话", username);
+                return true;
+            } else {
+                // 清理过期会话
+                removeSession(existingSessionId);
+            }
+        }
+        String sessionId = generateSessionId();
+
+        SessionInfo sessionInfo = new SessionInfo(
+                sessionId, token, username, clientAddress, systemType);
+
+        sessions.put(sessionId, sessionInfo);
+        tokenToSessionId.put(token, sessionId);
+        userToSessionId.put(username, sessionId);
+        return true;
+    }
     /**
      * 用户登出
      */
@@ -120,6 +143,7 @@ public class SessionManager {
 
         SessionInfo session = sessions.get(sessionId);
         if (session == null || session.isExpired()) {
+            System.out.println("sessionId is invalid, token -"+token);
             if (session != null) {
                 removeSession(sessionId);
             }

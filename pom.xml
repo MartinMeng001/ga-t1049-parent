@@ -14,15 +14,14 @@
     <description>GA/T 1049.2 交通信号控制系统通信协议实现</description>
     
     <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.source>15</maven.compiler.source>
+        <maven.compiler.target>15</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
         <!-- 版本管理 -->
         <spring.boot.version>2.7.18</spring.boot.version>
         <spring.version>5.3.27</spring.version>
         <hibernate.version>5.6.15.Final</hibernate.version>
-        <jackson.version>2.15.2</jackson.version>
         <slf4j.version>1.7.36</slf4j.version>
         <logback.version>1.2.12</logback.version>
         <junit.version>5.9.3</junit.version>
@@ -51,13 +50,6 @@
                 <groupId>com.traffic</groupId>
                 <artifactId>ga-t1049-common</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            
-            <!-- Jackson -->
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
             </dependency>
             
             <!-- 日志 -->

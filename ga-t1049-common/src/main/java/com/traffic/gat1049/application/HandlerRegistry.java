@@ -1,9 +1,13 @@
 package com.traffic.gat1049.application;
 
+import com.sun.nio.sctp.NotificationHandler;
+import com.traffic.gat1049.application.subscription.SubscriptionManager;
 import com.traffic.gat1049.exception.MessageEncodingException;
 import com.traffic.gat1049.protocol.handler.main.*;
 import com.traffic.gat1049.protocol.handler.main.common.LogoutHandler;
 import com.traffic.gat1049.protocol.handler.base.ProtocolHandler;
+import com.traffic.gat1049.protocol.handler.subscription.NotifySubscribeHandler;
+import com.traffic.gat1049.protocol.handler.subscription.NotifyUnsubscribeHandler;
 import com.traffic.gat1049.protocol.processor.DefaultMessageProcessor;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
 import com.traffic.gat1049.service.interfaces.ServiceFactory;
@@ -25,11 +29,13 @@ public class HandlerRegistry {
     private final ServiceFactory serviceFactory;
     private final SessionManager sessionManager;
     private final MessageProcessor messageProcessor;
+    private final SubscriptionManager subscriptionManager;
     private final List<ProtocolHandler> handlers;
 
-    public HandlerRegistry(ServiceFactory serviceFactory, SessionManager sessionManager) throws MessageEncodingException {
+    public HandlerRegistry(ServiceFactory serviceFactory, SessionManager sessionManager, SubscriptionManager subscriptionManager) throws MessageEncodingException {
         this.serviceFactory = serviceFactory;
         this.sessionManager = sessionManager;
+        this.subscriptionManager = subscriptionManager;
         this.messageProcessor = new DefaultMessageProcessor();
         this.handlers = new ArrayList<>();
 
@@ -70,6 +76,12 @@ public class HandlerRegistry {
 
         // 8. 状态推送处理器 - 处理系统主动推送的状态数据
         registerHandler(new StatePushHandler(serviceFactory));
+
+        // 9. 订阅处理器
+        registerHandler(new NotifySubscribeHandler(subscriptionManager, sessionManager));
+
+        // 10. 取消订阅处理器
+        registerHandler(new NotifyUnsubscribeHandler(subscriptionManager, sessionManager));
 
         logger.info("Registered {} protocol handlers", handlers.size());
     }

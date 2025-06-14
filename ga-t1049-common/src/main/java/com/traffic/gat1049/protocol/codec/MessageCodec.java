@@ -87,7 +87,6 @@ public class MessageCodec {
                                 //com.traffic.gat1049.model.dto.response.LoginResponse.class,
                                 //com.traffic.gat1049.model.dto.response.LogoutResponse.class,
                                 SdoHeartBeat.class,
-                                SdoMsgEntity.class,
                                 SdoTimeServer.class,
                                 SdoTimeOut.class
                                 // 根据需要添加其他 SDO 类

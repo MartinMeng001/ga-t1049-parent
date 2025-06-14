@@ -81,10 +81,10 @@ public class FlowControlHandler extends TokenRequiredHandler {
 
         } catch (ValidationException e) {
             logger.error("Flow control validation failed: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage(), "");
         } catch (BusinessException e) {
             logger.error("Flow control business error: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage(), "");
         }
     }
 

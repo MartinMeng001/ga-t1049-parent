@@ -1,10 +1,13 @@
 package com.traffic.client.integration;
 
+import com.traffic.gat1049.application.session.SessionManager;
+import com.traffic.gat1049.model.enums.SystemType;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.codec.MessageCodec;
 import com.traffic.gat1049.protocol.model.core.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -22,6 +25,9 @@ public class ClientGat1049Integration {
     private ScheduledExecutorService heartbeatExecutor;
     private String currentToken;
     private boolean connected = false;
+
+    @Autowired
+    private SessionManager sessionManager;
 
     @PostConstruct
     public void initialize() throws Exception {
@@ -54,6 +60,7 @@ public class ClientGat1049Integration {
                     currentToken = loginResponse.getToken();
                     connected = true;
                     logger.info("登录成功，获得Token");
+                    sessionManager.registerLogin(username, SystemType.UTCS, "127.0.0.1", currentToken);
                     return true;
                 }
             }
