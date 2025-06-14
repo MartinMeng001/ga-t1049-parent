@@ -55,13 +55,13 @@ public class VariableLaneHandler extends AbstractProtocolHandler {
 
         } catch (ValidationException e) {
             logger.error("Variable lane validation failed: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage(),"");
         } catch (DataNotFoundException e) {
             logger.error("Lane not found: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.OBJECT_NOT_FOUND, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.OBJECT_NOT_FOUND, e.getMessage(),"");
         } catch (BusinessException e) {
             logger.error("Variable lane control error: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage(),"");
         }
     }
 

@@ -1,4 +1,5 @@
 package com.traffic.gat1049.service.abstracts;
+import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.protocol.model.system.SysInfo;
@@ -20,11 +21,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public class SystemServiceImpl implements SystemService {
 
     private static final Logger logger = LoggerFactory.getLogger(SystemServiceImpl.class);
+    private ComprehensiveTestDataProviderImpl dataPrider = ComprehensiveTestDataProviderImpl.getInstance();
 
     private final AtomicReference<SysInfo> systemInfo = new AtomicReference<>();
     private final AtomicReference<SysState> systemState = new AtomicReference<>();
 
-    public SystemServiceImpl() {
+    public SystemServiceImpl() throws BusinessException {
         // 初始化默认系统信息
         initializeDefaultSystemInfo();
         initializeDefaultSystemState();
@@ -32,7 +34,7 @@ public class SystemServiceImpl implements SystemService {
 
     @Override
     public SysInfo getSystemInfo() throws BusinessException {
-        SysInfo info = systemInfo.get();
+        SysInfo info = dataPrider.getSystemInfo();//systemInfo.get();
         if (info == null) {
             throw new DataNotFoundException("系统信息未配置");
         }
@@ -59,7 +61,7 @@ public class SystemServiceImpl implements SystemService {
 
     @Override
     public SysState getSystemState() throws BusinessException {
-        SysState state = systemState.get();
+        SysState state = dataPrider.getSystemState();//systemState.get();
         if (state == null) {
             throw new DataNotFoundException("系统状态未初始化");
         }

@@ -2,6 +2,7 @@ package com.traffic.gat1049.protocol.handler.subscription;
 
 import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.exception.ValidationException;
+import com.traffic.gat1049.protocol.handler.base.TokenRequiredHandler;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.model.sdo.SdoMsgEntity;
 import com.traffic.gat1049.protocol.constants.GatConstants;
@@ -18,10 +19,9 @@ import java.util.List;
  * 专门处理msgType为PUSH、operName为Notify的订阅请求
  * 支持的对象名称包括：CrossCycle, CrossModePlan, SignalControllerError, CrossState, SysState等
  */
-public class NotifySubscribeHandler extends AbstractProtocolHandler {
+public class NotifySubscribeHandler extends TokenRequiredHandler {
 
     private final SubscriptionManager subscriptionManager;
-    private final SessionManager sessionManager;
 
     /**
      * 支持的对象名称列表
@@ -43,8 +43,8 @@ public class NotifySubscribeHandler extends AbstractProtocolHandler {
     );
 
     public NotifySubscribeHandler(SubscriptionManager subscriptionManager, SessionManager sessionManager) {
+        super(sessionManager);
         this.subscriptionManager = subscriptionManager;
-        this.sessionManager = sessionManager;
     }
 
     @Override
@@ -77,20 +77,61 @@ public class NotifySubscribeHandler extends AbstractProtocolHandler {
         return "NotifySubscribeHandler";
     }
 
-    @Override
-    protected Message doHandle(Message message) throws GatProtocolException {
-        try {
-            // 验证token
-            String token = message.getToken();
-            if (token == null || !sessionManager.validateToken(token)) {
-                return createErrorResponse(message,
-                        GatConstants.ErrorCode.SDE_TOKEN,
-                        "无效令牌或会话已过期");
-            }
+//    @Override
+//    protected Message doHandle(Message message) throws GatProtocolException {
+//        String objName = GatConstants.Operation.SUBSCRIBE;
+//        try {
+//            // 验证token
+//            String token = message.getToken();
+//            if (token == null || !sessionManager.validateToken(token)) {
+//                return createErrorResponse(message,
+//                        GatConstants.ErrorCode.SDE_TOKEN,
+//                        "无效令牌或会话已过期", objName);
+//            }
+//
+//            // 获取订阅数据
+//            SdoMsgEntity subscription = (SdoMsgEntity) ProtocolUtils.getOperationData(message);
+//
+//            // 验证订阅参数
+//            validateSubscription(subscription);
+//
+//            // 执行订阅
+//            boolean success = subscriptionManager.subscribe(token, subscription);
+//
+//            if (success) {
+//                logger.info("成功添加Notify订阅: token={}, objName={}", token, subscription.getObjName());
+//                return createSuccessResponse(message, subscription);
+//            } else {
+//                logger.warn("订阅失败: token={}, subscription={}", token, subscription);
+//                return createErrorResponse(message,
+//                        GatConstants.ErrorCode.SDE_FAILURE,
+//                        "订阅失败", objName);
+//            }
+//
+//        } catch (ValidationException e) {
+//            logger.error("订阅参数验证失败: {}", e.getMessage());
+//            return createErrorResponse(message,
+//                    GatConstants.ErrorCode.SDE_OPER_NAME,
+//                    e.getMessage(), objName);
+//        } catch (Exception e) {
+//            logger.error("处理Notify订阅请求失败", e);
+//            return createErrorResponse(message,
+//                    GatConstants.ErrorCode.SDE_FAILURE,
+//                    "订阅处理失败: " + e.getMessage(), objName);
+//        }
+//    }
 
+    @Override
+    protected Message doHandleWithSession(Message message, SessionManager.SessionInfo sessionInfo) throws GatProtocolException {
+        String objName = GatConstants.Operation.SUBSCRIBE;
+        try {
+            if(supports(message)==false) {
+                logger.info("{}消息无需处理", message.getType());
+                return null;
+            }
             // 获取订阅数据
             SdoMsgEntity subscription = (SdoMsgEntity) ProtocolUtils.getOperationData(message);
-
+            String token = message.getToken();
             // 验证订阅参数
             validateSubscription(subscription);
 
@@ -104,19 +145,19 @@ public class NotifySubscribeHandler extends AbstractProtocolHandler {
                 logger.warn("订阅失败: token={}, subscription={}", token, subscription);
                 return createErrorResponse(message,
                         GatConstants.ErrorCode.SDE_FAILURE,
-                        "订阅失败");
+                        "订阅失败", objName);
             }
 
         } catch (ValidationException e) {
             logger.error("订阅参数验证失败: {}", e.getMessage());
             return createErrorResponse(message,
                     GatConstants.ErrorCode.SDE_OPER_NAME,
-                    e.getMessage());
+                    e.getMessage(), objName);
         } catch (Exception e) {
             logger.error("处理Notify订阅请求失败", e);
             return createErrorResponse(message,
                     GatConstants.ErrorCode.SDE_FAILURE,
-                    "订阅处理失败: " + e.getMessage());
+                    "订阅处理失败: " + e.getMessage(), objName);
         }
     }
 

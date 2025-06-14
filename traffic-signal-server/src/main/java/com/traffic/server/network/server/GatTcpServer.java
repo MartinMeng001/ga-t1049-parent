@@ -1,8 +1,11 @@
 package com.traffic.server.network.server;
 
+import com.traffic.gat1049.application.connection.ConnectionManager;
+import com.traffic.gat1049.application.session.SessionManager;
 import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
+import com.traffic.server.network.client.ServerToClientSender;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -22,6 +25,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -44,6 +48,12 @@ public class GatTcpServer {
 
     @Autowired
     private MessageProcessor messageProcessor;
+
+    @Autowired
+    private ConnectionManager connectionManager;
+
+    @Autowired(required = false)
+    private ServerToClientSender clientSender;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
@@ -85,8 +95,8 @@ public class GatTcpServer {
                                         GatConstants.Session.CONNECTION_TIMEOUT,
                                         0, 0, TimeUnit.SECONDS));
 
-                        // 业务处理器
-                        pipeline.addLast("handler", new GatServerHandler(messageProcessor));
+                        // 业务处理器 - 传入 clientSender
+                        pipeline.addLast("handler", new GatServerHandler(messageProcessor, clientSender, connectionManager));
                     }
                 });
 
@@ -125,21 +135,42 @@ public class GatTcpServer {
 
         private static final Logger logger = LoggerFactory.getLogger(GatServerHandler.class);
         private final MessageProcessor messageProcessor;
+        private final ServerToClientSender clientSender; // 新增
+        private final ConnectionManager connectionManager;
+        private String clientId; // 新增
 
-        public GatServerHandler(MessageProcessor messageProcessor) {
+        public GatServerHandler(MessageProcessor messageProcessor, ServerToClientSender clientSender, ConnectionManager connectionManager) {
             this.messageProcessor = messageProcessor;
+            this.clientSender = clientSender;
+            this.connectionManager = connectionManager;
         }
 
         @Override
         public void channelActive(ChannelHandlerContext ctx) {
             String clientAddress = ctx.channel().remoteAddress().toString();
             logger.info("客户端连接: {}", clientAddress);
+
+            // 生成或提取客户端ID（这里简化处理，实际应该从登录消息中获取）
+            clientId = ctx.channel().id().asShortText();//"CLIENT_" + System.currentTimeMillis();
+
+            // 注册客户端到网络发送器
+            if (clientSender != null) {
+                clientSender.registerClient(clientId, ctx);
+                logger.info("客户端已注册到网络发送器: {}", clientId);
+            }
         }
 
         @Override
         public void channelInactive(ChannelHandlerContext ctx) {
             String clientAddress = ctx.channel().remoteAddress().toString();
             logger.info("客户端断开: {}", clientAddress);
+
+            // 从网络发送器中移除客户端
+            if (clientSender != null && clientId != null) {
+                clientSender.unregisterClient(clientId);
+                logger.info("客户端已从网络发送器移除: {}", clientId);
+                connectionManager.unregisterConnection(clientId);
+            }
         }
 
         @Override
@@ -154,6 +185,8 @@ public class GatTcpServer {
                 if (response != null && !response.trim().isEmpty()) {
                     ctx.writeAndFlush(response);
                     logger.debug("发送响应: {}", response);
+                    if(messageProcessor.getTempToken().isEmpty()==false)
+                        connectionManager.registerConnection(ctx.channel().id().asShortText(), messageProcessor.getTempToken());
                 }
 
             } catch (Exception e) {

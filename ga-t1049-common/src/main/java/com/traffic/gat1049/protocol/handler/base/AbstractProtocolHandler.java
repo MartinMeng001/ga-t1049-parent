@@ -5,6 +5,7 @@ import com.traffic.gat1049.exception.MessageValidationException;
 import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.model.core.Message;
+import com.traffic.gat1049.protocol.model.sdo.SdoError;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
 import com.traffic.gat1049.protocol.validator.MessageValidator;
 import com.traffic.gat1049.protocol.validator.TokenValidator;
@@ -49,11 +50,11 @@ public abstract class AbstractProtocolHandler implements ProtocolHandler {
 
         } catch (MessageValidationException e) {
             logger.error("Message validation failed: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage(), "");
         } catch (Exception e) {
             logger.error("Unexpected error handling message", e);
             return createErrorResponse(message, GatConstants.ErrorCode.SYSTEM_ERROR,
-                    "Internal server error: " + e.getMessage());
+                    "Internal server error: " + e.getMessage(), "");
         }
     }
 
@@ -93,14 +94,14 @@ public abstract class AbstractProtocolHandler implements ProtocolHandler {
     /**
      * 创建错误响应
      */
-    protected Message createErrorResponse(Message request, String errorCode, String errorMessage) {
+    protected Message createErrorResponse(Message request, String errorCode, String errorMessage, String objName) {
         if (request == null) {
             return MessageBuilder.create()
                     .error()
                     .fromUtcs()
                     .toTicp()
-                    .seq("ERROR_" + System.currentTimeMillis())
-                    .operation("Error", createErrorData(errorCode, errorMessage))
+                    .seq(request.getSeq())
+                    .operation("Error", createErrorData(errorCode, errorMessage, objName))
                     .build();
         }
 
@@ -110,19 +111,19 @@ public abstract class AbstractProtocolHandler implements ProtocolHandler {
                 .toTicp()
                 .seq(request.getSeq())
                 .token(request.getToken())
-                .operation("Error", createErrorData(errorCode, errorMessage))
+                .operation("Error", createErrorData(errorCode, errorMessage, objName))
                 .build();
     }
 
     /**
      * 创建错误数据
      */
-    private Object createErrorData(String errorCode, String errorMessage) {
-        return new java.util.HashMap<String, Object>() {{
-            put("errorCode", errorCode);
-            put("errorMessage", errorMessage);
-            put("timestamp", java.time.LocalDateTime.now());
-        }};
+    private Object createErrorData(String errorCode, String errorMessage, String objName) {
+        SdoError sdoError = new SdoError();
+        sdoError.setErrObj(objName);
+        sdoError.setErrDesc(errorMessage);
+        sdoError.setErrType(errorCode);
+        return sdoError;
     }
 
     /**

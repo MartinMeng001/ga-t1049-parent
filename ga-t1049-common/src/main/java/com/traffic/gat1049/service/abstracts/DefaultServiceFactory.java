@@ -1,4 +1,5 @@
 package com.traffic.gat1049.service.abstracts;
+import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.service.interfaces.*;
 
 /**
@@ -53,7 +54,7 @@ public class DefaultServiceFactory implements ServiceFactory {
     }
 
     // 默认构造函数，创建默认实现
-    public DefaultServiceFactory() {
+    public DefaultServiceFactory() throws BusinessException {
         this.systemService = new SystemServiceImpl();
         this.crossService = new CrossServiceImpl();
         this.planService = new PlanServiceImpl();

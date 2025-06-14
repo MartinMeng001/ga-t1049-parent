@@ -48,7 +48,7 @@ public class LoginHandler extends AbstractProtocolHandler {
 
         } catch (Exception e) {
             logger.error("Login处理失败", e);
-            return createErrorResponse(message, GatConstants.ErrorCode.SYSTEM_ERROR, "登录失败: " + e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.SYSTEM_ERROR, "登录失败: " + e.getMessage(), "");
         }
     }
 
@@ -126,7 +126,7 @@ public class LoginHandler extends AbstractProtocolHandler {
      */
     private Message createLoginResponse(Message request, SessionManager.LoginResult loginResult)
             throws GatProtocolException {
-
+        String objName = GatConstants.Operation.LOGIN;
         if (loginResult.isSuccess()) {
             // 登录成功 - 创建成功响应
             Message responseMessage = createLoginSuccessResponse(request, loginResult.getToken(), loginResult.getUserName());
@@ -136,7 +136,7 @@ public class LoginHandler extends AbstractProtocolHandler {
             // 登录失败 - 创建错误响应
             return createErrorResponse(request,
                     GatConstants.ErrorCode.SDE_FAILURE,
-                    loginResult.getErrorMessage());
+                    loginResult.getErrorMessage(), objName);
         }
     }
 

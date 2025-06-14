@@ -41,6 +41,7 @@ public class ConnectionManager {
      * 注册连接
      */
     public void registerConnection(String clientId, String token) {
+        if(connections.containsKey(clientId)) return;
         ConnectionStatus status = new ConnectionStatus(clientId, token);
         connections.put(clientId, status);
         logger.info("注册连接: clientId={}, token={}", clientId, token);
@@ -67,6 +68,13 @@ public class ConnectionManager {
         }
     }
 
+    /*
+     * 根据clientId获取Token
+     */
+    public String getToken(String clientId) {
+        String token = connections.get(clientId).getToken();
+        return token;
+    }
     /**
      * 检查连接是否在线
      */

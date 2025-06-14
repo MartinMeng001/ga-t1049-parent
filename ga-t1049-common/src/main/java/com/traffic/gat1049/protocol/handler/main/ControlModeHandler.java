@@ -37,7 +37,7 @@ public class ControlModeHandler extends AbstractProtocolHandler {
     @Override
     protected Message doHandle(Message message) throws GatProtocolException {
         CrossModePlan modePlan = (CrossModePlan) ProtocolUtils.getOperationData(message);
-
+        String objName = GatConstants.ObjectName.CROSS_MODE_PLAN;
         try {
             // 验证参数
             validateCrossModePlan(modePlan);
@@ -50,10 +50,10 @@ public class ControlModeHandler extends AbstractProtocolHandler {
 
         } catch (ValidationException e) {
             logger.error("Control mode validation failed: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage(), objName);
         } catch (BusinessException e) {
             logger.error("Control mode business error: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage(), objName);
         }
     }
 

@@ -39,7 +39,7 @@ public class ServerGat1049Integration {
         connectionManager = new ConnectionManager(sessionManager);
 
         // 创建处理器注册表
-        handlerRegistry = new HandlerRegistry(serviceFactory, sessionManager);
+        handlerRegistry = new HandlerRegistry(serviceFactory, sessionManager, subscriptionManager);
         messageProcessor = handlerRegistry.getMessageProcessor();
 
         // 注册通用操作处理器

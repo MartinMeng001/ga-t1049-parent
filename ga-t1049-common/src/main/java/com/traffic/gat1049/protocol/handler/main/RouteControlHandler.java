@@ -39,7 +39,7 @@ public class RouteControlHandler extends AbstractProtocolHandler {
     @Override
     protected Message doHandle(Message message) throws GatProtocolException {
         Object data = ProtocolUtils.getOperationData(message);
-
+        String objName = GatConstants.ObjectName.ROUTE_CONTROL_MODE;
         try {
             Object result = null;
 
@@ -53,13 +53,13 @@ public class RouteControlHandler extends AbstractProtocolHandler {
 
         } catch (ValidationException e) {
             logger.error("Route control validation failed: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage(), objName);
         } catch (DataNotFoundException e) {
             logger.error("Route not found: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.OBJECT_NOT_FOUND, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.OBJECT_NOT_FOUND, e.getMessage(), objName);
         } catch (BusinessException e) {
             logger.error("Route control business error: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage(), objName);
         }
     }
 

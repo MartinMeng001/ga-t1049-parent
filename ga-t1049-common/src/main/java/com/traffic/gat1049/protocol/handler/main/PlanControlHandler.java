@@ -58,10 +58,10 @@ public class PlanControlHandler extends AbstractProtocolHandler {
 
         } catch (ValidationException e) {
             logger.error("Plan control validation failed: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.INVALID_PARAMETER, e.getMessage(),"");
         } catch (BusinessException e) {
             logger.error("Plan control business error: {}", e.getMessage());
-            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage());
+            return createErrorResponse(message, GatConstants.ErrorCode.OPERATION_FAILED, e.getMessage(),"");
         }
     }
 

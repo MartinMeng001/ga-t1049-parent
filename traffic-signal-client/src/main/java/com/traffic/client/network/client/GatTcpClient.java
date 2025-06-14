@@ -1,9 +1,13 @@
 package com.traffic.client.network.client;
+import com.traffic.gat1049.application.session.SessionManager;
 import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.codec.MessageCodec;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.model.sdo.SdoUser;
+import com.traffic.gat1049.protocol.processor.DefaultMessageProcessor;
+import com.traffic.gat1049.protocol.processor.MessageProcessor;
+import com.traffic.gat1049.service.abstracts.DefaultServiceFactory;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -34,6 +38,7 @@ public class GatTcpClient {
     private final String clientId;
     private final MessageResponseHandler responseHandler;
     private final MessageCodec codec;
+    private final MessageProcessor messageProcessor;
 
     private EventLoopGroup workerGroup;
     private Channel channel;
@@ -51,11 +56,12 @@ public class GatTcpClient {
     private static final int MAX_RECONNECT_ATTEMPTS = 10;
     private static final long RECONNECT_DELAY = 5000; // 5秒
 
-    public GatTcpClient(String host, int port, String clientId) throws Exception {
+    public GatTcpClient(String host, int port, String clientId, MessageProcessor messageProcessor) throws Exception {
         this.host = host;
         this.port = port;
         this.clientId = clientId;
         this.responseHandler = new MessageResponseHandler();
+        this.messageProcessor = messageProcessor;
         this.codec = MessageCodec.getInstance();
         this.reconnectExecutor = Executors.newSingleThreadScheduledExecutor(
                 r -> new Thread(r, "GatTcpClient-Reconnect"));
@@ -342,6 +348,15 @@ public class GatTcpClient {
                     }
                 }
 
+                if("REQUEST".equals(message.getType())){
+                    String response = messageProcessor.processMessage(msg);
+
+                    // 发送响应
+                    if (response != null && !response.trim().isEmpty()) {
+                        ctx.writeAndFlush(response);
+                        logger.debug("发送响应: {}", response);
+                    }
+                }
                 // 交给响应处理器处理
                 responseHandler.handleMessage(message);
 
