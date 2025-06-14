@@ -1,12 +1,10 @@
 package com.traffic.gat1049.protocol.handler.subscription;
 
-import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.protocol.handler.base.TokenRequiredHandler;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.model.sdo.SdoMsgEntity;
 import com.traffic.gat1049.protocol.constants.GatConstants;
-import com.traffic.gat1049.protocol.handler.base.AbstractProtocolHandler;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
 import com.traffic.gat1049.application.subscription.SubscriptionManager;
 import com.traffic.gat1049.application.session.SessionManager;
@@ -122,10 +120,10 @@ public class NotifySubscribeHandler extends TokenRequiredHandler {
 //    }
 
     @Override
-    protected Message doHandleWithSession(Message message, SessionManager.SessionInfo sessionInfo) throws GatProtocolException {
+    protected Message doHandleWithSession(Message message, SessionManager.SessionInfo sessionInfo) {
         String objName = GatConstants.Operation.SUBSCRIBE;
         try {
-            if(supports(message)==false) {
+            if(!supports(message)) {
                 logger.info("{}消息无需处理", message.getType());
                 return null;
             }
