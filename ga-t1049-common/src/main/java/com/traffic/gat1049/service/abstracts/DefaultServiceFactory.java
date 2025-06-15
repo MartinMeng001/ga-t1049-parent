@@ -1,12 +1,17 @@
 package com.traffic.gat1049.service.abstracts;
+
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.service.interfaces.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 默认服务工厂实现
  * 注意：这个实现不使用Spring注解，需要在使用的模块中手动配置
  */
 public class DefaultServiceFactory implements ServiceFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultServiceFactory.class);
 
     private SystemService systemService;
     private RegionService regionService;
@@ -55,21 +60,24 @@ public class DefaultServiceFactory implements ServiceFactory {
 
     // 默认构造函数，创建默认实现
     public DefaultServiceFactory() throws BusinessException {
+        // 已实现的服务
         this.systemService = new SystemServiceImpl();
         this.crossService = new CrossServiceImpl();
         this.planService = new PlanServiceImpl();
         this.controlService = new ControlServiceImpl();
 
-        // 其他服务暂时设为null，需要时再实现
-        this.regionService = null;
-        this.subRegionService = null;
-        this.routeService = null;
-        this.signalControllerService = null;
-        this.laneService = null;
-        this.detectorService = null;
-        this.signalGroupService = null;
-        this.trafficDataService = null;
-        this.routeControlService = null;
+        // 新增实现的服务 - 参照SystemService模式，提供查询数据的获取
+        this.regionService = new RegionServiceImpl();
+        this.subRegionService = new SubRegionServiceImpl();
+        this.routeService = new RouteServiceImpl();
+        this.signalControllerService = new SignalControllerServiceImpl();
+        this.laneService = new LaneServiceImpl();
+        this.detectorService = new DetectorServiceImpl();
+        this.signalGroupService = new SignalGroupServiceImpl();
+        this.trafficDataService = new TrafficDataServiceImpl();
+        this.routeControlService = new RouteControlServiceImpl();
+
+        logger.info("DefaultServiceFactory 初始化完成，所有服务已实现");
     }
 
     @Override
