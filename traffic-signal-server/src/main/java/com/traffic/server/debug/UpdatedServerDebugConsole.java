@@ -2,6 +2,7 @@ package com.traffic.server.debug;
 
 import com.traffic.gat1049.application.session.SessionManager;
 import com.traffic.gat1049.application.subscription.SubscriptionManager;
+import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.protocol.model.sdo.SdoMsgEntity;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
@@ -9,6 +10,7 @@ import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.server.service.EnhancedServerSubscriptionService;
 import com.traffic.server.network.client.ServerToClientSender;
+import com.traffic.server.service.TSCCommandService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +40,11 @@ public class UpdatedServerDebugConsole {
     @Autowired
     private EnhancedServerSubscriptionService subscriptionService;
 
-    @Autowired(required = false) // 可选依赖，避免启动失败
+    @Autowired
     private ServerToClientSender clientSender;
+
+    @Autowired
+    private TSCCommandService tscCommandService;
 
     /**
      * 启动调试控制台
@@ -77,9 +82,9 @@ public class UpdatedServerDebugConsole {
     }
 
     /**
-     * 处理用户输入的命令
+     * 处理用户输入的命令 - 添加TSC查询功能
      */
-    private void handleCommand(String command, Scanner scanner) {
+    private void handleCommand(String command, Scanner scanner) throws GatProtocolException {
         switch (command.toLowerCase()) {
             case "help":
             case "h":
@@ -133,6 +138,12 @@ public class UpdatedServerDebugConsole {
                 showSubscriptions(scanner);
                 break;
 
+            // 新增: TSC查询功能
+            case "tsc":
+            case "query":
+                performTSCQuery(scanner);
+                break;
+
             default:
                 System.out.println("未知命令: " + command);
                 System.out.println("输入 'help' 查看可用命令");
@@ -140,7 +151,7 @@ public class UpdatedServerDebugConsole {
     }
 
     /**
-     * 显示帮助信息
+     * 显示帮助信息 - 更新版本
      */
     private void printHelp() {
         System.out.println("\n=== GA/T 1049.2 增强版服务端调试控制台 ===");
@@ -151,6 +162,9 @@ public class UpdatedServerDebugConsole {
         System.out.println("  clients         - 显示客户端连接");
         System.out.println("  stats           - 显示统计信息");
         System.out.println("  monitor         - 显示监控信息");
+        System.out.println();
+        System.out.println("TSC查询测试:");
+        System.out.println("  tsc (query)     - TSC指令查询测试 🔍 NEW!");
         System.out.println();
         System.out.println("订阅管理:");
         System.out.println("  subscribe       - 向客户端发送订阅请求 ✨");
@@ -167,7 +181,464 @@ public class UpdatedServerDebugConsole {
         } else {
             System.out.println("✨ = 支持实际网络发送");
         }
+        System.out.println("🔍 = 新增功能");
         System.out.println("===========================================");
+    }
+    /**
+     * 执行TSC查询测试
+     */
+    private void performTSCQuery(Scanner scanner) throws GatProtocolException {
+        System.out.println("\n=== TSC指令查询测试 ===");
+
+        // 第一步：选择TCP客户端
+        String selectedClient = selectTcpClient(scanner);
+        if (selectedClient == null) {
+            return; // 用户取消或没有可用客户端
+        }
+
+        // 第二步：选择查询类别
+        System.out.println("\n客户端已选择: " + selectedClient);
+        System.out.println("请选择查询类别:");
+        System.out.println("1. 系统参数查询");
+        System.out.println("2. 配置参数查询");
+        System.out.println("3. 运行信息查询");
+        System.out.println("4. 自定义查询");
+        System.out.println("5. 返回主菜单");
+        System.out.print("请选择 (1-5): ");
+
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "1":
+                performSystemParamQuery(scanner, selectedClient);
+                break;
+            case "2":
+                performConfigParamQuery(scanner, selectedClient);
+                break;
+            case "3":
+                performRuntimeInfoQuery(scanner, selectedClient);
+                break;
+            case "4":
+                performCustomQuery(scanner, selectedClient);
+                break;
+            case "5":
+                return;
+            default:
+                System.out.println("无效选择");
+        }
+    }
+    /**
+     * 选择TCP客户端
+     */
+    private String selectTcpClient(Scanner scanner) {
+        System.out.println("\n--- 选择TCP客户端 ---");
+
+        // 获取在线客户端列表
+        java.util.List<String> onlineClients = getOnlineClients();
+
+        if (onlineClients.isEmpty()) {
+            System.out.println("⚠️ 当前没有在线的TCP客户端");
+            System.out.println("请先确保有客户端连接到服务器");
+            System.out.println();
+            System.out.println("可用选项:");
+            System.out.println("1. 使用模拟客户端进行测试");
+            System.out.println("2. 返回主菜单");
+            System.out.print("请选择 (1-2): ");
+
+            String choice = scanner.nextLine().trim();
+            switch (choice) {
+                case "1":
+                    return "MOCK_CLIENT_127.0.0.1:9999";
+                case "2":
+                default:
+                    return null;
+            }
+        }
+
+        System.out.println("当前在线客户端:");
+        for (int i = 0; i < onlineClients.size(); i++) {
+            System.out.println((i + 1) + ". " + onlineClients.get(i));
+        }
+        System.out.println((onlineClients.size() + 1) + ". 使用模拟客户端");
+        System.out.println((onlineClients.size() + 2) + ". 返回主菜单");
+
+        System.out.print("请选择客户端 (1-" + (onlineClients.size() + 2) + "): ");
+        String choice = scanner.nextLine().trim();
+
+        try {
+            int index = Integer.parseInt(choice);
+            if (index >= 1 && index <= onlineClients.size()) {
+                return onlineClients.get(index - 1);
+            } else if (index == onlineClients.size() + 1) {
+                return "MOCK_CLIENT_127.0.0.1:9999";
+            } else if (index == onlineClients.size() + 2) {
+                return null;
+            } else {
+                System.out.println("⚠️ 无效选择");
+                return null;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("⚠️ 请输入有效的数字");
+            return null;
+        }
+    }
+    /**
+     * 获取在线客户端列表
+     */
+    private java.util.List<String> getOnlineClients() {
+        java.util.List<String> clients = new java.util.ArrayList<>();
+
+        if (clientSender != null) {
+            try {
+                // 尝试从clientSender获取在线客户端
+                clients.addAll(clientSender.getOnlineClientIds());
+            } catch (Exception e) {
+                logger.debug("无法从clientSender获取客户端列表: {}", e.getMessage());
+            }
+        }
+
+        // 如果没有实际客户端，添加一些模拟的示例
+        if (clients.isEmpty() && sessionManager != null) {
+            try {
+                // 从session manager获取活跃会话
+                int sessionCount = sessionManager.getOnlineSessionCount();
+                for (int i = 1; i <= sessionCount; i++) {
+                    clients.add("TCP_CLIENT_" + i + " (192.168.1." + (100 + i) + ":9999)");
+                }
+            } catch (Exception e) {
+                logger.debug("无法从sessionManager获取会话信息: {}", e.getMessage());
+            }
+        }
+
+        return clients;
+    }
+
+    /**
+     * 系统参数查询
+     */
+    private void performSystemParamQuery(Scanner scanner, String clientId) throws GatProtocolException {
+        System.out.println("\n--- 系统参数查询 ---");
+        System.out.println("1. SysInfo        - 系统信息");
+        System.out.println("2. SysState       - 系统状态");
+        System.out.println("3. 返回上级菜单");
+        System.out.print("请选择 (1-3): ");
+
+        String choice = scanner.nextLine().trim();
+        String objName = null;
+
+        switch (choice) {
+            case "1":
+                objName = "SysInfo";
+                break;
+            case "2":
+                objName = "SysState";
+                break;
+            case "3":
+                return;
+            default:
+                System.out.println("无效选择");
+                return;
+        }
+
+        System.out.println("📋 将执行查询: " + objName);
+        simulateTSCQuery(objName, null, null, clientId);
+    }
+    /**
+     * 配置参数查询
+     */
+    private void performConfigParamQuery(Scanner scanner, String clientId) throws GatProtocolException {
+        System.out.println("\n--- 配置参数查询 ---");
+        System.out.println("1.  RegionParam         - 区域参数");
+        System.out.println("2.  SubRegionParam      - 子区域参数");
+        System.out.println("3.  RouteParam          - 路线参数");
+        System.out.println("4.  CrossParam          - 路口参数");
+        System.out.println("5.  SignalController    - 信号机参数");
+        System.out.println("6.  LampGroup           - 灯组参数");
+        System.out.println("7.  DetectorParam       - 检测器参数");
+        System.out.println("8.  LaneParam           - 车道参数");
+        System.out.println("9.  PedestrianParam     - 行人参数");
+        System.out.println("10. SignalGroupParam    - 信号组参数");
+        System.out.println("11. StageParam          - 阶段参数");
+        System.out.println("12. PlanParam           - 配时方案参数");
+        System.out.println("13. DayPlanParam        - 日计划参数");
+        System.out.println("14. ScheduleParam       - 调度参数");
+        System.out.println("15. 返回上级菜单");
+        System.out.print("请选择 (1-15): ");
+
+        String choice = scanner.nextLine().trim();
+        String objName = null;
+        boolean needsId = true;
+
+        switch (choice) {
+            case "1": objName = "RegionParam"; break;
+            case "2": objName = "SubRegionParam"; break;
+            case "3": objName = "RouteParam"; break;
+            case "4": objName = "CrossParam"; break;
+            case "5": objName = "SignalController"; break;
+            case "6": objName = "LampGroup"; break;
+            case "7": objName = "DetectorParam"; break;
+            case "8": objName = "LaneParam"; break;
+            case "9": objName = "PedestrianParam"; break;
+            case "10": objName = "SignalGroupParam"; break;
+            case "11": objName = "StageParam"; break;
+            case "12": objName = "PlanParam"; break;
+            case "13": objName = "DayPlanParam"; break;
+            case "14": objName = "ScheduleParam"; break;
+            case "15": return;
+            default:
+                System.out.println("无效选择");
+                return;
+        }
+
+        String id = null;
+        Integer no = null;
+
+        if (needsId) {
+            System.out.print("请输入ID (可选，回车跳过): ");
+            String inputId = scanner.nextLine().trim();
+            if (!inputId.isEmpty()) {
+                id = inputId;
+            }
+
+            System.out.print("请输入No索引号 (可选，回车跳过): ");
+            String inputNo = scanner.nextLine().trim();
+            if (!inputNo.isEmpty()) {
+                try {
+                    no = Integer.parseInt(inputNo);
+                } catch (NumberFormatException e) {
+                    System.out.println("⚠️ 无效的数字格式，将忽略No参数");
+                }
+            }
+        }
+
+        System.out.println("📋 将执行查询: " + objName +
+                (id != null ? ", ID=" + id : "") +
+                (no != null ? ", No=" + no : ""));
+        simulateTSCQuery(objName, id, no, clientId);
+    }
+
+    /**
+     * 运行信息查询
+     */
+    private void performRuntimeInfoQuery(Scanner scanner, String clientId) throws GatProtocolException {
+        System.out.println("\n--- 运行信息查询 ---");
+        System.out.println("1.  CrossState               - 路口状态");
+        System.out.println("2.  SignalControllerError    - 信号机故障");
+        System.out.println("3.  CrossModePlan            - 路口控制方式和方案");
+        System.out.println("4.  CrossCycle               - 路口周期");
+        System.out.println("5.  CrossStage                - 路口阶段");
+        System.out.println("6.  CrossSignalGroupStatus   - 路口信号组状态");
+        System.out.println("7.  CrossTrafficData         - 路口交通流数据");
+        System.out.println("8.  StageTrafficData         - 阶段交通流数据");
+        System.out.println("9.  VarLaneStatus            - 可变车道状态");
+        System.out.println("10. RouteControlMode         - 路线控制方式");
+        System.out.println("11. RouteSpeed               - 路线速度");
+        System.out.println("12. 返回上级菜单");
+        System.out.print("请选择 (1-12): ");
+
+        String choice = scanner.nextLine().trim();
+        String objName = null;
+
+        switch (choice) {
+            case "1": objName = "CrossState"; break;
+            case "2": objName = "SignalControllerError"; break;
+            case "3": objName = "CrossModePlan"; break;
+            case "4": objName = "CrossCycle"; break;
+            case "5": objName = "CrossStage"; break;
+            case "6": objName = "CrossSignalGroupStatus"; break;
+            case "7": objName = "CrossTrafficData"; break;
+            case "8": objName = "StageTrafficData"; break;
+            case "9": objName = "VarLaneStatus"; break;
+            case "10": objName = "RouteControlMode"; break;
+            case "11": objName = "RouteSpeed"; break;
+            case "12": return;
+            default:
+                System.out.println("无效选择");
+                return;
+        }
+
+        String id = null;
+        Integer no = null;
+
+        // 大部分运行信息查询需要ID参数
+        System.out.print("请输入ID (建议输入路口ID/路线ID等): ");
+        String inputId = scanner.nextLine().trim();
+        if (!inputId.isEmpty()) {
+            id = inputId;
+        } else {
+            id = "11010000100001"; // 默认路口ID
+            System.out.println("📌 使用默认ID: " + id);
+        }
+
+        System.out.print("请输入No索引号 (可选，回车跳过): ");
+        String inputNo = scanner.nextLine().trim();
+        if (!inputNo.isEmpty()) {
+            try {
+                no = Integer.parseInt(inputNo);
+            } catch (NumberFormatException e) {
+                System.out.println("⚠️ 无效的数字格式，将忽略No参数");
+            }
+        }
+
+        System.out.println("📋 将执行查询: " + objName +
+                (id != null ? ", ID=" + id : "") +
+                (no != null ? ", No=" + no : ""));
+        simulateTSCQuery(objName, id, no, clientId);
+    }
+
+    /**
+     * 自定义查询
+     */
+    private void performCustomQuery(Scanner scanner, String clientId) throws GatProtocolException {
+        System.out.println("\n--- 自定义TSC查询 ---");
+        System.out.print("请输入对象名称 (ObjName): ");
+        String objName = scanner.nextLine().trim();
+
+        if (objName.isEmpty()) {
+            System.out.println("⚠️ 对象名称不能为空");
+            return;
+        }
+
+        System.out.print("请输入ID (可选): ");
+        String inputId = scanner.nextLine().trim();
+        String id = inputId.isEmpty() ? null : inputId;
+
+        System.out.print("请输入No (可选): ");
+        String inputNo = scanner.nextLine().trim();
+        Integer no = null;
+        if (!inputNo.isEmpty()) {
+            try {
+                no = Integer.parseInt(inputNo);
+            } catch (NumberFormatException e) {
+                System.out.println("⚠️ 无效的数字格式，将忽略No参数");
+            }
+        }
+
+        System.out.println("📋 将执行自定义查询: " + objName +
+                (id != null ? ", ID=" + id : "") +
+                (no != null ? ", No=" + no : ""));
+        simulateTSCQuery(objName, id, no, clientId);
+    }
+    /**
+     * 模拟TSC查询执行
+     * 注意：这里只是模拟显示，不执行实际的调用
+     */
+    private void simulateTSCQuery(String objName, String id, Integer no, String targetClient) throws GatProtocolException {
+
+        tscCommandService.queryTSCInfo(targetClient, objName, id, no);
+//        System.out.println("\n🔄 模拟执行TSC查询...");
+//        System.out.println("─────────────────────────");
+//        System.out.println("📋 查询类别: " + category);
+//        System.out.println("🎯 对象名称: " + objName);
+//        System.out.println("🆔 对象ID: " + (id != null ? id : "N/A"));
+//        System.out.println("🔢 索引号: " + (no != null ? no.toString() : "N/A"));
+//        System.out.println("─────────────────────────");
+//
+//        // 模拟构建TSCCmd
+//        System.out.println("🔧 构建TSCCmd对象:");
+//        System.out.println("   TSCCmd {");
+//        System.out.println("     objName: \"" + objName + "\",");
+//        if (id != null) {
+//            System.out.println("     id: \"" + id + "\",");
+//        }
+//        if (no != null) {
+//            System.out.println("     no: " + no + ",");
+//        }
+//        System.out.println("   }");
+//
+//        // 模拟构建请求消息
+//        System.out.println("📨 构建GA/T 1049协议消息:");
+//        System.out.println("   Message {");
+//        System.out.println("     type: \"REQUEST\",");
+//        System.out.println("     from: \"TICP\",");
+//        System.out.println("     to: \"UTCS\",");
+//        System.out.println("     operation: \"Get\",");
+//        System.out.println("     token: \"DEBUG_SESSION_TOKEN\",");
+//        System.out.println("     data: TSCCmd");
+//        System.out.println("   }");
+//
+//        // 模拟处理过程
+//        System.out.println("⚙️ 处理流程:");
+//        System.out.println("   1. 验证会话令牌");
+//        System.out.println("   2. 解析TSCCmd参数");
+//        System.out.println("   3. 路由到TSCCommandHandler");
+//        System.out.println("   4. 分发到具体的服务方法");
+//        System.out.println("   5. 执行业务逻辑查询");
+//        System.out.println("   6. 构建响应消息");
+//        System.out.println("   7. 返回查询结果");
+//
+//        // 模拟可能的处理器
+//        String handlerName = determineHandler(objName);
+//        System.out.println("🎛️ 预期处理器: " + handlerName);
+//
+//        // 模拟响应状态
+//        System.out.println("✅ 模拟执行完成");
+//        System.out.println("📤 响应状态: SUCCESS");
+//        System.out.println("📊 数据类型: " + objName + "对象");
+//
+//        System.out.println("\n💡 提示: 这是调试模式，未执行实际的网络调用");
+//        System.out.println("   实际使用时会通过MessageProcessor处理消息");
+//        System.out.println("─────────────────────────");
+    }
+
+    /**
+     * 根据对象名称确定处理器
+     */
+    private String determineHandler(String objName) {
+        switch (objName) {
+            case "SysInfo":
+            case "SysState":
+                return "TSCCommandHandler (系统参数)";
+            case "RegionParam":
+            case "SubRegionParam":
+            case "RouteParam":
+            case "CrossParam":
+            case "SignalController":
+            case "LampGroup":
+            case "DetectorParam":
+            case "LaneParam":
+            case "PedestrianParam":
+            case "SignalGroupParam":
+            case "StageParam":
+            case "PlanParam":
+            case "DayPlanParam":
+            case "ScheduleParam":
+                return "TSCCommandHandler (配置参数)";
+            case "CrossState":
+            case "SignalControllerError":
+            case "CrossModePlan":
+            case "CrossCycle":
+            case "CrossStage":
+            case "CrossSignalGroupStatus":
+            case "CrossTrafficData":
+            case "StageTrafficData":
+            case "VarLaneStatus":
+            case "RouteControlMode":
+            case "RouteSpeed":
+                return "TSCCommandHandler (运行信息)";
+            default:
+                return "TSCCommandHandler (通用处理)";
+        }
+    }
+
+    /**
+     * 显示TSC对象名称帮助信息
+     */
+    private void showTSCObjectHelp() {
+        System.out.println("\n=== TSC支持的对象名称 ===");
+        System.out.println("系统参数:");
+        System.out.println("  SysInfo, SysState");
+        System.out.println();
+        System.out.println("配置参数:");
+        System.out.println("  RegionParam, SubRegionParam, RouteParam, CrossParam,");
+        System.out.println("  SignalController, LampGroup, DetectorParam, LaneParam,");
+        System.out.println("  PedestrianParam, SignalGroupParam, StageParam,");
+        System.out.println("  PlanParam, DayPlanParam, ScheduleParam");
+        System.out.println();
+        System.out.println("运行信息:");
+        System.out.println("  CrossState, SignalControllerError, CrossModePlan, CrossCycle,");
+        System.out.println("  CrossStage, CrossSignalGroupStatus, CrossTrafficData,");
+        System.out.println("  StageTrafficData, VarLaneStatus, RouteControlMode, RouteSpeed");
+        System.out.println("========================");
     }
 
     /**
