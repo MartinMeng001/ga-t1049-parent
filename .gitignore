@@ -28,7 +28,6 @@ logs/
 *.log
 
 # 数据文件
-data/
 *.db
 *.h2.db
 
