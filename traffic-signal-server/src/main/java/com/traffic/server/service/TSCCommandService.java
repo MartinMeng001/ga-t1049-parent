@@ -111,9 +111,10 @@ public class TSCCommandService {
         try {
             // 1. 编码请求
             String requestXml = messageCodec.encode(request);
+            //logger.debug("发送XML请求 (长度={}): {}", requestXml.length(),
+            //        requestXml.length() > 500 ? requestXml.substring(0, 500) + "..." : requestXml);
             logger.debug("发送XML请求 (长度={}): {}", requestXml.length(),
-                    requestXml.length() > 500 ? requestXml.substring(0, 500) + "..." : requestXml);
-
+                    requestXml);
             // 2. 发送网络请求
             clientSender.sendToClient(clientId, requestXml)
                     .thenAccept(success -> {

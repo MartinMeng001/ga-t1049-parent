@@ -19,7 +19,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "StageParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class StageParam extends BaseParam {
+public class StageParam {//extends BaseParam
 
     /**
      * 路口编号

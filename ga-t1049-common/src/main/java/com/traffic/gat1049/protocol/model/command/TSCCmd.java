@@ -14,7 +14,7 @@ import javax.xml.bind.annotation.*;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "TSCCmd")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class TSCCmd extends BaseCommand {
+public class TSCCmd {//extends BaseCommand
 
     /**
      * 查询对象的名称
@@ -68,7 +68,7 @@ public class TSCCmd extends BaseCommand {
     }
 
     public void setId(String id) {
-        this.id = id;
+        this.id = (id == null) ? "" : id; // 或者 "0"
     }
 
     public Integer getNo() {
@@ -76,7 +76,7 @@ public class TSCCmd extends BaseCommand {
     }
 
     public void setNo(Integer no) {
-        this.no = no;
+        this.no = (no == null) ? 0 : no;
     }
 
     @Override

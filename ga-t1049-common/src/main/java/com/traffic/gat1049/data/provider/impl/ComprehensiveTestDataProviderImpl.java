@@ -49,30 +49,37 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     public static synchronized ComprehensiveTestDataProviderImpl getInstance() throws BusinessException {
         if (instance == null) {
             instance = new ComprehensiveTestDataProviderImpl();
-            //instance.initialize(); // Initialize here or on first access of data
+            // 首次获取实例时进行初始化
+            try {
+                instance.initialize(); // 在这里确保只初始化一次
+            } catch (BusinessException e) {
+                // 如果初始化失败，需要处理或重新抛出异常
+                instance = null; // 清除实例，以便下次尝试重新初始化
+                throw e;
+            }
         }
         return instance;
     }
 
     @Override
     public void initialize() throws BusinessException {
+        if (initialized) {
+            //logger.info("数据提供者已初始化，跳过重复初始化。");
+            return;
+        }
         try {
             logger.info("初始化综合测试数据提供者...");
-
-            loadTestDataFromJson();
-
+            loadTestDataFromJson(); // 实际加载数据
             if (testDataRoot == null) {
                 throw new BusinessException("INIT_ERROR", "无法加载测试数据");
             }
-
-            // 预加载和缓存常用数据
-            preloadCommonData();
-
+            preloadCommonData(); // 预加载和缓存
             initialized = true;
             logger.info("综合测试数据提供者初始化完成");
-
         } catch (Exception e) {
             logger.error("综合测试数据提供者初始化失败", e);
+            // 初始化失败时，将 initialized 设为 false，确保后续调用会再次尝试初始化
+            initialized = false;
             throw new BusinessException("INIT_ERROR", "初始化失败: " + e.getMessage());
         }
     }
@@ -134,7 +141,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
                     SystemState systemState = SystemState.fromCode(stateValue);
 
                     SysState sysState = new SysState(systemState);
-                    sysState.setStateTime(LocalDateTime.now());
+//                    sysState.setStateTime(LocalDateTime.now());
 
                     dataCache.put(cacheKey, sysState);
                     return sysState;
@@ -143,7 +150,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
             // 默认状态
             SysState defaultState = new SysState(SystemState.ONLINE);
-            defaultState.setStateTime(LocalDateTime.now());
+//            defaultState.setStateTime(LocalDateTime.now());
             dataCache.put(cacheKey, defaultState);
 
             return defaultState;
@@ -1265,7 +1272,9 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
     private void ensureInitialized() throws BusinessException {
         if (!initialized) {
-            initialize();
+            // 如果在 getInstance() 之外调用，或者 getInstance() 初始化失败
+            // 且后续又需要数据，这里可以抛出异常，或者根据业务逻辑选择再次尝试初始化 (不推荐)
+            //throw new BusinessException("NOT_INITIALIZED", "数据提供者未初始化，请先调用 getInstance() 获取实例。");
         }
     }
 
@@ -1369,8 +1378,8 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         sysInfo.setRouteIdList(parseStringList(sysParamNode, "RouteIDList"));
         sysInfo.setRegionIdList(parseStringList(sysParamNode, "RegionIDList"));
         sysInfo.setSignalControllerIdList(parseStringList(sysParamNode, "SignalControlerIDList"));
-        sysInfo.setCreateTime(LocalDateTime.now());
-        sysInfo.setUpdateTime(LocalDateTime.now());
+//        sysInfo.setCreateTime(LocalDateTime.now());
+//        sysInfo.setUpdateTime(LocalDateTime.now());
         return sysInfo;
     }
 

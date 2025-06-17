@@ -15,7 +15,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "SignalGroupParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SignalGroupParam extends BaseParam {
+public class SignalGroupParam {//extends BaseParam
 
     /**
      * 路口编号

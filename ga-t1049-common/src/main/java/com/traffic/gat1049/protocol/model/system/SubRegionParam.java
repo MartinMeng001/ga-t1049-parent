@@ -18,7 +18,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "SubRegionParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SubRegionParam extends BaseParam {
+public class SubRegionParam {//extends BaseParam
 
     /**
      * 子区编号 - 全局唯一，取值6位行政区划代码+5位数字

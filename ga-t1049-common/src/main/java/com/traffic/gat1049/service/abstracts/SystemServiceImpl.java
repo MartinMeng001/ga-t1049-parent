@@ -50,7 +50,7 @@ public class SystemServiceImpl implements SystemService {
 
         validateSystemInfo(sysInfo);
 
-        sysInfo.setUpdateTime(LocalDateTime.now());
+//        sysInfo.setUpdateTime(LocalDateTime.now());
         systemInfo.set(sysInfo);
 
         logger.info("更新系统信息: 系统名称={}, 版本={}, 供应商={}",
@@ -75,7 +75,7 @@ public class SystemServiceImpl implements SystemService {
         }
 
         SysState sysState = new SysState(state);
-        sysState.setStateTime(LocalDateTime.now());
+//        sysState.setStateTime(LocalDateTime.now());
         systemState.set(sysState);
 
         logger.info("更新系统状态: {}", state.getDescription());
@@ -142,8 +142,8 @@ public class SystemServiceImpl implements SystemService {
         signalControllerIds.add("11010000000000002");
         info.setSignalControllerIdList(signalControllerIds);
 
-        info.setCreateTime(LocalDateTime.now());
-        info.setUpdateTime(LocalDateTime.now());
+//        info.setCreateTime(LocalDateTime.now());
+//        info.setUpdateTime(LocalDateTime.now());
 
         systemInfo.set(info);
         logger.info("初始化默认系统信息完成");

@@ -260,9 +260,13 @@ public class TSCCommandHandler extends TokenRequiredHandler {
         if (crossId == null) {
             throw new ValidationException("crossId", "Cross ID is required for LampGroup query");
         }
+        if(lampGroupNo == null || lampGroupNo==0){
+            return serviceFactory.getLampGroupService().findByCrossId(crossId);
+        }
+        return serviceFactory.getLampGroupService().findByCrossIdAndLampGroupNo(crossId, lampGroupNo);
         // 这里需要实现LampGroupService，暂时返回空列表
-        logger.warn("LampGroup query not fully implemented for crossId: {}, lampGroupNo: {}", crossId, lampGroupNo);
-        return java.util.Collections.emptyList();
+//        logger.warn("LampGroup query not fully implemented for crossId: {}, lampGroupNo: {}", crossId, lampGroupNo);
+//        return java.util.Collections.emptyList();
     }
 
     private Object handleDetectorParam(String crossId, Integer detectorNo) throws BusinessException {

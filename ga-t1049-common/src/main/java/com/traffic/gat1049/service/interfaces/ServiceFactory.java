@@ -46,6 +46,11 @@ public interface ServiceFactory {
     DetectorService getDetectorService();
 
     /**
+     * 获取灯组服务
+     */
+    LampGroupService getLampGroupService();
+
+    /**
      * 获取信号组服务
      */
     SignalGroupService getSignalGroupService();

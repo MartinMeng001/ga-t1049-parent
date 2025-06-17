@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "LampGroup")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class LampGroup extends BaseParam {
+public class LampGroup {//extends BaseParam
 
     /**
      * 路口编号
@@ -58,11 +58,11 @@ public class LampGroup extends BaseParam {
 
     // 构造函数
     public LampGroup() {
-        super();
+        //super();
     }
 
     public LampGroup(String crossId, Integer lampGroupNo, Direction direction, LampGroupType type) {
-        super();
+        //super();
         this.crossId = crossId;
         this.lampGroupNo = lampGroupNo;
         this.direction = direction;

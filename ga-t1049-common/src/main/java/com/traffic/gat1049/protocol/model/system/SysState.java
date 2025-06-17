@@ -17,7 +17,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "SysState")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SysState extends BaseState {
+public class SysState {//extends BaseState
 
     /**
      * 系统运行状态
