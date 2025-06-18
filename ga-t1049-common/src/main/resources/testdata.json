@@ -327,10 +327,10 @@
     "SysState": {
       "Value": "Online"
     },
-    "CrossStatus": [
+    "CrossState": [
       {
         "CrossID": "11010110001",
-        "Value": "Online"
+        "Value": "ONLINE"
       }
     ],
     "SignalTrouble": [

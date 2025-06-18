@@ -190,7 +190,7 @@ public class TSCCommandHandler extends TokenRequiredHandler {
 
             case GatConstants.ObjectName.PLAN_PARAM:
                 if (id != null) {
-                    if (no != null) {
+                    if (no != null && no > 0) {
                         result = serviceFactory.getPlanService().findByCrossIdAndPlanNo(id, no);
                     } else {
                         result = serviceFactory.getPlanService().findByCrossId(id);
@@ -320,7 +320,7 @@ public class TSCCommandHandler extends TokenRequiredHandler {
         if (crossId == null) {
             throw new ValidationException("crossId", "Cross ID is required for PlanParam query");
         }
-        if (planNo == null) {
+        if (planNo == null || planNo<=0) {
             return serviceFactory.getPlanService().findByCrossId(crossId);
         }
         return serviceFactory.getPlanService().findByCrossIdAndPlanNo(crossId, planNo);
@@ -330,27 +330,28 @@ public class TSCCommandHandler extends TokenRequiredHandler {
         if (crossId == null) {
             throw new ValidationException("crossId", "Cross ID is required for DayPlanParam query");
         }
-        if (dayPlanNo == null) {
-            throw new ValidationException("dayPlanNo", "Day plan number is required for DayPlanParam query");
+        if (dayPlanNo == null || dayPlanNo<=0) {
+            return serviceFactory.getDayPlanService().findByCrossId(crossId);
         }
-        return serviceFactory.getPlanService().getDayPlanParam(crossId, dayPlanNo);
+        return serviceFactory.getDayPlanService().findByCrossIdAndDayPlanNo(crossId, dayPlanNo);
     }
 
     private Object handleScheduleParam(String crossId, Integer scheduleNo) throws BusinessException {
         if (crossId == null) {
             throw new ValidationException("crossId", "Cross ID is required for ScheduleParam query");
         }
-        if (scheduleNo == null) {
-            throw new ValidationException("scheduleNo", "Schedule number is required for ScheduleParam query");
+        if (scheduleNo == null || scheduleNo<=0) {
+            return serviceFactory.getScheduleService().findByCrossId(crossId);
         }
-        return serviceFactory.getPlanService().getScheduleParam(crossId, scheduleNo);
+        return serviceFactory.getScheduleService().findByCrossIdAndScheduleNo(crossId, scheduleNo);
     }
 
     // ==================== 运行信息处理方法 ====================
 
     private Object handleCrossState(String crossId) throws BusinessException {
-        if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for CrossState query");
+        if (crossId == null) {  // 返回所有CrossState
+            //throw new ValidationException("crossId", "Cross ID is required for CrossState query");
+            return serviceFactory.getCrossService().getAllCrossState();
         }
         return serviceFactory.getCrossService().getCrossState(crossId);
     }
@@ -359,7 +360,7 @@ public class TSCCommandHandler extends TokenRequiredHandler {
         if (crossId == null) {
             throw new ValidationException("crossId", "Cross ID is required for CrossModePlan query");
         }
-        return serviceFactory.getPlanService().getCurrentModePlan(crossId);
+        return serviceFactory.getControlModeService().getCurrentModePlan(crossId);
     }
 
     private Object handleCrossCycle(String crossId) throws BusinessException {

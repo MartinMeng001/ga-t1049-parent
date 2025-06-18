@@ -196,7 +196,7 @@ public class ConfigParamHandler extends AbstractProtocolHandler {
         if (dayPlanNo == null) {
             throw new ValidationException("dayPlanNo", "Day plan number is required");
         }
-        return serviceFactory.getPlanService().getDayPlanParam(crossId, dayPlanNo);
+        return serviceFactory.getDayPlanService().getDayPlanParam(crossId, dayPlanNo);
     }
 
     private Object handleScheduleParam(String crossId, Integer scheduleNo) throws BusinessException {
@@ -206,7 +206,7 @@ public class ConfigParamHandler extends AbstractProtocolHandler {
         if (scheduleNo == null) {
             throw new ValidationException("scheduleNo", "Schedule number is required");
         }
-        return serviceFactory.getPlanService().getScheduleParam(crossId, scheduleNo);
+        return serviceFactory.getScheduleService().getScheduleParam(crossId, scheduleNo);
     }
 
     @Override

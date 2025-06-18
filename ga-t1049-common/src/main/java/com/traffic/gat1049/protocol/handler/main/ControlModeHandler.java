@@ -119,7 +119,7 @@ public class ControlModeHandler extends AbstractProtocolHandler {
         }
 
         // 执行控制方式设置
-        serviceFactory.getPlanService().setControlMode(crossId, mode, planNo);
+        serviceFactory.getControlModeService().setControlMode(crossId, mode, planNo);
 
         // 根据不同的控制方式执行相应的操作
         handleSpecificControlMode(crossId, mode);

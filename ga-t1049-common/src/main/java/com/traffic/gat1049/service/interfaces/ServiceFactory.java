@@ -71,6 +71,16 @@ public interface ServiceFactory {
     PlanService getPlanService();
 
     /**
+     * 获取日计划服务
+     */
+    DayPlanService getDayPlanService();
+
+    /**
+     * 获取调度服务
+     */
+    ScheduleService getScheduleService();
+
+    /**
      * 获取交通数据服务
      */
     TrafficDataService getTrafficDataService();
@@ -79,6 +89,11 @@ public interface ServiceFactory {
      * 获取控制服务
      */
     ControlService getControlService();
+
+    /**
+     * 获取控制模式服务
+     */
+    ControlModeService getControlModeService();
 
     /**
      * 获取干线控制服务

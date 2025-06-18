@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.*;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "CrossState")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CrossState extends BaseState {
+public class CrossState {//extends BaseState
 
     /**
      * 路口编号
@@ -34,11 +34,11 @@ public class CrossState extends BaseState {
 
     // 构造函数
     public CrossState() {
-        super();
+        //super();
     }
 
     public CrossState(String crossId, SystemState value) {
-        super();
+        //super();
         this.crossId = crossId;
         this.value = value;
     }
