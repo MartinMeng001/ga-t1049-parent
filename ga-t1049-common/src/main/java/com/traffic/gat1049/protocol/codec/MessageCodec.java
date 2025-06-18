@@ -5,11 +5,15 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.traffic.gat1049.exception.MessageDecodingException;
 import com.traffic.gat1049.exception.MessageEncodingException;
 import com.traffic.gat1049.protocol.constants.GatConstants;
+import com.traffic.gat1049.protocol.model.command.TSCCmd;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.model.core.Address;
 import com.traffic.gat1049.protocol.model.core.MessageBody;
 import com.traffic.gat1049.protocol.model.core.Operation;
+import com.traffic.gat1049.protocol.model.intersection.*;
 import com.traffic.gat1049.protocol.model.sdo.*;
+import com.traffic.gat1049.protocol.model.signal.*;
+import com.traffic.gat1049.protocol.model.system.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,7 +92,30 @@ public class MessageCodec {
                                 //com.traffic.gat1049.model.dto.response.LogoutResponse.class,
                                 SdoHeartBeat.class,
                                 SdoTimeServer.class,
-                                SdoTimeOut.class
+                                SdoTimeOut.class,
+                                TSCCmd.class,
+                                SysInfo.class,
+                                SysState.class,
+                                RegionParam.class,
+                                SubRegionParam.class,
+                                RouteCross.class,
+                                RouteParam.class,
+                                CrossParam.class,
+                                SignalController.class,
+                                PedestrianParam.class,
+                                LampGroup.class,
+                                DetectorParam.class,
+                                LaneParam.class,
+                                StageParam.class,
+                                DayPlanParam.class,
+                                Period.class,
+                                PlanParam.class,
+                                ScheduleParam.class,
+                                SignalGroupParam.class,
+                                SignalGroupStatus.class,
+                                StageParam.class,
+                                StageTiming.class,
+                                Adjust.class
                                 // 根据需要添加其他 SDO 类
                         };
 

@@ -1,5 +1,6 @@
 package com.traffic.gat1049.service.abstracts;
 
+import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
@@ -27,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class PlanServiceImpl implements PlanService {
 
     private static final Logger logger = LoggerFactory.getLogger(PlanServiceImpl.class);
-
+    private ComprehensiveTestDataProviderImpl dataPrider = ComprehensiveTestDataProviderImpl.getInstance();
     // 配时方案存储：crossId -> planNo -> PlanParam
     private final Map<String, Map<Integer, PlanParam>> planStorage = new ConcurrentHashMap<>();
 
@@ -43,18 +44,21 @@ public class PlanServiceImpl implements PlanService {
     // 方案序号生成器
     private final AtomicInteger planNoGenerator = new AtomicInteger(1);
 
+    public PlanServiceImpl() throws BusinessException {
+    }
+
     @Override
     public List<PlanParam> findByCrossId(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
-
-        Map<Integer, PlanParam> crossPlans = planStorage.get(crossId);
-        if (crossPlans == null) {
-            return new ArrayList<>();
-        }
-
-        return new ArrayList<>(crossPlans.values());
+        return dataPrider.getPlansByCrossId(crossId);
+//        Map<Integer, PlanParam> crossPlans = planStorage.get(crossId);
+//        if (crossPlans == null) {
+//            return new ArrayList<>();
+//        }
+//
+//        return new ArrayList<>(crossPlans.values());
     }
 
     @Override
@@ -65,18 +69,18 @@ public class PlanServiceImpl implements PlanService {
         if (planNo == null) {
             throw new ValidationException("planNo", "方案序号不能为空");
         }
-
-        Map<Integer, PlanParam> crossPlans = planStorage.get(crossId);
-        if (crossPlans == null) {
-            throw new DataNotFoundException("PlanParam", crossId + "-" + planNo);
-        }
-
-        PlanParam plan = crossPlans.get(planNo);
-        if (plan == null) {
-            throw new DataNotFoundException("PlanParam", crossId + "-" + planNo);
-        }
-
-        return plan;
+        return dataPrider.getPlanByCrossIdAndNo(crossId, planNo.toString());
+//        Map<Integer, PlanParam> crossPlans = planStorage.get(crossId);
+//        if (crossPlans == null) {
+//            throw new DataNotFoundException("PlanParam", crossId + "-" + planNo);
+//        }
+//
+//        PlanParam plan = crossPlans.get(planNo);
+//        if (plan == null) {
+//            throw new DataNotFoundException("PlanParam", crossId + "-" + planNo);
+//        }
+//
+//        return plan;
     }
 
     @Override
@@ -114,12 +118,12 @@ public class PlanServiceImpl implements PlanService {
             throw new ValidationException("dayPlanNo", "日计划号不能为空");
         }
 
-        Map<Integer, DayPlanParam> crossDayPlans = dayPlanStorage.get(crossId);
-        if (crossDayPlans == null) {
-            throw new DataNotFoundException("DayPlanParam", crossId + "-" + dayPlanNo);
-        }
+//        Map<Integer, DayPlanParam> crossDayPlans = dayPlanStorage.get(crossId);
+//        if (crossDayPlans == null) {
+//            throw new DataNotFoundException("DayPlanParam", crossId + "-" + dayPlanNo);
+//        }
 
-        DayPlanParam dayPlan = crossDayPlans.get(dayPlanNo);
+        DayPlanParam dayPlan = dataPrider.getDayPlanByCrossIdAndNo(crossId, dayPlanNo.toString());//crossDayPlans.get(dayPlanNo);
         if (dayPlan == null) {
             throw new DataNotFoundException("DayPlanParam", crossId + "-" + dayPlanNo);
         }
@@ -253,7 +257,7 @@ public class PlanServiceImpl implements PlanService {
         Integer assignedPlanNo = 0;
         planParam.setPlanNo(assignedPlanNo);
         planParam.setPlanName("中心预案-" + LocalDateTime.now().toString());
-        planParam.setUpdateTime(LocalDateTime.now());
+        //planParam.setUpdateTime(LocalDateTime.now());
 
         // 存储临时方案
         planStorage.computeIfAbsent(crossId, k -> new ConcurrentHashMap<>())
@@ -381,8 +385,8 @@ public class PlanServiceImpl implements PlanService {
             planParam.setPlanNo(planNo);
         }
 
-        planParam.setCreateTime(LocalDateTime.now());
-        planParam.setUpdateTime(LocalDateTime.now());
+//        planParam.setCreateTime(LocalDateTime.now());
+//        planParam.setUpdateTime(LocalDateTime.now());
 
         planStorage.computeIfAbsent(crossId, k -> new ConcurrentHashMap<>())
                 .put(planNo, planParam);
@@ -401,7 +405,7 @@ public class PlanServiceImpl implements PlanService {
             throw new DataNotFoundException("PlanParam", crossId + "-" + planNo);
         }
 
-        planParam.setUpdateTime(LocalDateTime.now());
+        //planParam.setUpdateTime(LocalDateTime.now());
         crossPlans.put(planNo, planParam);
 
         logger.info("修改配时方案: crossId={}, planNo={}, planName={}",
@@ -411,8 +415,8 @@ public class PlanServiceImpl implements PlanService {
     }
 
     private DayPlanParam addDayPlan(String crossId, DayPlanParam dayPlan) {
-        dayPlan.setCreateTime(LocalDateTime.now());
-        dayPlan.setUpdateTime(LocalDateTime.now());
+//        dayPlan.setCreateTime(LocalDateTime.now());
+//        dayPlan.setUpdateTime(LocalDateTime.now());
 
         dayPlanStorage.computeIfAbsent(crossId, k -> new ConcurrentHashMap<>())
                 .put(dayPlan.getDayPlanNo(), dayPlan);
@@ -429,7 +433,7 @@ public class PlanServiceImpl implements PlanService {
             throw new DataNotFoundException("DayPlanParam", crossId + "-" + dayPlanNo);
         }
 
-        dayPlan.setUpdateTime(LocalDateTime.now());
+        //dayPlan.setUpdateTime(LocalDateTime.now());
         crossDayPlans.put(dayPlanNo, dayPlan);
 
         logger.info("修改日计划: crossId={}, dayPlanNo={}", crossId, dayPlanNo);
@@ -447,8 +451,8 @@ public class PlanServiceImpl implements PlanService {
     }
 
     private ScheduleParam addSchedule(String crossId, ScheduleParam schedule) {
-        schedule.setCreateTime(LocalDateTime.now());
-        schedule.setUpdateTime(LocalDateTime.now());
+//        schedule.setCreateTime(LocalDateTime.now());
+//        schedule.setUpdateTime(LocalDateTime.now());
 
         scheduleStorage.computeIfAbsent(crossId, k -> new ConcurrentHashMap<>())
                 .put(schedule.getScheduleNo(), schedule);
@@ -465,7 +469,7 @@ public class PlanServiceImpl implements PlanService {
             throw new DataNotFoundException("ScheduleParam", crossId + "-" + scheduleNo);
         }
 
-        schedule.setUpdateTime(LocalDateTime.now());
+        //schedule.setUpdateTime(LocalDateTime.now());
         crossSchedules.put(scheduleNo, schedule);
 
         logger.info("修改调度: crossId={}, scheduleNo={}", crossId, scheduleNo);

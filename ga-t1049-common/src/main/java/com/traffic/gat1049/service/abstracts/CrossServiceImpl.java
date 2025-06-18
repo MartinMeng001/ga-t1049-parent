@@ -1,5 +1,6 @@
 package com.traffic.gat1049.service.abstracts;
 
+import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 public class CrossServiceImpl implements CrossService {
 
     private static final Logger logger = LoggerFactory.getLogger(CrossServiceImpl.class);
+    private ComprehensiveTestDataProviderImpl dataPrider = ComprehensiveTestDataProviderImpl.getInstance();
 
     // 路口参数存储
     private final Map<String, CrossParam> crossStorage = new ConcurrentHashMap<>();
@@ -33,9 +35,9 @@ public class CrossServiceImpl implements CrossService {
     // 路口状态存储
     private final Map<String, CrossState> crossStateStorage = new ConcurrentHashMap<>();
 
-    public CrossServiceImpl() {
+    public CrossServiceImpl() throws BusinessException {
         // 初始化一些示例数据
-        initializeSampleData();
+        //initializeSampleData();
     }
 
     @Override
@@ -44,7 +46,7 @@ public class CrossServiceImpl implements CrossService {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
 
-        CrossParam crossParam = crossStorage.get(crossId);
+        CrossParam crossParam = dataPrider.getCrossById(crossId);//crossStorage.get(crossId);
         if (crossParam == null) {
             throw new DataNotFoundException("CrossParam", crossId);
         }
@@ -54,7 +56,8 @@ public class CrossServiceImpl implements CrossService {
 
     @Override
     public List<CrossParam> findAll() throws BusinessException {
-        return new ArrayList<>(crossStorage.values());
+        return dataPrider.getAllCrosses();
+        //return new ArrayList<>(crossStorage.values());
     }
 
     @Override

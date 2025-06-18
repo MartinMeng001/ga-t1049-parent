@@ -18,7 +18,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "RegionParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class RegionParam extends BaseParam {
+public class RegionParam {//extends BaseParam
 
     /**
      * 区域编号 - 全局唯一，取值6位行政区划代码+3位数字

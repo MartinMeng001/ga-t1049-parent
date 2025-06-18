@@ -16,7 +16,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "DayPlanParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DayPlanParam extends BaseParam {
+public class DayPlanParam {//extends BaseParam
 
     /**
      * 路口编号

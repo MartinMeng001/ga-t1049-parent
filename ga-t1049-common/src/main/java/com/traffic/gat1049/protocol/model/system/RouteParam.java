@@ -19,7 +19,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "RouteParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class RouteParam extends BaseParam {
+public class RouteParam {//extends BaseParam
 
     /**
      * 线路编号 - 全局唯一，取值6位行政区划代码+3位数字

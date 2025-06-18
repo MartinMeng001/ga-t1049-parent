@@ -21,6 +21,9 @@ public class DefaultServiceFactory implements ServiceFactory {
     private TrafficDataService trafficDataService;
     private ControlService controlService;
     private RouteControlService routeControlService;
+    private LampGroupServiceImpl lampGroupService;
+    private PedestrianServiceImpl pedestrianService;
+    private StageServiceImpl stageService;
 
     // 构造函数注入
     public DefaultServiceFactory(
@@ -36,7 +39,10 @@ public class DefaultServiceFactory implements ServiceFactory {
             PlanService planService,
             TrafficDataService trafficDataService,
             ControlService controlService,
-            RouteControlService routeControlService) {
+            RouteControlService routeControlService,
+            LampGroupServiceImpl lampGroupService,
+            PedestrianServiceImpl pedestrianService,
+            StageServiceImpl stageService) {
 
         this.systemService = systemService;
         this.regionService = regionService;
@@ -51,6 +57,9 @@ public class DefaultServiceFactory implements ServiceFactory {
         this.trafficDataService = trafficDataService;
         this.controlService = controlService;
         this.routeControlService = routeControlService;
+        this.lampGroupService = lampGroupService;
+        this.pedestrianService = pedestrianService;
+        this.stageService = stageService;
     }
 
     // 默认构造函数，创建默认实现
@@ -59,17 +68,18 @@ public class DefaultServiceFactory implements ServiceFactory {
         this.crossService = new CrossServiceImpl();
         this.planService = new PlanServiceImpl();
         this.controlService = new ControlServiceImpl();
-
-        // 其他服务暂时设为null，需要时再实现
-        this.regionService = null;
-        this.subRegionService = null;
-        this.routeService = null;
-        this.signalControllerService = null;
-        this.laneService = null;
-        this.detectorService = null;
-        this.signalGroupService = null;
-        this.trafficDataService = null;
-        this.routeControlService = null;
+        this.regionService = new RegionServiceImpl();
+        this.subRegionService = new SubRegionServiceImpl();
+        this.routeService = new RouteServiceImpl();
+        this.signalControllerService = new SignalControllerServiceImpl();
+        this.laneService = new LaneServiceImpl();
+        this.detectorService = new DetectorServiceImpl();
+        this.signalGroupService = new SignalGroupServiceImpl();
+        this.trafficDataService = new TrafficDataServiceImpl();
+        this.routeControlService = new RouteControlServiceImpl();
+        this.lampGroupService = new LampGroupServiceImpl();
+        this.pedestrianService = new PedestrianServiceImpl();
+        this.stageService = new StageServiceImpl();
     }
 
     @Override
@@ -108,13 +118,28 @@ public class DefaultServiceFactory implements ServiceFactory {
     }
 
     @Override
+    public PedestrianService getPedestrianService() {
+        return pedestrianService;
+    }
+
+    @Override
     public DetectorService getDetectorService() {
         return detectorService;
     }
 
     @Override
+    public LampGroupService getLampGroupService() {
+        return lampGroupService;
+    }
+
+    @Override
     public SignalGroupService getSignalGroupService() {
         return signalGroupService;
+    }
+
+    @Override
+    public StageService getStageService() {
+        return stageService;
     }
 
     @Override

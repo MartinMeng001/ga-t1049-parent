@@ -18,7 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "ScheduleParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ScheduleParam extends BaseParam {
+public class ScheduleParam {//extends BaseParam
 
     /**
      * 路口编号
