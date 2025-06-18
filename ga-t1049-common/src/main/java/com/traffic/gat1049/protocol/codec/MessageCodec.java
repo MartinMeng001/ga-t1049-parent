@@ -10,9 +10,7 @@ import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.model.core.Address;
 import com.traffic.gat1049.protocol.model.core.MessageBody;
 import com.traffic.gat1049.protocol.model.core.Operation;
-import com.traffic.gat1049.protocol.model.intersection.CrossParam;
-import com.traffic.gat1049.protocol.model.intersection.LampGroup;
-import com.traffic.gat1049.protocol.model.intersection.SignalController;
+import com.traffic.gat1049.protocol.model.intersection.*;
 import com.traffic.gat1049.protocol.model.sdo.*;
 import com.traffic.gat1049.protocol.model.signal.*;
 import com.traffic.gat1049.protocol.model.system.*;
@@ -104,7 +102,11 @@ public class MessageCodec {
                                 RouteParam.class,
                                 CrossParam.class,
                                 SignalController.class,
+                                PedestrianParam.class,
                                 LampGroup.class,
+                                DetectorParam.class,
+                                LaneParam.class,
+                                StageParam.class,
                                 DayPlanParam.class,
                                 Period.class,
                                 PlanParam.class,

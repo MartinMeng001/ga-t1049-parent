@@ -22,6 +22,8 @@ public class DefaultServiceFactory implements ServiceFactory {
     private ControlService controlService;
     private RouteControlService routeControlService;
     private LampGroupServiceImpl lampGroupService;
+    private PedestrianServiceImpl pedestrianService;
+    private StageServiceImpl stageService;
 
     // 构造函数注入
     public DefaultServiceFactory(
@@ -38,7 +40,9 @@ public class DefaultServiceFactory implements ServiceFactory {
             TrafficDataService trafficDataService,
             ControlService controlService,
             RouteControlService routeControlService,
-            LampGroupServiceImpl lampGroupService) {
+            LampGroupServiceImpl lampGroupService,
+            PedestrianServiceImpl pedestrianService,
+            StageServiceImpl stageService) {
 
         this.systemService = systemService;
         this.regionService = regionService;
@@ -54,6 +58,8 @@ public class DefaultServiceFactory implements ServiceFactory {
         this.controlService = controlService;
         this.routeControlService = routeControlService;
         this.lampGroupService = lampGroupService;
+        this.pedestrianService = pedestrianService;
+        this.stageService = stageService;
     }
 
     // 默认构造函数，创建默认实现
@@ -72,6 +78,8 @@ public class DefaultServiceFactory implements ServiceFactory {
         this.trafficDataService = new TrafficDataServiceImpl();
         this.routeControlService = new RouteControlServiceImpl();
         this.lampGroupService = new LampGroupServiceImpl();
+        this.pedestrianService = new PedestrianServiceImpl();
+        this.stageService = new StageServiceImpl();
     }
 
     @Override
@@ -110,6 +118,11 @@ public class DefaultServiceFactory implements ServiceFactory {
     }
 
     @Override
+    public PedestrianService getPedestrianService() {
+        return pedestrianService;
+    }
+
+    @Override
     public DetectorService getDetectorService() {
         return detectorService;
     }
@@ -122,6 +135,11 @@ public class DefaultServiceFactory implements ServiceFactory {
     @Override
     public SignalGroupService getSignalGroupService() {
         return signalGroupService;
+    }
+
+    @Override
+    public StageService getStageService() {
+        return stageService;
     }
 
     @Override

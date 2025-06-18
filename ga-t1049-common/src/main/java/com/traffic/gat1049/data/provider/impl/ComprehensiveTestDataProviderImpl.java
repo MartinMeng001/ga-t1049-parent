@@ -5,11 +5,7 @@ import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.model.enums.*;
 import com.traffic.gat1049.protocol.model.intersection.*;
-import com.traffic.gat1049.protocol.model.system.SysInfo;
-import com.traffic.gat1049.protocol.model.system.SysState;
-import com.traffic.gat1049.protocol.model.system.RegionParam;
-import com.traffic.gat1049.protocol.model.system.SubRegionParam;
-import com.traffic.gat1049.protocol.model.system.RouteParam;
+import com.traffic.gat1049.protocol.model.system.*;
 import com.traffic.gat1049.protocol.model.signal.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -483,7 +479,8 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<LampGroup> lampGroups = getLampGroupsByCrossId(crossId);
         return lampGroups.stream()
-                .filter(lampGroup -> lampGroupNo.equals(lampGroup.getLampGroupNo()))
+                //.filter(lampGroup -> lampGroupNo.equals(lampGroup.getLampGroupNo()))
+                .filter(lampGroup -> Integer.parseInt(lampGroupNo)==(lampGroup.getLampGroupNo()))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
                         String.format("未找到灯组: 路口ID=%s, 灯组编号=%s", crossId, lampGroupNo)));
@@ -542,7 +539,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<DetectorParam> detectors = getDetectorsByCrossId(crossId);
         return detectors.stream()
-                .filter(detector -> detectorNo.equals(detector.getDetectorNo()))
+                .filter(detector -> Integer.parseInt(detectorNo) == (detector.getDetectorNo()))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
                         String.format("未找到检测器: 路口ID=%s, 检测器编号=%s", crossId, detectorNo)));
@@ -601,7 +598,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<LaneParam> lanes = getLanesByCrossId(crossId);
         return lanes.stream()
-                .filter(lane -> laneNo.equals(lane.getLaneNo()))
+                .filter(lane -> Integer.parseInt(laneNo)==(lane.getLaneNo()))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
                         String.format("未找到车道: 路口ID=%s, 车道编号=%s", crossId, laneNo)));
@@ -660,7 +657,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<PedestrianParam> pedestrians = getPedestriansByCrossId(crossId);
         return pedestrians.stream()
-                .filter(pedestrian -> pedestrianNo.equals(pedestrian.getPedestrianNo()))
+                .filter(pedestrian -> Integer.parseInt(pedestrianNo)==(pedestrian.getPedestrianNo()))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
                         String.format("未找到行人参数: 路口ID=%s, 行人编号=%s", crossId, pedestrianNo)));
@@ -719,7 +716,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<SignalGroupParam> signalGroups = getSignalGroupsByCrossId(crossId);
         return signalGroups.stream()
-                .filter(signalGroup -> signalGroupNo.equals(signalGroup.getSignalGroupNo()))
+                .filter(signalGroup -> Integer.parseInt(signalGroupNo) == (signalGroup.getSignalGroupNo()))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
                         String.format("未找到信号组: 路口ID=%s, 信号组编号=%s", crossId, signalGroupNo)));
@@ -778,7 +775,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<StageParam> stages = getStagesByCrossId(crossId);
         return stages.stream()
-                .filter(stage -> stageNo.equals(stage.getStageNo()))
+                .filter(stage -> Integer.parseInt(stageNo)==(stage.getStageNo()))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
                         String.format("未找到阶段: 路口ID=%s, 阶段编号=%s", crossId, stageNo)));
@@ -837,7 +834,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<PlanParam> plans = getPlansByCrossId(crossId);
         return plans.stream()
-                .filter(plan -> planNo.equals(plan.getPlanNo()))
+                .filter(plan -> Integer.parseInt(planNo)==(plan.getPlanNo()))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
                         String.format("未找到配时方案: 路口ID=%s, 方案编号=%s", crossId, planNo)));
@@ -1407,8 +1404,30 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         route.setRouteName(routeNode.path("RouteName").asText());
         route.setType(RouteType.fromCode(routeNode.path("Type").asText()));
         route.setSubRegionIdList(parseStringList(routeNode, "SubRegionIDList"));
-        // 解析RouteCrossList等复杂字段需要根据实际模型类来实现
+
+        // 解析RouteCrossList
+        List<RouteCross> routeCrossList = new ArrayList<>();
+        JsonNode routeCrossListNode = routeNode.path("RouteCrossList");
+
+        if (routeCrossListNode != null && routeCrossListNode.isArray()) {
+            for (JsonNode routeCrossNode : routeCrossListNode) {
+                RouteCross routeCross = parseRouteCross(routeCrossNode);
+                routeCrossList.add(routeCross);
+            }
+        }
+
+        route.setRouteCrossList(routeCrossList);
         return route;
+    }
+
+    /**
+     * 解析线路路口信息
+     */
+    private RouteCross parseRouteCross(JsonNode routeCrossNode) {
+        RouteCross routeCross = new RouteCross();
+        routeCross.setCrossId(routeCrossNode.path("CrossID").asText());
+        routeCross.setDistance(routeCrossNode.path("Distance").asInt(0));
+        return routeCross;
     }
 
     private CrossParam parseCrossParam(JsonNode crossNode) {
@@ -1502,8 +1521,59 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         stage.setStageNo(stageNode.path("StageNo").asInt());
         stage.setStageName(stageNode.path("StageName").asText());
         stage.setAttribute(stageNode.path("Attribute").asInt());
-        // 解析SignalGroupStatusList等复杂字段需要根据实际模型类来实现
+
+        // 解析SignalGroupStatusList
+        stage.setSignalGroupStatusList(parseSignalGroupStatusList(stageNode, "SignalGroupStatusList"));
+
         return stage;
+    }
+
+    /**
+     * 解析信号组状态列表
+     *
+     * @param parentNode 父节点
+     * @param fieldName 字段名称
+     * @return 信号组状态列表
+     */
+    private List<SignalGroupStatus> parseSignalGroupStatusList(JsonNode parentNode, String fieldName) {
+        List<SignalGroupStatus> statusList = new ArrayList<>();
+
+        JsonNode statusArray = parentNode.path(fieldName);
+        if (statusArray != null && statusArray.isArray()) {
+            for (JsonNode statusNode : statusArray) {
+                SignalGroupStatus status = parseSignalGroupStatus(statusNode);
+                statusList.add(status);
+            }
+        }
+
+        return statusList;
+    }
+
+    /**
+     * 解析单个信号组状态
+     *
+     * @param statusNode 状态节点
+     * @return 信号组状态对象
+     */
+    private SignalGroupStatus parseSignalGroupStatus(JsonNode statusNode) {
+        SignalGroupStatus status = new SignalGroupStatus();
+
+        // 解析信号组序号
+        status.setSignalGroupNo(statusNode.path("SignalGroupNo").asInt());
+
+        // 解析灯态状态，使用LampStatus枚举的fromCode方法
+        String lampStatusCode = statusNode.path("LampStatus").asText();
+        if (lampStatusCode != null && !lampStatusCode.trim().isEmpty()) {
+            try {
+                status.setLampStatus(LampStatus.fromCode(lampStatusCode));
+            } catch (IllegalArgumentException e) {
+                // 记录日志并设置默认值或抛出更友好的异常
+                logger.warn("未知的灯态代码: {}, 使用默认值OFF", lampStatusCode);
+                status.setLampStatus(LampStatus.OFF);
+            }
+        }
+
+        return status;
     }
 
     private PlanParam parsePlanParam(JsonNode planNode) {
@@ -1514,16 +1584,225 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         plan.setCycleLen(planNode.path("CycleLen").asInt());
         plan.setCoordStageNo(planNode.path("CoordStageNo").asInt());
         plan.setOffset(planNode.path("Offset").asInt());
-        // 解析StageTimingList等复杂字段需要根据实际模型类来实现
+
+        // 解析StageTimingList - 现在有完整实现
+        plan.setStageTimingList(parseStageTimingList(planNode, "StageTimingList"));
+
         return plan;
     }
 
+    /**
+     * 解析阶段配时信息列表
+     * @param parentNode 父JSON节点
+     * @param fieldName 字段名称
+     * @return 阶段配时信息列表
+     */
+    private List<StageTiming> parseStageTimingList(JsonNode parentNode, String fieldName) {
+        List<StageTiming> result = new ArrayList<>();
+        JsonNode listNode = parentNode.get(fieldName);
+
+        if (listNode != null && listNode.isArray()) {
+            for (JsonNode timingNode : listNode) {
+                StageTiming timing = parseStageTiming(timingNode);
+                result.add(timing);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 解析单个阶段配时信息
+     * @param timingNode 阶段配时JSON节点
+     * @return 阶段配时信息对象
+     */
+    private StageTiming parseStageTiming(JsonNode timingNode) {
+        StageTiming timing = new StageTiming();
+
+        // 设置基本配时信息
+        timing.setStageNo(timingNode.path("StageNo").asInt());
+        timing.setGreen(timingNode.path("Green").asInt());
+        timing.setYellow(timingNode.path("Yellow").asInt());
+        timing.setAllRed(timingNode.path("AllRed").asInt());
+
+        // 设置可选的最大最小绿灯时间
+        if (timingNode.has("MaxGreen") && !timingNode.path("MaxGreen").isNull()) {
+            timing.setMaxGreen(timingNode.path("MaxGreen").asInt());
+        }
+        if (timingNode.has("MinGreen") && !timingNode.path("MinGreen").isNull()) {
+            timing.setMinGreen(timingNode.path("MinGreen").asInt());
+        }
+
+        // 解析AdjustList（迟开早闭配置列表）
+        timing.setAdjustList(parseAdjustList(timingNode, "AdjustList"));
+
+        return timing;
+    }
+
+    /**
+     * 解析迟开早闭配置列表
+     * @param parentNode 父JSON节点
+     * @param fieldName 字段名称
+     * @return 迟开早闭配置列表
+     */
+    private List<Adjust> parseAdjustList(JsonNode parentNode, String fieldName) {
+        List<Adjust> result = new ArrayList<>();
+        JsonNode listNode = parentNode.get(fieldName);
+
+        if (listNode != null && listNode.isArray()) {
+            for (JsonNode adjustNode : listNode) {
+                Adjust adjust = parseAdjust(adjustNode);
+                result.add(adjust);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 解析单个迟开早闭配置
+     * @param adjustNode 迟开早闭配置JSON节点
+     * @return 迟开早闭配置对象
+     */
+    private Adjust parseAdjust(JsonNode adjustNode) {
+        Adjust adjust = new Adjust();
+
+        // 设置信号组序号
+        adjust.setSignalGroupNo(adjustNode.path("SignalGroupNo").asInt());
+
+        // 设置操作类型（迟开/早闭）
+        String operCode = adjustNode.path("Oper").asText();
+        if (operCode != null && !operCode.isEmpty()) {
+            adjust.setOper(AdjustOperation.fromCode(operCode));
+        }
+
+        // 设置调整时间长度
+        adjust.setLen(adjustNode.path("Len").asInt());
+
+        return adjust;
+    }
+
+    /**
+     * 解析DayPlanParam，包含完整的PeriodList解析
+     */
     private DayPlanParam parseDayPlanParam(JsonNode dayPlanNode) {
         DayPlanParam dayPlan = new DayPlanParam();
         dayPlan.setCrossId(dayPlanNode.path("CrossID").asText());
         dayPlan.setDayPlanNo(dayPlanNode.path("DayPlanNo").asInt());
-        // 解析PeriodList等复杂字段需要根据实际模型类来实现
+
+        // 解析PeriodList
+        List<Period> periodList = parsePeriodList(dayPlanNode, "PeriodList");
+        dayPlan.setPeriodList(periodList);
+
         return dayPlan;
+    }
+
+    /**
+     * 解析时段信息列表
+     * @param parentNode 父JSON节点
+     * @param fieldName 字段名称
+     * @return 时段信息列表
+     */
+    private List<Period> parsePeriodList(JsonNode parentNode, String fieldName) {
+        List<Period> periodList = new ArrayList<>();
+        JsonNode listNode = parentNode.get(fieldName);
+
+        if (listNode != null && listNode.isArray()) {
+            for (JsonNode periodNode : listNode) {
+                Period period = parsePeriod(periodNode);
+                periodList.add(period);
+            }
+        }
+
+        return periodList;
+    }
+
+    /**
+     * 解析单个时段信息
+     * @param periodNode 时段JSON节点
+     * @return 时段信息对象
+     */
+    private Period parsePeriod(JsonNode periodNode) {
+        Period period = new Period();
+
+        // 解析开始时间 - 从字符串格式"HH:MM"转换为LocalTime
+        String startTimeStr = periodNode.path("StartTime").asText();
+        if (startTimeStr != null && !startTimeStr.isEmpty() && !"null".equals(startTimeStr)) {
+            try {
+                // 支持"HH:MM"和"HH:MM:SS"格式
+                if (startTimeStr.length() == 5) {
+                    period.setStartTime(LocalTime.parse(startTimeStr));
+                } else if (startTimeStr.length() == 8) {
+                    period.setStartTime(LocalTime.parse(startTimeStr));
+                } else {
+                    logger.warn("不支持的时间格式: {}, 使用默认值00:00", startTimeStr);
+                    period.setStartTime(LocalTime.of(0, 0));
+                }
+            } catch (Exception e) {
+                logger.warn("解析开始时间失败: {}, 使用默认值00:00", startTimeStr);
+                period.setStartTime(LocalTime.of(0, 0));
+            }
+        } else {
+            period.setStartTime(LocalTime.of(0, 0));
+        }
+
+        // 解析配时方案号 - 根据testdata.json，PlanNo可能是字符串形式的数字（如"001"）
+        JsonNode planNoNode = periodNode.get("PlanNo");
+        if (planNoNode != null && !planNoNode.isNull()) {
+            if (planNoNode.isTextual()) {
+                String planNoStr = planNoNode.asText();
+                if (planNoStr != null && !planNoStr.isEmpty() && !"null".equals(planNoStr)) {
+                    try {
+                        // 去除前导零后转换为整数
+                        period.setPlanNo(Integer.parseInt(planNoStr));
+                    } catch (NumberFormatException e) {
+                        logger.warn("解析配时方案号失败: {}, 使用默认值1", planNoStr);
+                        period.setPlanNo(1);
+                    }
+                } else {
+                    period.setPlanNo(1);
+                }
+            } else {
+                period.setPlanNo(planNoNode.asInt(1));
+            }
+        } else {
+            period.setPlanNo(1);
+        }
+
+        // 解析控制方式
+        String ctrlMode = periodNode.path("CtrlMode").asText();
+        if (ctrlMode != null && !ctrlMode.isEmpty() && !"null".equals(ctrlMode)) {
+            period.setCtrlMode(ctrlMode);
+        } else {
+            // 根据协议文档，设置默认控制方式
+            period.setCtrlMode("21"); // 假设21为默认的时间优化控制方式
+        }
+
+        return period;
+    }
+
+    /**
+     * 使用示例和验证方法
+     */
+    public void validatePeriodListParsing() throws BusinessException {
+        // 测试解析功能
+        List<DayPlanParam> dayPlans = getAllDayPlans();
+
+        for (DayPlanParam dayPlan : dayPlans) {
+            logger.info("日计划: CrossID={}, DayPlanNo={}",
+                    dayPlan.getCrossId(), dayPlan.getDayPlanNo());
+
+            List<Period> periods = dayPlan.getPeriodList();
+            if (periods != null && !periods.isEmpty()) {
+                logger.info("包含{}个时段:", periods.size());
+                for (Period period : periods) {
+                    logger.info("  时段: 开始时间={}, 配时方案号={}, 控制方式={}",
+                            period.getStartTime(), period.getPlanNo(), period.getCtrlMode());
+                }
+            } else {
+                logger.warn("日计划{}没有时段信息", dayPlan.getDayPlanNo());
+            }
+        }
     }
 
     private ScheduleParam parseScheduleParam(JsonNode scheduleNode) {

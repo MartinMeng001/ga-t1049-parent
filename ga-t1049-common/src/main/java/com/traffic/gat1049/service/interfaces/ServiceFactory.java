@@ -41,6 +41,11 @@ public interface ServiceFactory {
     LaneService getLaneService();
 
     /**
+     * 获取人行服务
+     */
+    PedestrianService getPedestrianService();
+
+    /**
      * 获取检测器服务
      */
     DetectorService getDetectorService();
@@ -54,6 +59,11 @@ public interface ServiceFactory {
      * 获取信号组服务
      */
     SignalGroupService getSignalGroupService();
+
+    /**
+     * 获取阶段服务
+     */
+    StageService getStageService();
 
     /**
      * 获取配时方案服务

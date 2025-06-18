@@ -118,12 +118,12 @@ public class PlanServiceImpl implements PlanService {
             throw new ValidationException("dayPlanNo", "日计划号不能为空");
         }
 
-        Map<Integer, DayPlanParam> crossDayPlans = dayPlanStorage.get(crossId);
-        if (crossDayPlans == null) {
-            throw new DataNotFoundException("DayPlanParam", crossId + "-" + dayPlanNo);
-        }
+//        Map<Integer, DayPlanParam> crossDayPlans = dayPlanStorage.get(crossId);
+//        if (crossDayPlans == null) {
+//            throw new DataNotFoundException("DayPlanParam", crossId + "-" + dayPlanNo);
+//        }
 
-        DayPlanParam dayPlan = crossDayPlans.get(dayPlanNo);
+        DayPlanParam dayPlan = dataPrider.getDayPlanByCrossIdAndNo(crossId, dayPlanNo.toString());//crossDayPlans.get(dayPlanNo);
         if (dayPlan == null) {
             throw new DataNotFoundException("DayPlanParam", crossId + "-" + dayPlanNo);
         }

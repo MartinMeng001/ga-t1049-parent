@@ -264,16 +264,13 @@ public class TSCCommandHandler extends TokenRequiredHandler {
             return serviceFactory.getLampGroupService().findByCrossId(crossId);
         }
         return serviceFactory.getLampGroupService().findByCrossIdAndLampGroupNo(crossId, lampGroupNo);
-        // 这里需要实现LampGroupService，暂时返回空列表
-//        logger.warn("LampGroup query not fully implemented for crossId: {}, lampGroupNo: {}", crossId, lampGroupNo);
-//        return java.util.Collections.emptyList();
     }
 
     private Object handleDetectorParam(String crossId, Integer detectorNo) throws BusinessException {
         if (crossId == null) {
             throw new ValidationException("crossId", "Cross ID is required for DetectorParam query");
         }
-        if (detectorNo == null) {
+        if (detectorNo == null || detectorNo == 0) {
             return serviceFactory.getDetectorService().findByCrossId(crossId);
         }
         return serviceFactory.getDetectorService().findByCrossIdAndDetectorNo(crossId, detectorNo);
@@ -283,7 +280,7 @@ public class TSCCommandHandler extends TokenRequiredHandler {
         if (crossId == null) {
             throw new ValidationException("crossId", "Cross ID is required for LaneParam query");
         }
-        if (laneNo == null) {
+        if (laneNo == null || laneNo==0) {
             return serviceFactory.getLaneService().findByCrossId(crossId);
         }
         return serviceFactory.getLaneService().findByCrossIdAndLaneNo(crossId, laneNo);
@@ -293,16 +290,17 @@ public class TSCCommandHandler extends TokenRequiredHandler {
         if (crossId == null) {
             throw new ValidationException("crossId", "Cross ID is required for PedestrianParam query");
         }
-        // 这里需要实现PedestrianService，暂时返回空列表
-        logger.warn("PedestrianParam query not fully implemented for crossId: {}, pedestrianNo: {}", crossId, pedestrianNo);
-        return java.util.Collections.emptyList();
+        if(pedestrianNo == null || pedestrianNo==0){
+            return serviceFactory.getPedestrianService().findByCrossId(crossId);
+        }
+        return serviceFactory.getPedestrianService().findByCrossIdAndPedestrianNo(crossId, pedestrianNo);
     }
 
     private Object handleSignalGroupParam(String crossId, Integer signalGroupNo) throws BusinessException {
         if (crossId == null) {
             throw new ValidationException("crossId", "Cross ID is required for SignalGroupParam query");
         }
-        if (signalGroupNo == null) {
+        if (signalGroupNo == null || signalGroupNo == 0) {
             return serviceFactory.getSignalGroupService().findByCrossId(crossId);
         }
         return serviceFactory.getSignalGroupService().findByCrossIdAndSignalGroupNo(crossId, signalGroupNo);
@@ -312,9 +310,10 @@ public class TSCCommandHandler extends TokenRequiredHandler {
         if (crossId == null) {
             throw new ValidationException("crossId", "Cross ID is required for StageParam query");
         }
-        // 这里需要实现StageService，暂时返回空列表
-        logger.warn("StageParam query not fully implemented for crossId: {}, stageNo: {}", crossId, stageNo);
-        return java.util.Collections.emptyList();
+        if(stageNo == null || stageNo==0){
+            return serviceFactory.getStageService().findByCrossId(crossId);
+        }
+        return serviceFactory.getStageService().findByCrossIdAndStageNo(crossId, stageNo);
     }
 
     private Object handlePlanParam(String crossId, Integer planNo) throws BusinessException {
