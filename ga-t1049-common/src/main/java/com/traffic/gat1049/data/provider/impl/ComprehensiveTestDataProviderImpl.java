@@ -3,6 +3,7 @@ package com.traffic.gat1049.data.provider.impl;
 import com.traffic.gat1049.data.provider.ComprehensiveTestDataProvider;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
+import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.model.enums.*;
 import com.traffic.gat1049.protocol.model.intersection.*;
 import com.traffic.gat1049.protocol.model.system.*;
@@ -893,7 +894,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<DayPlanParam> dayPlans = getDayPlansByCrossId(crossId);
         return dayPlans.stream()
-                .filter(dayPlan -> dayPlanNo.equals(dayPlan.getDayPlanNo()))
+                .filter(dayPlan -> Integer.parseInt(dayPlanNo) == (dayPlan.getDayPlanNo()))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
                         String.format("未找到日计划: 路口ID=%s, 日计划编号=%s", crossId, dayPlanNo)));
@@ -952,7 +953,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<ScheduleParam> schedules = getSchedulesByCrossId(crossId);
         return schedules.stream()
-                .filter(schedule -> scheduleNo.equals(schedule.getScheduleNo()))
+                .filter(schedule -> Integer.parseInt(scheduleNo)==(schedule.getScheduleNo()))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
                         String.format("未找到调度: 路口ID=%s, 调度编号=%s", crossId, scheduleNo)));
@@ -964,7 +965,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     @SuppressWarnings("unchecked")
     public List<Object> getAllCrossStates() throws BusinessException {
         ensureInitialized();
-        return (List<Object>) getRunStatusData("CrossStatus");
+        return (List<Object>) getRunStatusData("CrossState");
     }
 
     @Override
@@ -1725,25 +1726,14 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     private Period parsePeriod(JsonNode periodNode) {
         Period period = new Period();
 
-        // 解析开始时间 - 从字符串格式"HH:MM"转换为LocalTime
+        // 解析开始时间 - 直接作为字符串处理，不再转换为LocalTime
         String startTimeStr = periodNode.path("StartTime").asText();
         if (startTimeStr != null && !startTimeStr.isEmpty() && !"null".equals(startTimeStr)) {
-            try {
-                // 支持"HH:MM"和"HH:MM:SS"格式
-                if (startTimeStr.length() == 5) {
-                    period.setStartTime(LocalTime.parse(startTimeStr));
-                } else if (startTimeStr.length() == 8) {
-                    period.setStartTime(LocalTime.parse(startTimeStr));
-                } else {
-                    logger.warn("不支持的时间格式: {}, 使用默认值00:00", startTimeStr);
-                    period.setStartTime(LocalTime.of(0, 0));
-                }
-            } catch (Exception e) {
-                logger.warn("解析开始时间失败: {}, 使用默认值00:00", startTimeStr);
-                period.setStartTime(LocalTime.of(0, 0));
-            }
+            // 使用Period类的标准化方法处理时间格式
+            period.setStartTime(Period.normalizeTimeFormat(startTimeStr));
         } else {
-            period.setStartTime(LocalTime.of(0, 0));
+            // 设置默认时间
+            period.setStartTime("00:00:00");
         }
 
         // 解析配时方案号 - 根据testdata.json，PlanNo可能是字符串形式的数字（如"001"）
@@ -1780,6 +1770,59 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         return period;
     }
+
+    /**
+     * 验证时段信息列表 - 更新版本
+     * 适配 startTime 为 String 类型的验证
+     */
+    private void validatePeriods(List<Period> periods) throws BusinessException {
+        if (periods == null || periods.isEmpty()) {
+            throw new ValidationException("periodList", "时段信息列表不能为空");
+        }
+
+        // 检查时段是否按时间顺序排列
+        for (int i = 0; i < periods.size() - 1; i++) {
+            Period current = periods.get(i);
+            Period next = periods.get(i + 1);
+
+            if (current.getStartTime() == null || next.getStartTime() == null) {
+                throw new ValidationException("startTime", "时段开始时间不能为空");
+            }
+
+            // 使用Period类的时间比较方法
+            if (Period.compareTime(current.getStartTime(), next.getStartTime()) >= 0) {
+                throw new ValidationException("periodList", "时段必须按开始时间升序排列");
+            }
+        }
+
+        // 验证每个时段的有效性
+        for (Period period : periods) {
+            validatePeriod(period);
+        }
+    }
+
+    /**
+     * 验证单个时段信息 - 更新版本
+     */
+    private void validatePeriod(Period period) throws BusinessException {
+        if (period.getStartTime() == null || period.getStartTime().trim().isEmpty()) {
+            throw new ValidationException("startTime", "时段开始时间不能为空");
+        }
+
+        if (period.getPlanNo() == null || period.getPlanNo() <= 0) {
+            throw new ValidationException("planNo", "配时方案号必须大于0");
+        }
+
+        if (period.getCtrlMode() == null || period.getCtrlMode().trim().isEmpty()) {
+            throw new ValidationException("ctrlMode", "控制方式不能为空");
+        }
+
+        // 使用Period类的验证方法检查时间格式
+        if (!Period.isValidTimeFormat(period.getStartTime())) {
+            throw new ValidationException("startTime", "时间格式必须为HH:MM:SS或HH:MM");
+        }
+    }
+
 
     /**
      * 使用示例和验证方法

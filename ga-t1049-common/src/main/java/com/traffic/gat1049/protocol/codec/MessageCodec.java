@@ -11,6 +11,7 @@ import com.traffic.gat1049.protocol.model.core.Address;
 import com.traffic.gat1049.protocol.model.core.MessageBody;
 import com.traffic.gat1049.protocol.model.core.Operation;
 import com.traffic.gat1049.protocol.model.intersection.*;
+import com.traffic.gat1049.protocol.model.runtime.CrossState;
 import com.traffic.gat1049.protocol.model.sdo.*;
 import com.traffic.gat1049.protocol.model.signal.*;
 import com.traffic.gat1049.protocol.model.system.*;
@@ -115,7 +116,8 @@ public class MessageCodec {
                                 SignalGroupStatus.class,
                                 StageParam.class,
                                 StageTiming.class,
-                                Adjust.class
+                                Adjust.class,
+                                CrossState.class
                                 // 根据需要添加其他 SDO 类
                         };
 

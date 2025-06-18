@@ -1,5 +1,6 @@
 package com.traffic.gat1049.service.abstracts;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
@@ -34,6 +35,8 @@ public class CrossServiceImpl implements CrossService {
 
     // 路口状态存储
     private final Map<String, CrossState> crossStateStorage = new ConcurrentHashMap<>();
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public CrossServiceImpl() throws BusinessException {
         // 初始化一些示例数据
@@ -214,7 +217,8 @@ public class CrossServiceImpl implements CrossService {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
 
-        CrossState crossState = crossStateStorage.get(crossId);
+        Object obj = dataPrider.getCrossStateById(crossId);
+        CrossState crossState = OBJECT_MAPPER.convertValue(obj, CrossState.class);//crossStateStorage.get(crossId);
         if (crossState == null) {
             // 如果路口存在但状态不存在，创建默认状态
             if (crossStorage.containsKey(crossId)) {
@@ -226,6 +230,28 @@ public class CrossServiceImpl implements CrossService {
         }
 
         return crossState;
+    }
+
+    @Override
+    public List<CrossState> getAllCrossState() throws BusinessException {
+        List<Object> objs = dataPrider.getAllCrossStates();
+//        List<CrossState> allCrossState = new ArrayList<>();
+//        for(Object obj : objs) {
+//            CrossState crossState = OBJECT_MAPPER.convertValue(obj, CrossState.class);
+//            allCrossState.add(crossState);
+//        }
+//        return allCrossState;
+        return objs.stream()
+                .map(obj -> {
+                    try {
+                        return OBJECT_MAPPER.convertValue(obj, CrossState.class);
+                    } catch (IllegalArgumentException e) {
+                        logger.warn("转换 CrossState 失败: {}", obj, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -71,6 +71,13 @@ public interface CrossService extends BaseService<CrossParam, String> {
     CrossState getCrossState(String crossId) throws BusinessException;
 
     /**
+     * 获取路口状态列表
+     *
+     * @return 路口状态列表
+     * @throws BusinessException 业务异常
+     */
+    List<CrossState> getAllCrossState() throws BusinessException;
+    /**
      * 更新路口状态
      *
      * @param crossId 路口编号

@@ -119,7 +119,7 @@ public class RuntimeInfoHandler extends AbstractProtocolHandler {
         if (crossId == null) {
             throw new ValidationException("crossId", "Cross ID is required for CrossModePlan query");
         }
-        return serviceFactory.getPlanService().getCurrentModePlan(crossId);
+        return serviceFactory.getControlModeService().getCurrentModePlan(crossId);
     }
 
     private Object handleCrossCycle(String crossId) throws BusinessException {

@@ -18,7 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "CrossModePlan")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CrossModePlan extends BaseState {
+public class CrossModePlan {//extends BaseState
 
     /**
      * 路口编号
@@ -44,11 +44,11 @@ public class CrossModePlan extends BaseState {
 
     // 构造函数
     public CrossModePlan() {
-        super();
+        //super();
     }
 
     public CrossModePlan(String crossId, ControlMode controlMode, Integer planNo) {
-        super();
+        //super();
         this.crossId = crossId;
         this.controlMode = controlMode;
         this.planNo = planNo;

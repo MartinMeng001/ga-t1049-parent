@@ -95,7 +95,7 @@ public class PlanControlHandler extends AbstractProtocolHandler {
                 setDayPlanParam.getDayPlanParam().getCrossId(),
                 setDayPlanParam.getDayPlanParam().getDayPlanNo());
 
-        return serviceFactory.getPlanService().setDayPlanParam(
+        return serviceFactory.getDayPlanService().setDayPlanParam(
                 setDayPlanParam.getOper(), setDayPlanParam.getDayPlanParam());
     }
 
@@ -112,7 +112,7 @@ public class PlanControlHandler extends AbstractProtocolHandler {
                 setScheduleParam.getScheduleParam().getCrossId(),
                 setScheduleParam.getScheduleParam().getScheduleNo());
 
-        return serviceFactory.getPlanService().setScheduleParam(
+        return serviceFactory.getScheduleService().setScheduleParam(
                 setScheduleParam.getOper(), setScheduleParam.getScheduleParam());
     }
 
