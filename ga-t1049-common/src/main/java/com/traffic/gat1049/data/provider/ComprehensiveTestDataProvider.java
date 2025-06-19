@@ -349,9 +349,9 @@ public interface ComprehensiveTestDataProvider {
     List<Object> getAllStageTrafficData() throws BusinessException;
 
     /**
-     * 根据路口ID和阶段编号获取阶段交通流数据
+     * 根据路口ID获取阶段交通流数据
      */
-    List<Object> getStageTrafficDataByCrossIdAndStageNo(String crossId, String stageNo) throws BusinessException;
+    Object getStageTrafficDataByCrossId(String crossId) throws BusinessException;
 
     // ==================== 可变车道和干线控制相关 ====================
 
@@ -363,7 +363,7 @@ public interface ComprehensiveTestDataProvider {
     /**
      * 根据路口ID获取可变车道状态
      */
-    List<Object> getVarLaneStatusByCrossId(String crossId) throws BusinessException;
+    Object getVarLaneStatusByCrossId(String crossId) throws BusinessException;
 
     /**
      * 获取所有干线控制模式

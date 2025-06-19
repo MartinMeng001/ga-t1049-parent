@@ -18,7 +18,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "CrossSignalGroupStatus")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CrossSignalGroupStatus extends BaseState {
+public class CrossSignalGroupStatus {//extends BaseState
 
     /**
      * 路口编号
@@ -39,11 +39,11 @@ public class CrossSignalGroupStatus extends BaseState {
 
     // 构造函数
     public CrossSignalGroupStatus() {
-        super();
+        //super();
     }
 
     public CrossSignalGroupStatus(String crossId) {
-        super();
+        //super();
         this.crossId = crossId;
     }
 

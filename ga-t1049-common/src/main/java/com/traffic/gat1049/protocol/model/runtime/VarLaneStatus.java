@@ -2,6 +2,9 @@ package com.traffic.gat1049.protocol.model.runtime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.LampStatusAdapter;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.LaneMovementAdapter;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.VarLaneModeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseState;
 import com.traffic.gat1049.model.enums.LaneMovement;
 import com.traffic.gat1049.model.enums.VarLaneMode;
@@ -12,6 +15,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 可变车道运行信息
@@ -20,7 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "VarLaneStatus")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class VarLaneStatus extends BaseState {
+public class VarLaneStatus  {//extends BaseState
 
     /**
      * 路口编号
@@ -42,6 +46,7 @@ public class VarLaneStatus extends BaseState {
      * 当前转向
      */
     @XmlElement(name = "CurMovement", required = true)
+    @XmlJavaTypeAdapter(LaneMovementAdapter.class)
     @JsonProperty("CurMovement")
     private LaneMovement curMovement;
 
@@ -49,16 +54,17 @@ public class VarLaneStatus extends BaseState {
      * 当前控制方式
      */
     @XmlElement(name = "CurMode", required = true)
+    @XmlJavaTypeAdapter(VarLaneModeAdapter.class)
     @JsonProperty("CurMode")
     private VarLaneMode curMode;
 
     // 构造函数
     public VarLaneStatus() {
-        super();
+        //super();
     }
 
     public VarLaneStatus(String crossId, Integer laneNo, LaneMovement curMovement) {
-        super();
+        //super();
         this.crossId = crossId;
         this.laneNo = laneNo;
         this.curMovement = curMovement;

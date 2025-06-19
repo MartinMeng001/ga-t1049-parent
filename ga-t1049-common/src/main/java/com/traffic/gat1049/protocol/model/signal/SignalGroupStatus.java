@@ -3,11 +3,13 @@ package com.traffic.gat1049.protocol.model.signal;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.traffic.gat1049.model.enums.LampStatus;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.LampStatusAdapter;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 信号组灯态
@@ -29,6 +31,7 @@ public class SignalGroupStatus {
      * 灯态
      */
     @XmlElement(name = "LampStatus", required = true)
+    @XmlJavaTypeAdapter(LampStatusAdapter.class)
     @JsonProperty("LampStatus")
     private LampStatus lampStatus;
 

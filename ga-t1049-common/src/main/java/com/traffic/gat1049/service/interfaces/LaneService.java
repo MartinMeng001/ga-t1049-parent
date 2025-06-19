@@ -111,9 +111,8 @@ public interface LaneService {
     /**
      * 获取路口的可变车道列表
      *
-     * @param crossId 路口编号
      * @return 可变车道状态列表
      * @throws BusinessException 业务异常
      */
-    List<VarLaneStatus> getVarLanes(String crossId) throws BusinessException;
+    List<VarLaneStatus> getVarLanes() throws BusinessException;
 }

@@ -1,5 +1,7 @@
 package com.traffic.gat1049.service.abstracts;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
@@ -12,10 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -27,6 +26,7 @@ public class ControlModeServiceImpl implements ControlModeService {
 
     private static final Logger logger = LoggerFactory.getLogger(ControlModeServiceImpl.class);
 
+    private ComprehensiveTestDataProviderImpl dataProvider = ComprehensiveTestDataProviderImpl.getInstance();
     // 当前控制模式存储：crossId -> CrossModePlan
     private final Map<String, CrossModePlan> currentModeStorage = new ConcurrentHashMap<>();
 
@@ -36,6 +36,7 @@ public class ControlModeServiceImpl implements ControlModeService {
     // 临时方案存储：crossId -> planNo -> PlanParam（用于中心预案）
     private final Map<String, Map<Integer, PlanParam>> temporaryPlanStorage = new ConcurrentHashMap<>();
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     // 临时方案号生成器
     private final AtomicInteger temporaryPlanNoGenerator = new AtomicInteger(-1);
 
@@ -47,7 +48,7 @@ public class ControlModeServiceImpl implements ControlModeService {
 
     public ControlModeServiceImpl() throws BusinessException {
         // 初始化默认控制模式
-        initializeDefaultModes();
+        //initializeDefaultModes();
     }
 
     public ControlModeServiceImpl(PlanService planService) throws BusinessException {
@@ -61,14 +62,10 @@ public class ControlModeServiceImpl implements ControlModeService {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
 
-        CrossModePlan currentMode = currentModeStorage.get(crossId);
+        Object obj = dataProvider.getCrossModePlanById(crossId);
+        CrossModePlan currentMode = OBJECT_MAPPER.convertValue(obj, CrossModePlan.class);
         if (currentMode == null) {
-            // 返回默认的单点定时控制模式
-            currentMode = new CrossModePlan(crossId, ControlMode.SINGLE_TIMING, 1);
-            //currentMode.setStateTime(LocalDateTime.now());
-            currentModeStorage.put(crossId, currentMode);
-
-            logger.info("路口{}未找到控制模式，返回默认模式: {}", crossId, ControlMode.SINGLE_TIMING.getDescription());
+            throw new DataNotFoundException("CrossModePlan", crossId);
         }
 
         return currentMode;
@@ -154,7 +151,19 @@ public class ControlModeServiceImpl implements ControlModeService {
 
     @Override
     public List<CrossModePlan> getAllControlModes() throws BusinessException {
-        return new ArrayList<>(currentModeStorage.values());
+        List<Object> objs = dataProvider.getAllCrossModePlans();
+
+        return objs.stream()
+                .map(obj -> {
+                    try {
+                        return OBJECT_MAPPER.convertValue(obj, CrossModePlan.class);
+                    } catch (IllegalArgumentException e) {
+                        logger.warn("转换 ControlModePlan 失败: {}", obj, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override

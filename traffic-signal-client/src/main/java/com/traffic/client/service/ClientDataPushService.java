@@ -213,7 +213,7 @@ public class ClientDataPushService {
                 }
 
                 CrossState crossState = new CrossState(crossId, SystemState.ONLINE);
-                crossState.setStateTime(LocalDateTime.now());
+                //crossState.setStateTime(LocalDateTime.now());
 
                 Message pushMessage = createPushMessage(crossState);
                 sendPushMessage(serverId, pushMessage);
@@ -290,7 +290,7 @@ public class ClientDataPushService {
 
                 CrossSignalGroupStatus status = new CrossSignalGroupStatus();
                 status.setCrossId(crossId);
-                status.setStateTime(LocalDateTime.now());
+//                status.setStateTime(LocalDateTime.now());
 
                 // 模拟4个信号组的状态
                 List<SignalGroupStatus> groupList = new CopyOnWriteArrayList<>();
@@ -330,7 +330,7 @@ public class ClientDataPushService {
 
                 CrossTrafficData trafficData = new CrossTrafficData();
                 trafficData.setCrossId(crossId);
-                trafficData.setEndTime(LocalDateTime.now());
+                trafficData.setEndTimeFromLocalDateTime(LocalDateTime.now());
                 trafficData.setInterval(300); // 5分钟间隔
 
                 // 模拟车道交通流数据
@@ -548,7 +548,7 @@ public class ClientDataPushService {
                 // 创建模拟交通数据
                 CrossTrafficData trafficData = new CrossTrafficData();
                 trafficData.setCrossId(crossId);
-                trafficData.setEndTime(LocalDateTime.now());
+                trafficData.setEndTimeFromLocalDateTime(LocalDateTime.now());
                 sendPushMessage(serverId, createPushMessage(trafficData));
                 break;
             default:

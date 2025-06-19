@@ -22,7 +22,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "StageTrafficData")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class StageTrafficData extends BaseState {
+public class StageTrafficData {//extends BaseState
 
     /**
      * 路口编号
@@ -34,21 +34,19 @@ public class StageTrafficData extends BaseState {
 
     /**
      * 阶段开始时间
+     * 格式: yyyy-MM-dd HH:mm:ss
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @XmlElement(name = "StartTime", required = true)
-    @XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
     @JsonProperty("StartTime")
-    private LocalDateTime startTime;
+    private String startTime;
 
     /**
      * 阶段结束时间
+     * 格式: yyyy-MM-dd HH:mm:ss
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @XmlElement(name = "EndTime", required = true)
-    @XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
     @JsonProperty("EndTime")
-    private LocalDateTime endTime;
+    private String endTime;
 
     /**
      * 阶段号
@@ -69,14 +67,13 @@ public class StageTrafficData extends BaseState {
 
     // 构造函数
     public StageTrafficData() {
-        super();
+        //super();
     }
 
     public StageTrafficData(String crossId, Integer stageNo) {
-        super();
+        //super();
         this.crossId = crossId;
         this.stageNo = stageNo;
-        this.startTime = LocalDateTime.now();
     }
 
     // Getters and Setters
@@ -88,19 +85,51 @@ public class StageTrafficData extends BaseState {
         this.crossId = crossId;
     }
 
-    public LocalDateTime getStartTime() {
+    public String getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
+    public void setStartTime(String startTime) {
         this.startTime = startTime;
     }
 
-    public LocalDateTime getEndTime() {
+    public String getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(LocalDateTime endTime) {
+    /**
+     * 获取开始时间的 LocalDateTime 对象
+     * @return LocalDateTime 对象，如果 startTime 为空或格式错误则返回 null
+     */
+    public LocalDateTime getStartTimeAsLocalDateTime() {
+        return parseDateTime(this.startTime);
+    }
+
+    /**
+     * 设置开始时间，接受 LocalDateTime 参数
+     * @param startTime LocalDateTime 对象
+     */
+    public void setStartTimeAsLocalDateTime(LocalDateTime startTime) {
+        this.startTime = formatDateTime(startTime);
+    }
+
+    /**
+     * 获取结束时间的 LocalDateTime 对象
+     * @return LocalDateTime 对象，如果 endTime 为空或格式错误则返回 null
+     */
+    public LocalDateTime getEndTimeAsLocalDateTime() {
+        return parseDateTime(this.endTime);
+    }
+
+    /**
+     * 设置结束时间，接受 LocalDateTime 参数
+     * @param endTime LocalDateTime 对象
+     */
+    public void setEndTimeAsLocalDateTime(LocalDateTime endTime) {
+        this.endTime = formatDateTime(endTime);
+    }
+
+    public void setEndTime(String endTime) {
         this.endTime = endTime;
     }
 
@@ -129,5 +158,34 @@ public class StageTrafficData extends BaseState {
                 ", stageNo=" + stageNo +
                 ", dataList=" + dataList +
                 "} " + super.toString();
+    }
+
+    /**
+     * 将 LocalDateTime 转换为字符串格式
+     * @param dateTime LocalDateTime 对象
+     * @return 格式化的时间字符串 (yyyy-MM-dd HH:mm:ss)，如果输入为 null 则返回 null
+     */
+    private static String formatDateTime(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return null;
+        }
+        return dateTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+
+    /**
+     * 将字符串格式转换为 LocalDateTime
+     * @param dateTimeStr 时间字符串 (yyyy-MM-dd HH:mm:ss)
+     * @return LocalDateTime 对象，如果输入为空或格式错误则返回 null
+     */
+    private static LocalDateTime parseDateTime(String dateTimeStr) {
+        if (dateTimeStr == null || dateTimeStr.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(dateTimeStr, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        } catch (java.time.format.DateTimeParseException e) {
+            // 如果解析失败，返回 null 而不是抛出异常
+            return null;
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.traffic.gat1049.service.abstracts;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
@@ -37,6 +38,7 @@ public class RouteControlServiceImpl implements RouteControlService {
     // 干线协调控制状态存储
     private final Map<String, Boolean> coordinationStatusStorage = new ConcurrentHashMap<>();
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public RouteControlServiceImpl() throws BusinessException {
         // 初始化示例数据
         initializeSampleData();
@@ -48,12 +50,24 @@ public class RouteControlServiceImpl implements RouteControlService {
             throw new ValidationException("routeId", "线路编号不能为空");
         }
 
-        RouteControlModeStatus controlMode = routeControlModeStorage.get(routeId);
-        if (controlMode == null) {
-            throw new DataNotFoundException("RouteControlModeStatus", routeId);
-        }
+        Object obj = dataPrider.getRouteControlModeById(routeId);
+        return OBJECT_MAPPER.convertValue(obj, RouteControlModeStatus.class);
+    }
 
-        return controlMode;
+    @Override
+    public List<RouteControlModeStatus> getAllRouteControlMode() throws BusinessException {
+        List<Object> objs = dataPrider.getAllRouteControlModes();
+        return objs.stream()
+                .map(obj -> {
+                    try{
+                        return OBJECT_MAPPER.convertValue(obj, RouteControlModeStatus.class);
+                    }catch(IllegalArgumentException e){
+                        logger.error("转换 RouteControlModeStatus 失败: {}", obj, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -72,8 +86,8 @@ public class RouteControlServiceImpl implements RouteControlService {
         }
 
         RouteControlModeStatus status = new RouteControlModeStatus(routeId, controlMode);
-        status.setCreateTime(LocalDateTime.now());
-        status.setUpdateTime(LocalDateTime.now());
+//        status.setCreateTime(LocalDateTime.now());
+//        status.setUpdateTime(LocalDateTime.now());
 
         routeControlModeStorage.put(routeId, status);
 
@@ -85,13 +99,24 @@ public class RouteControlServiceImpl implements RouteControlService {
         if (routeId == null || routeId.trim().isEmpty()) {
             throw new ValidationException("routeId", "线路编号不能为空");
         }
+        Object obj = dataPrider.getRouteSpeedById(routeId);
+        return OBJECT_MAPPER.convertValue(obj, RouteSpeed.class);
+    }
 
-        RouteSpeed routeSpeed = routeSpeedStorage.get(routeId);
-        if (routeSpeed == null) {
-            throw new DataNotFoundException("RouteSpeed", routeId);
-        }
-
-        return routeSpeed;
+    @Override
+    public List<RouteSpeed> getAllRouteSpeed() throws BusinessException {
+        List<Object> objs = dataPrider.getAllRouteSpeeds();
+        return objs.stream()
+                .map(obj -> {
+                    try{
+                        return OBJECT_MAPPER.convertValue(obj, RouteSpeed.class);
+                    }catch (IllegalArgumentException e){
+                        logger.warn("转换 RouteSpeed 失败: {}", obj, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -104,8 +129,8 @@ public class RouteControlServiceImpl implements RouteControlService {
 
         String routeId = routeSpeed.getRouteId();
 
-        routeSpeed.setCreateTime(LocalDateTime.now());
-        routeSpeed.setUpdateTime(LocalDateTime.now());
+//        routeSpeed.setCreateTime(LocalDateTime.now());
+//        routeSpeed.setUpdateTime(LocalDateTime.now());
 
         // 保存整体路线车速信息
         routeSpeedStorage.put(routeId, routeSpeed);
@@ -297,7 +322,7 @@ public class RouteControlServiceImpl implements RouteControlService {
         if (!sections.isEmpty()) {
             RouteSpeed routeSpeed = routeSpeedStorage.getOrDefault(routeId, new RouteSpeed(routeId));
             routeSpeed.setRoadSectionSpeedList(sections);
-            routeSpeed.setUpdateTime(LocalDateTime.now());
+//            routeSpeed.setUpdateTime(LocalDateTime.now());
             routeSpeedStorage.put(routeId, routeSpeed);
         }
     }

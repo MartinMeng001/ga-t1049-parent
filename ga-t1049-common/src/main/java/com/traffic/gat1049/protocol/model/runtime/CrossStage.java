@@ -18,7 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "CrossStage")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CrossStage extends BaseState {
+public class CrossStage  {//extends BaseState
 
     /**
      * 路口编号
@@ -60,11 +60,11 @@ public class CrossStage extends BaseState {
 
     // 构造函数
     public CrossStage() {
-        super();
+        //super();
     }
 
     public CrossStage(String crossId, Integer curStageNo) {
-        super();
+        //super();
         this.crossId = crossId;
         this.curStageNo = curStageNo;
         this.curStageLen = 0;
@@ -119,6 +119,6 @@ public class CrossStage extends BaseState {
                 ", lastStageLen=" + lastStageLen +
                 ", curStageNo=" + curStageNo +
                 ", curStageLen=" + curStageLen +
-                "} " + super.toString();
+                "} ";
     }
 }

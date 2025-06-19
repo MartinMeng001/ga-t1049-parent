@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "SignalControllerError")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SignalControllerError extends BaseState {
+public class SignalControllerError {//extends BaseState
 
     /**
      * 信号机编号
@@ -57,12 +57,12 @@ public class SignalControllerError extends BaseState {
 
     // 构造函数
     public SignalControllerError() {
-        super();
+        //super();
         this.occurTime = LocalDateTime.now();
     }
 
     public SignalControllerError(String signalControllerId, ControllerErrorType errorType) {
-        super();
+        //super();
         this.signalControllerId = signalControllerId;
         this.errorType = errorType;
         this.occurTime = LocalDateTime.now();

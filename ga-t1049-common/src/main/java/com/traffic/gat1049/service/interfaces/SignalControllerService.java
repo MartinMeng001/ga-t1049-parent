@@ -87,6 +87,14 @@ public interface SignalControllerService extends BaseService<SignalController, S
     List<SignalControllerError> getErrors(String signalControllerId) throws BusinessException;
 
     /**
+     * 获取所有信号机故障列表
+     *
+     * @return 所有信号机的故障列表
+     * @throws BusinessException 业务异常
+     */
+    List<SignalControllerError> getAllErrors() throws BusinessException;
+
+    /**
      * 清除信号机故障
      *
      * @param signalControllerId 信号机编号

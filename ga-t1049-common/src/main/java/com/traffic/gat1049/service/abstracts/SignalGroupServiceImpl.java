@@ -1,5 +1,6 @@
 package com.traffic.gat1049.service.abstracts;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
@@ -29,7 +30,7 @@ public class SignalGroupServiceImpl implements SignalGroupService {
 
     // 信号组状态存储 - 使用crossId作为key，存储整个路口的信号组状态
     private final Map<String, CrossSignalGroupStatus> signalGroupStatusStorage = new ConcurrentHashMap<>();
-
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public SignalGroupServiceImpl() throws BusinessException {
         // 初始化一些示例数据
         //initializeSampleData();
@@ -139,13 +140,28 @@ public class SignalGroupServiceImpl implements SignalGroupService {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
-
-        CrossSignalGroupStatus status = signalGroupStatusStorage.get(crossId);
+        Object obj = dataPrider.getCrossSignalGroupStatusById(crossId);
+        CrossSignalGroupStatus status = OBJECT_MAPPER.convertValue(obj, CrossSignalGroupStatus.class);//signalGroupStatusStorage.get(crossId);
         if (status == null) {
             throw new DataNotFoundException("CrossSignalGroupStatus", crossId);
         }
 
         return status;
+    }
+
+    @Override
+    public List<CrossSignalGroupStatus> getAllCrossSignalGroupStatus() throws BusinessException {
+        List<Object> objs = dataPrider.getAllCrossSignalGroupStatus();
+        return objs.stream()
+                .map(obj ->{
+                    try{
+                        return OBJECT_MAPPER.convertValue(obj, CrossSignalGroupStatus.class);
+                    }catch (IllegalArgumentException e){
+                        logger.warn("转换 CrossSignalGroupStatus 失败: {}", obj, e);
+                        return null;
+                    }
+                }).filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -164,7 +180,7 @@ public class SignalGroupServiceImpl implements SignalGroupService {
             throw new ValidationException("signalGroupStatusList", "信号组状态列表不能为空");
         }
 
-        crossSignalGroupStatus.setStateTime(LocalDateTime.now());
+        //crossSignalGroupStatus.setStateTime(LocalDateTime.now());
         signalGroupStatusStorage.put(crossId, crossSignalGroupStatus);
 
         logger.info("更新路口信号组状态: crossId={}, signalGroupCount={}",
@@ -232,7 +248,7 @@ public class SignalGroupServiceImpl implements SignalGroupService {
         CrossSignalGroupStatus crossStatus = signalGroupStatusStorage.get(crossId);
         if (crossStatus == null) {
             crossStatus = new CrossSignalGroupStatus(crossId);
-            crossStatus.setStateTime(LocalDateTime.now());
+//            crossStatus.setStateTime(LocalDateTime.now());
             signalGroupStatusStorage.put(crossId, crossStatus);
         }
 
@@ -303,7 +319,7 @@ public class SignalGroupServiceImpl implements SignalGroupService {
      */
     private void initializeCrossSignalGroupStatus(String crossId, List<Integer> signalGroupNos) {
         CrossSignalGroupStatus crossStatus = new CrossSignalGroupStatus(crossId);
-        crossStatus.setStateTime(LocalDateTime.now());
+//        crossStatus.setStateTime(LocalDateTime.now());
 
         List<SignalGroupStatus> statusList = new ArrayList<>();
         for (Integer signalGroupNo : signalGroupNos) {

@@ -46,7 +46,17 @@ public interface TrafficDataService {
      * @return 阶段交通流数据
      * @throws BusinessException 业务异常
      */
-    StageTrafficData getStageTrafficData(String crossId, Integer stageNo, LocalDateTime startTime, LocalDateTime endTime) throws BusinessException;
+    StageTrafficData getStageTrafficData(String crossId, LocalDateTime startTime, LocalDateTime endTime) throws BusinessException;
+
+    /**
+     * 获取阶段交通流数据列表
+     *
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 阶段交通流数据
+     * @throws BusinessException 业务异常
+     */
+    List<StageTrafficData> getAllStageTrafficData(LocalDateTime startTime, LocalDateTime endTime) throws BusinessException;
 
     /**
      * 保存路口交通流数据
@@ -74,6 +84,14 @@ public interface TrafficDataService {
     CrossCycle getCrossCycle(String crossId) throws BusinessException;
 
     /**
+     * 获取路口周期信息
+     *
+     * @return 路口周期列表
+     * @throws BusinessException 业务异常
+     */
+    List<CrossCycle> getAllCrossCycle() throws BusinessException;
+
+    /**
      * 更新路口周期信息
      *
      * @param crossCycle 路口周期
@@ -89,6 +107,14 @@ public interface TrafficDataService {
      * @throws BusinessException 业务异常
      */
     CrossStage getCrossStage(String crossId) throws BusinessException;
+
+    /**
+     * 获取路口阶段信息列表
+     *
+     * @return 路口阶段
+     * @throws BusinessException 业务异常
+     */
+    List<CrossStage> getAllCrossStage() throws BusinessException;
 
     /**
      * 更新路口阶段信息

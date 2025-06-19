@@ -268,7 +268,7 @@ public class CrossServiceImpl implements CrossService {
         }
 
         CrossState crossState = new CrossState(crossId, state);
-        crossState.setStateTime(LocalDateTime.now());
+        //crossState.setStateTime(LocalDateTime.now());
         crossStateStorage.put(crossId, crossState);
 
         logger.info("更新路口状态: crossId={}, state={}", crossId, state.getDescription());
