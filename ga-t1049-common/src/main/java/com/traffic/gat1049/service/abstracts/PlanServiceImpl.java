@@ -1,10 +1,12 @@
 package com.traffic.gat1049.service.abstracts;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.model.constants.BusinessConstants;
+import com.traffic.gat1049.protocol.model.runtime.CrossState;
 import com.traffic.gat1049.protocol.model.signal.PlanParam;
 import com.traffic.gat1049.protocol.model.signal.StageTiming;
 import com.traffic.gat1049.protocol.model.runtime.CrossModePlan;
@@ -18,8 +20,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * 配时方案服务实现
@@ -35,6 +39,7 @@ public class PlanServiceImpl implements PlanService {
     // 当前控制方式存储：crossId -> CrossModePlan
     private final Map<String, CrossModePlan> currentModeStorage = new ConcurrentHashMap<>();
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     // 方案序号生成器
     private final AtomicInteger planNoGenerator = new AtomicInteger(1);
 
@@ -146,12 +151,30 @@ public class PlanServiceImpl implements PlanService {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
 
-        CrossModePlan currentMode = currentModeStorage.get(crossId);
+        Object obj = dataProvider.getCrossModePlanById(crossId);
+        CrossModePlan currentMode = OBJECT_MAPPER.convertValue(obj, CrossModePlan.class);
         if (currentMode == null) {
             throw new DataNotFoundException("CrossModePlan", crossId);
         }
 
         return currentMode;
+    }
+
+    @Override
+    public List<CrossModePlan> getAllCurrentControlMode() throws BusinessException {
+        List<Object> objs = dataProvider.getAllCrossModePlans();
+
+        return objs.stream()
+                .map(obj -> {
+                    try {
+                        return OBJECT_MAPPER.convertValue(obj, CrossModePlan.class);
+                    } catch (IllegalArgumentException e) {
+                        logger.warn("转换 ControlModePlan 失败: {}", obj, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private PlanParam addPlan(String crossId, PlanParam planParam) {

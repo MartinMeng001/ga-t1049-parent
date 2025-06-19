@@ -77,4 +77,13 @@ public interface PlanService {
      * @throws BusinessException 业务异常
      */
     CrossModePlan getCurrentControlMode(String crossId) throws BusinessException;
+
+    /**
+     * 获取全部当前控制模式和方案
+     *
+     * @return 当前控制模式和方案
+     * @throws BusinessException 业务异常
+     */
+    List<CrossModePlan> getAllCurrentControlMode() throws BusinessException;
+
 }

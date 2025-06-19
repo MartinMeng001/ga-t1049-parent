@@ -2,7 +2,7 @@ package com.traffic.gat1049.protocol.model.runtime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.traffic.gat1049.protocol.model.base.BaseState;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.ControlModeAdapter;
 import com.traffic.gat1049.model.enums.ControlMode;
 
 import javax.validation.constraints.NotBlank;
@@ -10,6 +10,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 路口控制方式方案
@@ -29,9 +30,10 @@ public class CrossModePlan {//extends BaseState
     private String crossId;
 
     /**
-     * 控制方式
+     * 控制方式 - 使用适配器进行 XML 序列化
      */
     @XmlElement(name = "ControlMode", required = true)
+    @XmlJavaTypeAdapter(ControlModeAdapter.class)  // 关键注解
     @JsonProperty("ControlMode")
     private ControlMode controlMode;
 

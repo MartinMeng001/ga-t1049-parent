@@ -1,5 +1,6 @@
 package com.traffic.gat1049.service.abstracts;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
@@ -32,6 +33,7 @@ public class LaneServiceImpl implements LaneService {
 
     // 可变车道状态存储 - key: crossId_laneNo
     private final Map<String, VarLaneStatus> varLaneStatusStorage = new ConcurrentHashMap<>();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public LaneServiceImpl() throws BusinessException {
         // 初始化示例数据
@@ -217,24 +219,8 @@ public class LaneServiceImpl implements LaneService {
             throw new ValidationException("laneNo", "车道序号不能为空");
         }
 
-        // 首先验证车道是否存在
-        LaneParam laneParam = findByCrossIdAndLaneNo(crossId, laneNo);
-
-        // 检查是否为可变车道
-        if (!isVariableLane(laneParam)) {
-            throw new BusinessException("NOT_VARIABLE_LANE",
-                    String.format("车道不是可变车道: crossId=%s, laneNo=%d", crossId, laneNo));
-        }
-
-        String key = generateKey(crossId, laneNo);
-        VarLaneStatus varLaneStatus = varLaneStatusStorage.get(key);
-
-        if (varLaneStatus == null) {
-            throw new DataNotFoundException("VarLaneStatus",
-                    String.format("crossId=%s, laneNo=%d", crossId, laneNo));
-        }
-
-        return varLaneStatus;
+        Object obj = dataPrider.getVarLaneStatusByCrossId(crossId);
+        return OBJECT_MAPPER.convertValue(obj, VarLaneStatus.class);
     }
 
     @Override
@@ -263,7 +249,7 @@ public class LaneServiceImpl implements LaneService {
                             newMovement.getDescription(), laneNo));
         }
 
-        varLaneStatus.setUpdateTime(LocalDateTime.now());
+        //varLaneStatus.setUpdateTime(LocalDateTime.now());
 
         String key = generateKey(crossId, laneNo);
         varLaneStatusStorage.put(key, varLaneStatus);
@@ -273,14 +259,19 @@ public class LaneServiceImpl implements LaneService {
     }
 
     @Override
-    public List<VarLaneStatus> getVarLanes(String crossId) throws BusinessException {
-        if (crossId == null || crossId.trim().isEmpty()) {
-            throw new ValidationException("crossId", "路口编号不能为空");
-        }
+    public List<VarLaneStatus> getVarLanes() throws BusinessException {
+        List<Object> objs = dataPrider.getAllVarLaneStatus();
 
-        return varLaneStatusStorage.values().stream()
-                .filter(varLane -> crossId.equals(varLane.getCrossId()))
-                .sorted(Comparator.comparing(VarLaneStatus::getLaneNo))
+        return objs.stream()
+                .map(obj ->{
+                    try{
+                        return OBJECT_MAPPER.convertValue(obj, VarLaneStatus.class);
+                    }catch (IllegalArgumentException e){
+                        logger.warn("转换 VarLaneStatus 失败: {}", obj, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -361,8 +352,8 @@ public class LaneServiceImpl implements LaneService {
         varLaneStatus.setLaneNo(laneParam.getLaneNo());
         varLaneStatus.setCurMovement(laneParam.getMovement()); // 使用默认转向
         varLaneStatus.setCurMode(VarLaneMode.FIXED); // 默认为固定模式
-        varLaneStatus.setCreateTime(LocalDateTime.now());
-        varLaneStatus.setUpdateTime(LocalDateTime.now());
+//        varLaneStatus.setCreateTime(LocalDateTime.now());
+//        varLaneStatus.setUpdateTime(LocalDateTime.now());
 
         String key = generateKey(laneParam.getCrossId(), laneParam.getLaneNo());
         varLaneStatusStorage.put(key, varLaneStatus);
@@ -383,7 +374,7 @@ public class LaneServiceImpl implements LaneService {
             if (!laneParam.getVarMovementList().contains(existingStatus.getCurMovement())) {
                 // 如果当前转向不再允许，重置为默认转向
                 existingStatus.setCurMovement(laneParam.getMovement());
-                existingStatus.setUpdateTime(LocalDateTime.now());
+//                existingStatus.setUpdateTime(LocalDateTime.now());
                 varLaneStatusStorage.put(key, existingStatus);
 
                 logger.info("重置可变车道状态转向: crossId={}, laneNo={}, newMovement={}",

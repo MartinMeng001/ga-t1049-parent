@@ -11,10 +11,12 @@ import com.traffic.gat1049.protocol.model.core.Address;
 import com.traffic.gat1049.protocol.model.core.MessageBody;
 import com.traffic.gat1049.protocol.model.core.Operation;
 import com.traffic.gat1049.protocol.model.intersection.*;
-import com.traffic.gat1049.protocol.model.runtime.CrossState;
+import com.traffic.gat1049.protocol.model.runtime.*;
 import com.traffic.gat1049.protocol.model.sdo.*;
 import com.traffic.gat1049.protocol.model.signal.*;
 import com.traffic.gat1049.protocol.model.system.*;
+import com.traffic.gat1049.protocol.model.traffic.CrossTrafficData;
+import com.traffic.gat1049.protocol.model.traffic.StageTrafficData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,7 +119,17 @@ public class MessageCodec {
                                 StageParam.class,
                                 StageTiming.class,
                                 Adjust.class,
-                                CrossState.class
+                                CrossState.class,
+                                SignalControllerError.class,
+                                CrossModePlan.class,
+                                CrossCycle.class,
+                                CrossStage.class,
+                                CrossSignalGroupStatus.class,
+                                CrossTrafficData.class,
+                                StageTrafficData.class,
+                                VarLaneStatus.class,
+                                RouteControlModeStatus.class,
+                                RouteSpeed.class
                                 // 根据需要添加其他 SDO 类
                         };
 

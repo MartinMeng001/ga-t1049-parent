@@ -1,5 +1,7 @@
 package com.traffic.gat1049.service.abstracts;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
@@ -7,6 +9,7 @@ import com.traffic.gat1049.model.dto.TrafficDataQueryDto;
 import com.traffic.gat1049.model.vo.LaneStatisticsVo;
 import com.traffic.gat1049.model.vo.TrafficStatisticsVo;
 import com.traffic.gat1049.protocol.model.runtime.CrossCycle;
+import com.traffic.gat1049.protocol.model.runtime.CrossModePlan;
 import com.traffic.gat1049.protocol.model.runtime.CrossStage;
 import com.traffic.gat1049.protocol.model.traffic.CrossTrafficData;
 import com.traffic.gat1049.protocol.model.traffic.LaneTrafficData;
@@ -30,6 +33,7 @@ public class TrafficDataServiceImpl implements TrafficDataService {
 
     private static final Logger logger = LoggerFactory.getLogger(TrafficDataServiceImpl.class);
 
+    private ComprehensiveTestDataProviderImpl dataProvider = ComprehensiveTestDataProviderImpl.getInstance();
     // 路口交通流数据存储
     private final Map<String, List<CrossTrafficData>> crossTrafficDataStorage = new ConcurrentHashMap<>();
 
@@ -44,10 +48,11 @@ public class TrafficDataServiceImpl implements TrafficDataService {
 
     // 数据上传控制状态
     private final Map<String, Map<String, Boolean>> dataReportStatus = new ConcurrentHashMap<>();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    public TrafficDataServiceImpl() {
+    public TrafficDataServiceImpl() throws BusinessException {
         // 初始化示例数据
-        initializeSampleData();
+        //initializeSampleData();
     }
 
     @Override
@@ -56,27 +61,15 @@ public class TrafficDataServiceImpl implements TrafficDataService {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
 
-        if (endTime == null) {
-            endTime = LocalDateTime.now();
-        }
-
-        if (interval == null) {
-            interval = 300; // 默认5分钟
-        }
-
-        List<CrossTrafficData> dataList = crossTrafficDataStorage.get(crossId);
-        if (dataList == null || dataList.isEmpty()) {
-            throw new DataNotFoundException("CrossTrafficData", crossId);
-        }
-
-        // 查找最接近endTime的数据
-        LocalDateTime finalEndTime = endTime;
-        return dataList.stream()
-                .filter(data -> data.getEndTime() != null)
-                .min(Comparator.comparing(data ->
-                        Math.abs(data.getEndTime().toEpochSecond(java.time.ZoneOffset.UTC) -
-                                finalEndTime.toEpochSecond(java.time.ZoneOffset.UTC))))
-                .orElseThrow(() -> new DataNotFoundException("CrossTrafficData", crossId));
+//        if (endTime == null) {
+//            endTime = LocalDateTime.now();
+//        }
+//
+//        if (interval == null) {
+//            interval = 300; // 默认5分钟
+//        }
+        Object obj = dataProvider.getCrossTrafficDataById(crossId);
+        return OBJECT_MAPPER.convertValue(obj, CrossTrafficData.class);
     }
 
     @Override
@@ -106,26 +99,29 @@ public class TrafficDataServiceImpl implements TrafficDataService {
     }
 
     @Override
-    public StageTrafficData getStageTrafficData(String crossId, Integer stageNo, LocalDateTime startTime, LocalDateTime endTime) throws BusinessException {
+    public StageTrafficData getStageTrafficData(String crossId, LocalDateTime startTime, LocalDateTime endTime) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
 
-        if (stageNo == null) {
-            throw new ValidationException("stageNo", "阶段号不能为空");
-        }
+        Object obj = dataProvider.getStageTrafficDataByCrossId(crossId);
+        return OBJECT_MAPPER.convertValue(obj, StageTrafficData.class);
+    }
 
-        List<StageTrafficData> dataList = stageTrafficDataStorage.get(crossId);
-        if (dataList == null || dataList.isEmpty()) {
-            throw new DataNotFoundException("StageTrafficData", crossId + "-" + stageNo);
-        }
-
-        // 查找指定阶段和时间范围的数据
-        return dataList.stream()
-                .filter(data -> stageNo.equals(data.getStageNo()))
-                .filter(data -> filterStageByTimeRange(data, startTime, endTime))
-                .findFirst()
-                .orElseThrow(() -> new DataNotFoundException("StageTrafficData", crossId + "-" + stageNo));
+    @Override
+    public List<StageTrafficData> getAllStageTrafficData(LocalDateTime startTime, LocalDateTime endTime) throws BusinessException {
+        List<Object> objs = dataProvider.getAllStageTrafficData();
+        return objs.stream()
+                .map(obj -> {
+                    try {
+                        return OBJECT_MAPPER.convertValue(obj, StageTrafficData.class);
+                    } catch (IllegalArgumentException e) {
+                        logger.warn("转换 CrossCycle 失败: {}", obj, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -164,12 +160,30 @@ public class TrafficDataServiceImpl implements TrafficDataService {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
 
-        CrossCycle crossCycle = crossCycleStorage.get(crossId);
+        Object obj = dataProvider.getCrossCycleById(crossId);
+        CrossCycle crossCycle = OBJECT_MAPPER.convertValue(obj, CrossCycle.class);
         if (crossCycle == null) {
             throw new DataNotFoundException("CrossCycle", crossId);
         }
 
         return crossCycle;
+    }
+
+    @Override
+    public List<CrossCycle> getAllCrossCycle() throws BusinessException {
+        List<Object> objs = dataProvider.getAllCrossCycles();
+
+        return objs.stream()
+                .map(obj -> {
+                    try {
+                        return OBJECT_MAPPER.convertValue(obj, CrossCycle.class);
+                    } catch (IllegalArgumentException e) {
+                        logger.warn("转换 CrossCycle 失败: {}", obj, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -194,12 +208,31 @@ public class TrafficDataServiceImpl implements TrafficDataService {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
 
-        CrossStage crossStage = crossStageStorage.get(crossId);
+        Object obj = dataProvider.getCrossStageById(crossId);
+        CrossStage crossStage = OBJECT_MAPPER.convertValue(obj, CrossStage.class);
+
         if (crossStage == null) {
             throw new DataNotFoundException("CrossStage", crossId);
         }
 
         return crossStage;
+    }
+
+    @Override
+    public List<CrossStage> getAllCrossStage() throws BusinessException {
+        List<Object> objs = dataProvider.getAllCrossStages();
+
+        return objs.stream()
+                .map(obj -> {
+                    try {
+                        return OBJECT_MAPPER.convertValue(obj, CrossStage.class);
+                    } catch (IllegalArgumentException e) {
+                        logger.warn("转换 CrossStage 失败: {}", obj, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -262,7 +295,7 @@ public class TrafficDataServiceImpl implements TrafficDataService {
         for (Map.Entry<String, List<CrossTrafficData>> entry : crossTrafficDataStorage.entrySet()) {
             List<CrossTrafficData> dataList = entry.getValue();
             int originalSize = dataList.size();
-            dataList.removeIf(data -> data.getEndTime() != null && data.getEndTime().isBefore(beforeDate));
+            dataList.removeIf(data -> data.getEndTime() != null && data.getEndTimeAsLocalDateTime().isBefore(beforeDate));
             cleanedCount += originalSize - dataList.size();
         }
 
@@ -270,7 +303,7 @@ public class TrafficDataServiceImpl implements TrafficDataService {
         for (Map.Entry<String, List<StageTrafficData>> entry : stageTrafficDataStorage.entrySet()) {
             List<StageTrafficData> dataList = entry.getValue();
             int originalSize = dataList.size();
-            dataList.removeIf(data -> data.getEndTime() != null && data.getEndTime().isBefore(beforeDate));
+            dataList.removeIf(data -> data.getEndTime() != null && data.getEndTimeAsLocalDateTime().isBefore(beforeDate));
             cleanedCount += originalSize - dataList.size();
         }
 
@@ -316,11 +349,11 @@ public class TrafficDataServiceImpl implements TrafficDataService {
             return false;
         }
 
-        if (startTime != null && data.getEndTime().isBefore(startTime)) {
+        if (startTime != null && data.getEndTimeAsLocalDateTime().isBefore(startTime)) {
             return false;
         }
 
-        if (endTime != null && data.getEndTime().isAfter(endTime)) {
+        if (endTime != null && data.getEndTimeAsLocalDateTime().isAfter(endTime)) {
             return false;
         }
 
@@ -328,11 +361,11 @@ public class TrafficDataServiceImpl implements TrafficDataService {
     }
 
     private boolean filterStageByTimeRange(StageTrafficData data, LocalDateTime startTime, LocalDateTime endTime) {
-        if (startTime != null && data.getEndTime() != null && data.getEndTime().isBefore(startTime)) {
+        if (startTime != null && data.getEndTime() != null && data.getEndTimeAsLocalDateTime().isBefore(startTime)) {
             return false;
         }
 
-        if (endTime != null && data.getStartTime() != null && data.getStartTime().isAfter(endTime)) {
+        if (endTime != null && data.getStartTime() != null && data.getStartTimeAsLocalDateTime().isAfter(endTime)) {
             return false;
         }
 
@@ -342,7 +375,7 @@ public class TrafficDataServiceImpl implements TrafficDataService {
     private TrafficStatisticsVo convertToStatisticsVo(CrossTrafficData crossTrafficData) {
         TrafficStatisticsVo vo = new TrafficStatisticsVo();
         vo.setCrossId(crossTrafficData.getCrossId());
-        vo.setStatisticsTime(crossTrafficData.getEndTime());
+        vo.setStatisticsTime(crossTrafficData.getEndTimeAsLocalDateTime());
 
         // 计算总流量和平均值
         List<LaneTrafficData> dataList = crossTrafficData.getDataList();

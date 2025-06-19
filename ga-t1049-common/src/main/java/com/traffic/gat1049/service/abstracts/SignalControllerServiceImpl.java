@@ -1,11 +1,13 @@
 package com.traffic.gat1049.service.abstracts;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.model.dto.PageRequestDto;
 import com.traffic.gat1049.protocol.model.intersection.SignalController;
+import com.traffic.gat1049.protocol.model.runtime.CrossState;
 import com.traffic.gat1049.protocol.model.runtime.SignalControllerError;
 import com.traffic.gat1049.service.interfaces.SignalControllerService;
 import com.traffic.gat1049.model.enums.CommMode;
@@ -30,7 +32,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
 
     // 信号机故障存储 - key: signalControllerId, value: 故障列表
     private final Map<String, List<SignalControllerError>> errorStorage = new ConcurrentHashMap<>();
-
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public SignalControllerServiceImpl() throws BusinessException {
         // 初始化一些示例数据
         //initializeSampleData();
@@ -264,8 +266,35 @@ public class SignalControllerServiceImpl implements SignalControllerService {
 
         // 验证信号机是否存在
         findById(signalControllerId);
+        List<Object> objs = dataPrider.getSignalTroublesByControllerId(signalControllerId);
+        return objs.stream()
+                .map(obj -> {
+                    try {
+                        return OBJECT_MAPPER.convertValue(obj, SignalControllerError.class);
+                    } catch (IllegalArgumentException e) {
+                        logger.warn("转换 SignalControllerError 失败: {}", obj, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        //return errorStorage.getOrDefault(signalControllerId, new ArrayList<>());
+    }
 
-        return errorStorage.getOrDefault(signalControllerId, new ArrayList<>());
+    @Override
+    public List<SignalControllerError> getAllErrors() throws BusinessException {
+        List<Object> objs = dataPrider.getAllSignalTroubles();
+        return objs.stream()
+                .map(obj -> {
+                    try {
+                        return OBJECT_MAPPER.convertValue(obj, SignalControllerError.class);
+                    } catch (IllegalArgumentException e) {
+                        logger.warn("转换 SignalControllerError 失败: {}", obj, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override

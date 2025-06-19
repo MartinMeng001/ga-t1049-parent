@@ -17,7 +17,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "RouteSpeed")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class RouteSpeed extends BaseState {
+public class RouteSpeed  { //extends BaseState
 
     /**
      * 线路编号
@@ -38,11 +38,11 @@ public class RouteSpeed extends BaseState {
 
     // 构造函数
     public RouteSpeed() {
-        super();
+        //super();
     }
 
     public RouteSpeed(String routeId) {
-        super();
+        //super();
         this.routeId = routeId;
     }
 

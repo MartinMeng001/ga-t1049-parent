@@ -6,6 +6,8 @@ import com.traffic.gat1049.protocol.model.runtime.RouteSpeed;
 import com.traffic.gat1049.protocol.model.runtime.RoadSectionSpeed;
 import com.traffic.gat1049.model.enums.RouteControlMode;
 
+import java.util.List;
+
 /**
  * 干线控制服务接口
  */
@@ -19,6 +21,15 @@ public interface RouteControlService {
      * @throws BusinessException 业务异常
      */
     RouteControlModeStatus getRouteControlMode(String routeId) throws BusinessException;
+
+    /**
+     * 获取干线控制方式列表
+     *
+     * @param routeId 线路编号
+     * @return 干线控制方式
+     * @throws BusinessException 业务异常
+     */
+    List<RouteControlModeStatus> getAllRouteControlMode() throws BusinessException;
 
     /**
      * 设置干线控制方式
@@ -37,6 +48,14 @@ public interface RouteControlService {
      * @throws BusinessException 业务异常
      */
     RouteSpeed getRouteSpeed(String routeId) throws BusinessException;
+
+    /**
+     * 获取干线路段推荐车速列表
+     *
+     * @return 干线路段推荐车速
+     * @throws BusinessException 业务异常
+     */
+    List<RouteSpeed> getAllRouteSpeed() throws BusinessException;
 
     /**
      * 设置干线路段推荐车速

@@ -161,15 +161,12 @@ public class RuntimeInfoHandler extends AbstractProtocolHandler {
         }
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
         return serviceFactory.getTrafficDataService().getStageTrafficData(
-                crossId, stageNo, now.minusMinutes(5), now);
+                crossId, now.minusMinutes(5), now);
     }
 
     private Object handleVarLaneStatus(String crossId, Integer laneNo) throws BusinessException {
         if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for VarLaneStatus query");
-        }
-        if (laneNo == null) {
-            return serviceFactory.getLaneService().getVarLanes(crossId);
+            return serviceFactory.getLaneService().getVarLanes();
         }
         return serviceFactory.getLaneService().getVarLaneStatus(crossId, laneNo);
     }

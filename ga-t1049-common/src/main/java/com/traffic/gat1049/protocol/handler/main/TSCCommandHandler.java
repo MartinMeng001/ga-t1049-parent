@@ -158,7 +158,7 @@ public class TSCCommandHandler extends TokenRequiredHandler {
                 result = handleCrossCycle(id);
                 break;
             case GatConstants.ObjectName.CROSS_STAGE:
-                result = handleCrossState(id);
+                result = handleCrossStage(id);
                 break;
             case GatConstants.ObjectName.CROSS_SIGNAL_GROUP_STATUS:
                 result = handleCrossSignalGroupStatus(id);
@@ -201,13 +201,11 @@ public class TSCCommandHandler extends TokenRequiredHandler {
                 break;
 
             case GatConstants.ObjectName.CROSS_STATE:
-                if (id != null) {
-                    result = serviceFactory.getCrossService().getCrossState(id);
-                } else {
-                    throw new ValidationException("INVALID_PARAMETER", "查询路口状态必须指定路口ID");
-                }
+                result = handleCrossState(id);
                 break;
-
+            case GatConstants.ObjectName.SIGNAL_CONTROLLER_ERROR:
+                result = handleSignalControllerError(id);
+                break;
             default:
                 throw new ValidationException("objName", "Unsupported object name: " + objName);
         }
@@ -355,31 +353,38 @@ public class TSCCommandHandler extends TokenRequiredHandler {
         }
         return serviceFactory.getCrossService().getCrossState(crossId);
     }
+    private Object handleSignalControllerError(String signalControllerId) throws BusinessException {
+        if (signalControllerId == null) {  // 返回所有信号机故障
+            return serviceFactory.getSignalControllerService().getAllErrors();
+        }
+        return serviceFactory.getSignalControllerService().getErrors(signalControllerId);
+    }
+
 
     private Object handleCrossModePlan(String crossId) throws BusinessException {
         if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for CrossModePlan query");
+            serviceFactory.getControlModeService().getAllControlModes();
         }
         return serviceFactory.getControlModeService().getCurrentModePlan(crossId);
     }
 
     private Object handleCrossCycle(String crossId) throws BusinessException {
         if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for CrossCycle query");
+            return serviceFactory.getTrafficDataService().getAllCrossCycle();
         }
         return serviceFactory.getTrafficDataService().getCrossCycle(crossId);
     }
 
     private Object handleCrossStage(String crossId) throws BusinessException {
         if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for CrossStage query");
+            return serviceFactory.getTrafficDataService().getAllCrossStage();
         }
         return serviceFactory.getTrafficDataService().getCrossStage(crossId);
     }
 
     private Object handleCrossSignalGroupStatus(String crossId) throws BusinessException {
         if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for CrossSignalGroupStatus query");
+            return serviceFactory.getSignalGroupService().getAllCrossSignalGroupStatus();
         }
         return serviceFactory.getSignalGroupService().getCrossSignalGroupStatus(crossId);
     }
@@ -397,35 +402,30 @@ public class TSCCommandHandler extends TokenRequiredHandler {
         if (crossId == null) {
             throw new ValidationException("crossId", "Cross ID is required for StageTrafficData query");
         }
-        if (stageNo == null) {
-            throw new ValidationException("stageNo", "Stage number is required for StageTrafficData query");
-        }
+
         // 获取当前阶段的交通流数据
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
         return serviceFactory.getTrafficDataService().getStageTrafficData(
-                crossId, stageNo, now.minusMinutes(5), now);
+                crossId, now.minusMinutes(5), now);
     }
 
     private Object handleVarLaneStatus(String crossId, Integer laneNo) throws BusinessException {
         if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for VarLaneStatus query");
-        }
-        if (laneNo == null) {
-            return serviceFactory.getLaneService().getVarLanes(crossId);
+            return serviceFactory.getLaneService().getVarLanes();
         }
         return serviceFactory.getLaneService().getVarLaneStatus(crossId, laneNo);
     }
 
     private Object handleRouteControlMode(String routeId) throws BusinessException {
         if (routeId == null) {
-            throw new ValidationException("routeId", "Route ID is required for RouteControlMode query");
+            return serviceFactory.getRouteControlService().getAllRouteControlMode();
         }
         return serviceFactory.getRouteControlService().getRouteControlMode(routeId);
     }
 
     private Object handleRouteSpeed(String routeId) throws BusinessException {
         if (routeId == null) {
-            throw new ValidationException("routeId", "Route ID is required for RouteSpeed query");
+            return serviceFactory.getRouteControlService().getAllRouteSpeed();
         }
         return serviceFactory.getRouteControlService().getRouteSpeed(routeId);
     }

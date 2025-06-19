@@ -333,7 +333,7 @@
         "Value": "ONLINE"
       }
     ],
-    "SignalTrouble": [
+    "SignalControllerError": [
       {
         "SignalControlerID": "11010140000111001",
         "ErrorType": "1",
@@ -344,7 +344,7 @@
     "CrossModePlan": [
       {
         "CrossID": "11010110001",
-        "ControlMode": "21",
+        "ControlMode": "31",
         "PlanNo": "001"
       }
     ],
@@ -449,7 +449,7 @@
         "CurMode": "1"
       }
     ],
-    "RouteControlMode": [
+    "RouteControlModeStatus": [
       {
         "RouteID": "110101001",
         "Value": "11"

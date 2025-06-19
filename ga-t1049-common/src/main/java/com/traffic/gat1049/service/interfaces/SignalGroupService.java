@@ -13,7 +13,7 @@ import java.util.List;
 public interface SignalGroupService {
 
     /**
-     * 根据路口编号获取信号组列表
+     * 根据路口编号获取信号组
      *
      * @param crossId 路口编号
      * @return 信号组参数列表
@@ -66,6 +66,14 @@ public interface SignalGroupService {
      * @throws BusinessException 业务异常
      */
     CrossSignalGroupStatus getCrossSignalGroupStatus(String crossId) throws BusinessException;
+
+    /**
+     * 获取路口信号组灯态列表
+     *
+     * @return 路口信号组灯态
+     * @throws BusinessException 业务异常
+     */
+    List<CrossSignalGroupStatus> getAllCrossSignalGroupStatus() throws BusinessException;
 
     /**
      * 更新路口信号组灯态

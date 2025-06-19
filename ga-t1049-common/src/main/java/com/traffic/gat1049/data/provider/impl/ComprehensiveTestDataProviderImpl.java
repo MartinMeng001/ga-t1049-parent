@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -978,7 +977,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     @SuppressWarnings("unchecked")
     public List<Object> getAllSignalTroubles() throws BusinessException {
         ensureInitialized();
-        return (List<Object>) getRunStatusData("SignalTrouble");
+        return (List<Object>) getRunStatusData("SignalControllerError");
     }
 
     @Override
@@ -1062,19 +1061,9 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     }
 
     @Override
-    public List<Object> getStageTrafficDataByCrossIdAndStageNo(String crossId, String stageNo) throws BusinessException {
+    public Object getStageTrafficDataByCrossId(String crossId) throws BusinessException {
         List<Object> stageData = getAllStageTrafficData();
-        return stageData.stream()
-                .filter(data -> {
-                    if (data instanceof Map) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> dataMap = (Map<String, Object>) data;
-                        return crossId.equals(dataMap.get("CrossID")) &&
-                                stageNo.equals(dataMap.get("StageNo"));
-                    }
-                    return false;
-                })
-                .collect(Collectors.toList());
+        return findByIdInList(stageData, "CrossID", crossId);
     }
 
     // ==================== 可变车道和干线控制相关实现 ====================
@@ -1087,16 +1076,16 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     }
 
     @Override
-    public List<Object> getVarLaneStatusByCrossId(String crossId) throws BusinessException {
+    public Object getVarLaneStatusByCrossId(String crossId) throws BusinessException {
         List<Object> varLanes = getAllVarLaneStatus();
-        return filterListByField(varLanes, "CrossID", crossId);
+        return findByIdInList(varLanes, "CrossID", crossId);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public List<Object> getAllRouteControlModes() throws BusinessException {
         ensureInitialized();
-        return (List<Object>) getRunStatusData("RouteControlMode");
+        return (List<Object>) getRunStatusData("RouteControlModeStatus");
     }
 
     @Override

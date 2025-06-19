@@ -2,6 +2,7 @@ package com.traffic.gat1049.protocol.model.runtime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.RouteControlModeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseState;
 import com.traffic.gat1049.model.enums.RouteControlMode;
 
@@ -10,6 +11,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 干线控制方式
@@ -18,7 +20,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "RouteControlMode")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class RouteControlModeStatus extends BaseState {
+public class RouteControlModeStatus {//extends BaseState
 
     /**
      * 线路编号
@@ -32,16 +34,17 @@ public class RouteControlModeStatus extends BaseState {
      * 控制方式
      */
     @XmlElement(name = "Value", required = true)
+    @XmlJavaTypeAdapter(RouteControlModeAdapter.class)
     @JsonProperty("Value")
     private RouteControlMode value;
 
     // 构造函数
     public RouteControlModeStatus() {
-        super();
+        //super();
     }
 
     public RouteControlModeStatus(String routeId, RouteControlMode value) {
-        super();
+        //super();
         this.routeId = routeId;
         this.value = value;
     }
