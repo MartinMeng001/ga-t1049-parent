@@ -35,13 +35,13 @@ public class ClientDemoService {
 
             if (token != null) {
                 // 2. 订阅操作
-                performSubscribe(client);
+                //performSubscribe(client);
 
                 // 3. 查询对时服务器
-                performQuery(client);
+                //performQuery(client);
 
                 // 4. 设置超时时间
-                performSetTimeout(client);
+                //performSetTimeout(client);
             }
 
         } catch (Exception e) {

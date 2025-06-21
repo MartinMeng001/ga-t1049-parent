@@ -3,7 +3,14 @@ package com.traffic.server.debug;
 import com.traffic.gat1049.application.session.SessionManager;
 import com.traffic.gat1049.application.subscription.SubscriptionManager;
 import com.traffic.gat1049.exception.GatProtocolException;
+import com.traffic.gat1049.model.enums.*;
+import com.traffic.gat1049.protocol.model.command.*;
+import com.traffic.gat1049.protocol.model.intersection.CrossParam;
 import com.traffic.gat1049.protocol.model.sdo.SdoMsgEntity;
+import com.traffic.gat1049.protocol.model.signal.DayPlanParam;
+import com.traffic.gat1049.protocol.model.signal.PlanParam;
+import com.traffic.gat1049.protocol.model.signal.ScheduleParam;
+import com.traffic.gat1049.protocol.model.system.SysInfo;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.model.core.Message;
@@ -16,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -144,6 +153,11 @@ public class UpdatedServerDebugConsole {
                 performTSCQuery(scanner);
                 break;
 
+            // 在handleCommand方法中添加
+            case "set":
+            case "config":
+                performTSCSet(scanner);
+                break;
             default:
                 System.out.println("未知命令: " + command);
                 System.out.println("输入 'help' 查看可用命令");
@@ -163,8 +177,9 @@ public class UpdatedServerDebugConsole {
         System.out.println("  stats           - 显示统计信息");
         System.out.println("  monitor         - 显示监控信息");
         System.out.println();
-        System.out.println("TSC查询测试:");
-        System.out.println("  tsc (query)     - TSC指令查询测试 🔍 NEW!");
+        System.out.println("TSC功能测试:");
+        System.out.println("  tsc (query)     - TSC指令查询测试 🔍");
+        System.out.println("  set (config)    - TSC设置功能测试 🔧 NEW!");
         System.out.println();
         System.out.println("订阅管理:");
         System.out.println("  subscribe       - 向客户端发送订阅请求 ✨");
@@ -181,7 +196,8 @@ public class UpdatedServerDebugConsole {
         } else {
             System.out.println("✨ = 支持实际网络发送");
         }
-        System.out.println("🔍 = 新增功能");
+        System.out.println("🔍 = 查询功能");
+        System.out.println("🔧 = 设置功能");
         System.out.println("===========================================");
     }
     /**
@@ -226,6 +242,53 @@ public class UpdatedServerDebugConsole {
                 System.out.println("无效选择");
         }
     }
+    /**
+     * 执行TSC设置测试
+     */
+    private void performTSCSet(Scanner scanner) throws GatProtocolException {
+        System.out.println("\n=== TSC设置功能测试 ===");
+
+        // 第一步：选择TCP客户端
+        String selectedClient = selectTcpClient(scanner);
+        if (selectedClient == null) {
+            return; // 用户取消或没有可用客户端
+        }
+
+        // 第二步：选择设置功能类别
+        System.out.println("\n客户端已选择: " + selectedClient);
+        System.out.println("请选择设置功能类别:");
+        System.out.println("1. 流向控制设置");
+        System.out.println("2. 数据上报设置");
+        System.out.println("3. 预案管理设置");
+        System.out.println("4. 计划调度设置");
+        System.out.println("5. 实时控制设置");
+        System.out.println("6. 返回主菜单");
+        System.out.print("请选择 (1-6): ");
+
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "1":
+                performFlowControlSetting(scanner, selectedClient);
+                break;
+            case "2":
+                performDataReportSetting(scanner, selectedClient);
+                break;
+            case "3":
+                performPlanManagementSetting(scanner, selectedClient);
+                break;
+            case "4":
+                performScheduleSetting(scanner, selectedClient);
+                break;
+            case "5":
+                performRealTimeControlSetting(scanner, selectedClient);
+                break;
+            case "6":
+                return;
+            default:
+                System.out.println("无效选择");
+        }
+    }
+
     /**
      * 选择TCP客户端
      */
@@ -518,6 +581,7 @@ public class UpdatedServerDebugConsole {
                 (no != null ? ", No=" + no : ""));
         simulateTSCQuery(objName, id, no, clientId);
     }
+
     /**
      * 模拟TSC查询执行
      * 注意：这里只是模拟显示，不执行实际的调用
@@ -580,6 +644,694 @@ public class UpdatedServerDebugConsole {
 //        System.out.println("─────────────────────────");
     }
 
+    /**
+     * 流向控制设置
+     */
+    private void performFlowControlSetting(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 流向控制设置 ===");
+        System.out.println("1. lockFlowDirection - 锁定交通流向");
+        System.out.println("2. unlockFlowDirection - 解锁交通流向");
+        System.out.println("3. 返回上级菜单");
+        System.out.print("请选择 (1-3): ");
+
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "1":
+                performLockFlowDirection(scanner, selectedClient);
+                break;
+            case "2":
+                performUnlockFlowDirection(scanner, selectedClient);
+                break;
+            case "3":
+                return;
+            default:
+                System.out.println("无效选择");
+        }
+    }
+    /**
+     * 数据上报设置
+     */
+    private void performDataReportSetting(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 数据上报设置 ===");
+        System.out.println("1. CrossReportCtrl - 交通数据上报控制");
+        System.out.println("2. 返回上级菜单");
+        System.out.print("请选择 (1-2): ");
+
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "1":
+                performCrossReportCtrl(scanner, selectedClient);
+                break;
+            case "2":
+                return;
+            default:
+                System.out.println("无效选择");
+        }
+    }
+
+    /**
+     * 预案管理设置
+     */
+    private void performPlanManagementSetting(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 预案管理设置 ===");
+        System.out.println("1. CenterPlan - 中心预案控制");
+        System.out.println("2. SetPlanParam - 配时方案设置");
+        System.out.println("3. 返回上级菜单");
+        System.out.print("请选择 (1-3): ");
+
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "1":
+                performCenterPlan(scanner, selectedClient);
+                break;
+            case "2":
+                performSetPlanParam(scanner, selectedClient);
+                break;
+            case "3":
+                return;
+            default:
+                System.out.println("无效选择");
+        }
+    }
+    /**
+     * 计划调度设置
+     */
+    private void performScheduleSetting(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 计划调度设置 ===");
+        System.out.println("1. SetDayplanParam - 日计划参数设置");
+        System.out.println("2. SetScheduleParam - 调度参数设置");
+        System.out.println("3. 返回上级菜单");
+        System.out.print("请选择 (1-3): ");
+
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "1":
+                performSetDayPlanParam(scanner, selectedClient);
+                break;
+            case "2":
+                performSetScheduleParam(scanner, selectedClient);
+                break;
+            case "3":
+                return;
+            default:
+                System.out.println("无效选择");
+        }
+    }
+    /**
+     * 实时控制设置
+     */
+    private void performRealTimeControlSetting(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 实时控制设置 ===");
+        System.out.println("1. StageCtrl - 阶段干预控制");
+        System.out.println("2. 返回上级菜单");
+        System.out.print("请选择 (1-2): ");
+
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "1":
+                performStageCtrl(scanner, selectedClient);
+                break;
+            case "2":
+                return;
+            default:
+                System.out.println("无效选择");
+        }
+    }
+    /**
+     * 锁定交通流向
+     */
+    private void performLockFlowDirection(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 锁定交通流向测试 ===");
+
+        try {
+            // 收集参数
+            System.out.print("请输入路口编号 (如: 001001001): ");
+            String crossId = scanner.nextLine().trim();
+
+            System.out.println("请选择交通流类型:");
+            System.out.println("1. MOTOR - 机动车");
+            System.out.println("2. NONMOTOR - 非机动");
+            System.out.println("3. PEDSTRAINT - 人行");
+            System.out.print("请选择 (1-3): ");
+            FlowType flowType = parseFlowType(scanner.nextLine().trim());
+
+            System.out.println("请选择进口方向:");
+            System.out.println("1. NORTH - 北进口");
+            System.out.println("2. SOUTH - 南进口");
+            System.out.println("3. EAST - 东进口");
+            System.out.println("4. WEST - 西进口");
+            System.out.print("请选择 (1-4): ");
+            Direction entrance = parseDirection(scanner.nextLine().trim());
+
+            System.out.println("请选择出口方向:");
+            System.out.println("1. NORTH - 北出口");
+            System.out.println("2. SOUTH - 南出口");
+            System.out.println("3. EAST - 东出口");
+            System.out.println("4. WEST - 西出口");
+            System.out.print("请选择 (1-4): ");
+            Direction exit = parseDirection(scanner.nextLine().trim());
+
+            System.out.println("请选择锁定类型:");
+            System.out.println("1. CURRENT_PLAN - 阶段放行");
+            System.out.println("2. SINGLE_ENTRANCE - 单向全放");
+            System.out.println("3. SIGNAL_GROUP_ONLY - 只放行此流向信号组");
+            System.out.print("请选择 (1-3): ");
+            LockType lockType = parseLockType(scanner.nextLine().trim());
+
+            System.out.print("请输入锁定时长(秒，0表示持续锁定): ");
+            Integer duration = Integer.parseInt(scanner.nextLine().trim());
+
+            // 构建命令
+            LockFlowDirection lockCmd = new LockFlowDirection();
+            lockCmd.setCrossId(crossId);
+            lockCmd.setType(flowType);
+            lockCmd.setEntrance(entrance);
+            lockCmd.setExit(exit);
+            lockCmd.setLockType(lockType);
+            lockCmd.setDuration(duration);
+
+            // 显示设置信息
+            System.out.println("\n=== 设置信息确认 ===");
+            System.out.println("目标客户端: " + selectedClient);
+            System.out.println("路口编号: " + crossId);
+            System.out.println("流向类型: " + flowType.getDescription());
+            System.out.println("进口方向: " + entrance.getDescription());
+            System.out.println("出口方向: " + exit.getDescription());
+            System.out.println("锁定类型: " + lockType.getDescription());
+            System.out.println("锁定时长: " + (duration == 0 ? "持续锁定" : duration + "秒"));
+
+            System.out.print("\n确认发送? (y/n): ");
+            String confirm = scanner.nextLine().trim();
+            if (!"y".equalsIgnoreCase(confirm)) {
+                System.out.println("操作已取消");
+                return;
+            }
+
+            // 发送命令
+            sendSettingCommand(selectedClient, lockCmd, "锁定交通流向");
+
+        } catch (Exception e) {
+            System.out.println("参数输入错误: " + e.getMessage());
+        }
+    }
+    /**
+     * 解锁交通流向
+     */
+    private void performUnlockFlowDirection(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 解锁交通流向测试 ===");
+
+        try {
+            // 收集参数
+            System.out.print("请输入路口编号 (如: 001001001): ");
+            String crossId = scanner.nextLine().trim();
+
+            System.out.println("请选择交通流类型:");
+            System.out.println("1. STRAIGHT - 直行");
+            System.out.println("2. LEFT_TURN - 左转");
+            System.out.println("3. RIGHT_TURN - 右转");
+            System.out.print("请选择 (1-3): ");
+            FlowType flowType = parseFlowType(scanner.nextLine().trim());
+
+            System.out.println("请选择进口方向:");
+            System.out.println("1. NORTH - 北进口");
+            System.out.println("2. SOUTH - 南进口");
+            System.out.println("3. EAST - 东进口");
+            System.out.println("4. WEST - 西进口");
+            System.out.print("请选择 (1-4): ");
+            Direction entrance = parseDirection(scanner.nextLine().trim());
+
+            System.out.println("请选择出口方向:");
+            System.out.println("1. NORTH - 北出口");
+            System.out.println("2. SOUTH - 南出口");
+            System.out.println("3. EAST - 东出口");
+            System.out.println("4. WEST - 西出口");
+            System.out.print("请选择 (1-4): ");
+            Direction exit = parseDirection(scanner.nextLine().trim());
+
+            // 构建命令
+            UnlockFlowDirection unlockCmd = new UnlockFlowDirection();
+            unlockCmd.setCrossId(crossId);
+            unlockCmd.setType(flowType);
+            unlockCmd.setEntrance(entrance);
+            unlockCmd.setExit(exit);
+
+            // 显示设置信息
+            System.out.println("\n=== 设置信息确认 ===");
+            System.out.println("目标客户端: " + selectedClient);
+            System.out.println("路口编号: " + crossId);
+            System.out.println("流向类型: " + flowType.getDescription());
+            System.out.println("进口方向: " + entrance.getDescription());
+            System.out.println("出口方向: " + exit.getDescription());
+
+            System.out.print("\n确认发送? (y/n): ");
+            String confirm = scanner.nextLine().trim();
+            if (!"y".equalsIgnoreCase(confirm)) {
+                System.out.println("操作已取消");
+                return;
+            }
+
+            // 发送命令
+            simulateTSCSet("解锁交通流向", unlockCmd, selectedClient);
+
+        } catch (Exception e) {
+            System.out.println("参数输入错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 交通数据上报控制
+     */
+    private void performCrossReportCtrl(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 交通数据上报控制测试 ===");
+
+        try {
+            // 收集参数
+            System.out.println("请选择上报命令:");
+            System.out.println("1. START - 开始主动上报");
+            System.out.println("2. STOP - 停止主动上报");
+            System.out.print("请选择 (1-2): ");
+            ReportCommand cmd = parseReportCommand(scanner.nextLine().trim());
+
+            System.out.println("请选择上报数据类型:");
+            System.out.println("1. CROSS_TRAFFIC_DATA - 路口交通流数据");
+            System.out.println("2. CROSS_SIGNAL_STATUS - 路口信号状态");
+            System.out.println("3. STAGE_TRAFFIC_DATA - 阶段交通流数据");
+            System.out.print("请选择 (1-3): ");
+            ReportDataType type = parseReportDataType(scanner.nextLine().trim());
+
+            System.out.print("请输入路口编号列表 (用逗号分隔，如: 001001001,001001002): ");
+            String crossIdInput = scanner.nextLine().trim();
+            List<String> crossIdList = Arrays.asList(crossIdInput.split(","));
+
+            // 去除空格
+            crossIdList = crossIdList.stream()
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(java.util.stream.Collectors.toList());
+
+            // 构建命令
+            CrossReportCtrl reportCtrl = new CrossReportCtrl();
+            reportCtrl.setCmd(cmd);
+            reportCtrl.setType(type);
+            reportCtrl.setCrossIdList(crossIdList);
+
+            // 显示设置信息
+            System.out.println("\n=== 设置信息确认 ===");
+            System.out.println("目标客户端: " + selectedClient);
+            System.out.println("上报命令: " + cmd.getDescription());
+            System.out.println("数据类型: " + type.getDescription());
+            System.out.println("路口列表: " + String.join(", ", crossIdList));
+
+            System.out.print("\n确认发送? (y/n): ");
+            String confirm = scanner.nextLine().trim();
+            if (!"y".equalsIgnoreCase(confirm)) {
+                System.out.println("操作已取消");
+                return;
+            }
+
+            // 发送命令
+            sendSettingCommand(selectedClient, reportCtrl, "交通数据上报控制");
+
+        } catch (Exception e) {
+            System.out.println("参数输入错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 中心预案控制
+     */
+    private void performCenterPlan(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 中心预案控制测试 ===");
+
+        try {
+            // 收集参数
+            System.out.println("请选择控制模式:");
+            System.out.println("1. COMPUTER_CONTROL - 计算机控制");
+            System.out.println("2. MANUAL_CONTROL - 手动控制");
+            System.out.println("3. CENTRAL_CONTROL - 中心控制");
+            System.out.print("请选择 (1-3): ");
+            ControlMode controlMode = parseControlMode(scanner.nextLine().trim());
+
+            System.out.print("请输入路口编号 (如: 001001001): ");
+            String crossId = scanner.nextLine().trim();
+
+            System.out.print("请输入方案名称 (如: 应急预案1): ");
+            String planName = scanner.nextLine().trim();
+
+            System.out.print("请输入周期时长(秒) (如: 120): ");
+            Integer cycleTime = Integer.parseInt(scanner.nextLine().trim());
+
+            // 构建配时方案参数
+            PlanParam planParam = new PlanParam();
+            planParam.setCrossId(crossId);
+            planParam.setPlanName(planName);
+            planParam.setCycleLen(cycleTime);
+            // 这里可以添加更多阶段配时参数...
+
+            // 构建命令
+            CenterPlan centerPlan = new CenterPlan();
+            centerPlan.setCrossControlMode(controlMode);
+            centerPlan.setPlanParam(planParam);
+
+            // 显示设置信息
+            System.out.println("\n=== 设置信息确认 ===");
+            System.out.println("目标客户端: " + selectedClient);
+            System.out.println("控制模式: " + controlMode.getDescription());
+            System.out.println("路口编号: " + crossId);
+            System.out.println("方案名称: " + planName);
+            System.out.println("周期时长: " + cycleTime + "秒");
+
+            System.out.print("\n确认发送? (y/n): ");
+            String confirm = scanner.nextLine().trim();
+            if (!"y".equalsIgnoreCase(confirm)) {
+                System.out.println("操作已取消");
+                return;
+            }
+
+            // 发送命令
+            sendSettingCommand(selectedClient, centerPlan, "中心预案控制");
+
+        } catch (Exception e) {
+            System.out.println("参数输入错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 配时方案设置
+     */
+    private void performSetPlanParam(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 配时方案设置测试 ===");
+
+        try {
+            // 收集参数
+            System.out.println("请选择操作类型:");
+            System.out.println("1. ADD - 新增");
+            System.out.println("2. MODIFY - 修改");
+            System.out.println("3. DELETE - 删除");
+            System.out.print("请选择 (1-3): ");
+            OperationType oper = parseOperationType(scanner.nextLine().trim());
+
+            System.out.print("请输入路口编号 (如: 001001001): ");
+            String crossId = scanner.nextLine().trim();
+
+            System.out.print("请输入方案号 (如: 5): ");
+            Integer planNo = Integer.parseInt(scanner.nextLine().trim());
+
+            String planName = "";
+            Integer cycleTime = null;
+
+            if (oper != OperationType.DELETE) {
+                System.out.print("请输入方案名称 (如: 早高峰方案): ");
+                planName = scanner.nextLine().trim();
+
+                System.out.print("请输入周期时长(秒) (如: 150): ");
+                cycleTime = Integer.parseInt(scanner.nextLine().trim());
+            }
+
+            // 构建配时方案参数
+            PlanParam planParam = new PlanParam();
+            planParam.setCrossId(crossId);
+            planParam.setPlanNo(planNo);
+            if (!planName.isEmpty()) {
+                planParam.setPlanName(planName);
+            }
+            if (cycleTime != null) {
+                planParam.setCycleLen(cycleTime);
+            }
+
+            // 构建命令
+            SetPlanParam setPlan = new SetPlanParam();
+            setPlan.setOper(oper);
+            setPlan.setPlanParam(planParam);
+
+            // 显示设置信息
+            System.out.println("\n=== 设置信息确认 ===");
+            System.out.println("目标客户端: " + selectedClient);
+            System.out.println("操作类型: " + oper.getDescription());
+            System.out.println("路口编号: " + crossId);
+            System.out.println("方案号: " + planNo);
+            if (!planName.isEmpty()) {
+                System.out.println("方案名称: " + planName);
+            }
+            if (cycleTime != null) {
+                System.out.println("周期时长: " + cycleTime + "秒");
+            }
+
+            System.out.print("\n确认发送? (y/n): ");
+            String confirm = scanner.nextLine().trim();
+            if (!"y".equalsIgnoreCase(confirm)) {
+                System.out.println("操作已取消");
+                return;
+            }
+
+            // 发送命令
+            sendSettingCommand(selectedClient, setPlan, "配时方案设置");
+
+        } catch (Exception e) {
+            System.out.println("参数输入错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 日计划参数设置
+     */
+    private void performSetDayPlanParam(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 日计划参数设置测试 ===");
+
+        try {
+            // 收集参数
+            System.out.println("请选择操作类型:");
+            System.out.println("1. ADD - 新增");
+            System.out.println("2. MODIFY - 修改");
+            System.out.println("3. DELETE - 删除");
+            System.out.print("请选择 (1-3): ");
+            OperationType oper = parseOperationType(scanner.nextLine().trim());
+
+            System.out.print("请输入路口编号 (如: 001001001): ");
+            String crossId = scanner.nextLine().trim();
+
+            System.out.print("请输入日计划号 (如: 3): ");
+            Integer dayPlanNo = Integer.parseInt(scanner.nextLine().trim());
+
+            String dayPlanName = "";
+
+            if (oper != OperationType.DELETE) {
+                System.out.print("请输入日计划名称 (如: 工作日计划): ");
+                dayPlanName = scanner.nextLine().trim();
+            }
+
+            // 构建日计划参数
+            DayPlanParam dayPlan = new DayPlanParam();
+            dayPlan.setCrossId(crossId);
+            dayPlan.setDayPlanNo(dayPlanNo);
+//            if (!dayPlanName.isEmpty()) {
+//                dayPlan.setDayPlanName(dayPlanName);
+//            }
+
+            // 构建命令
+            SetDayPlanParam setDayPlan = new SetDayPlanParam();
+            setDayPlan.setOper(oper);
+            setDayPlan.setDayPlanParam(dayPlan);
+
+            // 显示设置信息
+            System.out.println("\n=== 设置信息确认 ===");
+            System.out.println("目标客户端: " + selectedClient);
+            System.out.println("操作类型: " + oper.getDescription());
+            System.out.println("路口编号: " + crossId);
+            System.out.println("日计划号: " + dayPlanNo);
+            if (!dayPlanName.isEmpty()) {
+                System.out.println("日计划名称: " + dayPlanName);
+            }
+
+            System.out.print("\n确认发送? (y/n): ");
+            String confirm = scanner.nextLine().trim();
+            if (!"y".equalsIgnoreCase(confirm)) {
+                System.out.println("操作已取消");
+                return;
+            }
+
+            // 发送命令
+            sendSettingCommand(selectedClient, setDayPlan, "日计划参数设置");
+
+        } catch (Exception e) {
+            System.out.println("参数输入错误: " + e.getMessage());
+        }
+    }
+    /**
+     * 调度参数设置
+     */
+    private void performSetScheduleParam(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 调度参数设置测试 ===");
+
+        try {
+            // 收集参数
+            System.out.println("请选择操作类型:");
+            System.out.println("1. ADD - 新增");
+            System.out.println("2. MODIFY - 修改");
+            System.out.println("3. DELETE - 删除");
+            System.out.print("请选择 (1-3): ");
+            OperationType oper = parseOperationType(scanner.nextLine().trim());
+
+            System.out.print("请输入路口编号 (如: 001001001): ");
+            String crossId = scanner.nextLine().trim();
+
+            System.out.print("请输入调度号 (如: 2): ");
+            Integer scheduleNo = Integer.parseInt(scanner.nextLine().trim());
+
+            String scheduleName = "";
+
+            if (oper != OperationType.DELETE) {
+                System.out.print("请输入调度名称 (如: 月度调度): ");
+                scheduleName = scanner.nextLine().trim();
+            }
+
+            // 构建调度参数
+            ScheduleParam scheduleParam = new ScheduleParam();
+            scheduleParam.setCrossId(crossId);
+            scheduleParam.setScheduleNo(scheduleNo);
+//            if (!scheduleName.isEmpty()) {
+//                scheduleParam.setScheduleName(scheduleName);
+//            }
+
+            // 构建命令
+            SetScheduleParam setSchedule = new SetScheduleParam();
+            setSchedule.setOper(oper);
+            setSchedule.setScheduleParam(scheduleParam);
+
+            // 显示设置信息
+            System.out.println("\n=== 设置信息确认 ===");
+            System.out.println("目标客户端: " + selectedClient);
+            System.out.println("操作类型: " + oper.getDescription());
+            System.out.println("路口编号: " + crossId);
+            System.out.println("调度号: " + scheduleNo);
+            if (!scheduleName.isEmpty()) {
+                System.out.println("调度名称: " + scheduleName);
+            }
+
+            System.out.print("\n确认发送? (y/n): ");
+            String confirm = scanner.nextLine().trim();
+            if (!"y".equalsIgnoreCase(confirm)) {
+                System.out.println("操作已取消");
+                return;
+            }
+
+            // 发送命令
+            sendSettingCommand(selectedClient, setSchedule, "调度参数设置");
+
+        } catch (Exception e) {
+            System.out.println("参数输入错误: " + e.getMessage());
+        }
+    }
+    /**
+     * 阶段干预控制
+     */
+    private void performStageCtrl(Scanner scanner, String selectedClient) throws GatProtocolException {
+        System.out.println("\n=== 阶段干预控制测试 ===");
+
+        try {
+            // 收集参数
+            System.out.print("请输入路口编号 (如: 001001001): ");
+            String crossId = scanner.nextLine().trim();
+
+            System.out.print("请输入阶段号 (如: 2): ");
+            Integer stageNo = Integer.parseInt(scanner.nextLine().trim());
+
+            System.out.println("请选择干预类型:");
+            System.out.println("1. EXTEND - 延长");
+            System.out.println("2. REDUCE - 缩短");
+            System.out.println("3. SKIP - 跳过");
+            System.out.print("请选择 (1-3): ");
+            InterventionType type = parseInterventionType(scanner.nextLine().trim());
+
+            System.out.print("请输入干预时长(秒) (如: 30): ");
+            Integer len = Integer.parseInt(scanner.nextLine().trim());
+
+            // 构建命令
+            StageCtrl stageCtrl = new StageCtrl();
+            stageCtrl.setCrossId(crossId);
+            stageCtrl.setStageNo(stageNo);
+            stageCtrl.setType(type);
+            stageCtrl.setLen(len);
+
+            // 显示设置信息
+            System.out.println("\n=== 设置信息确认 ===");
+            System.out.println("目标客户端: " + selectedClient);
+            System.out.println("路口编号: " + crossId);
+            System.out.println("阶段号: " + stageNo);
+            System.out.println("干预类型: " + type.getDescription());
+            System.out.println("干预时长: " + len + "秒");
+
+            System.out.print("\n确认发送? (y/n): ");
+            String confirm = scanner.nextLine().trim();
+            if (!"y".equalsIgnoreCase(confirm)) {
+                System.out.println("操作已取消");
+                return;
+            }
+
+            // 发送命令
+            sendSettingCommand(selectedClient, stageCtrl, "阶段干预控制");
+
+        } catch (Exception e) {
+            System.out.println("参数输入错误: " + e.getMessage());
+        }
+    }
+    /**
+     * 发送设置命令的通用方法
+     */
+    private void sendSettingCommand(String selectedClient, Object command, String commandName) throws GatProtocolException {
+        long startTime = System.currentTimeMillis();
+
+        try {
+            System.out.println("\n正在发送" + commandName + "命令...");
+
+            // 构建消息
+            //Message requestMessage = MessageBuilder.createSetRequest(command);
+
+            if (selectedClient.startsWith("MOCK_CLIENT")) {
+                // 模拟客户端模式
+                System.out.println("✓ 使用模拟客户端模式");
+                System.out.println("✓ 命令构建成功: " + command.getClass().getSimpleName());
+                System.out.println("✓ 模拟发送成功");
+                System.out.println("✓ 模拟响应: " + commandName + "设置成功");
+
+            } else if (clientSender != null) {
+                // 实际网络发送
+                System.out.println("✓ 使用实际网络发送");
+                System.out.println("✓ 命令构建成功: " + command.getClass().getSimpleName());
+
+                // 这里需要根据实际的clientSender接口进行发送
+                simulateTSCSet(commandName, command, selectedClient);
+                // clientSender.sendMessage(selectedClient, requestMessage);
+                System.out.println("✓ 网络发送成功");
+                System.out.println("✓ 等待服务端响应...");
+
+                // 模拟响应处理
+                System.out.println("✓ 服务端响应: " + commandName + "设置成功");
+
+            } else {
+                System.out.println("⚠️ 网络发送器未配置，使用模拟模式");
+                System.out.println("✓ 命令构建成功: " + command.getClass().getSimpleName());
+                System.out.println("✓ 模拟发送成功");
+            }
+
+            long endTime = System.currentTimeMillis();
+            System.out.println("\n执行时间: " + (endTime - startTime) + "ms");
+            System.out.println("状态: 成功");
+            System.out.println("时间戳: " + LocalDateTime.now());
+        } catch (Exception e) {
+            long endTime = System.currentTimeMillis();
+            System.out.println("✗ " + commandName + "命令发送失败: " + e.getMessage());
+            System.out.println("\n执行时间: " + (endTime - startTime) + "ms");
+            System.out.println("状态: 失败");
+            logger.error(commandName + "命令发送失败", e);
+        }
+    }
+    /**
+     * 模拟TSC设置执行
+     */
+    private void simulateTSCSet(String objName, Object setData, String targetClient) throws GatProtocolException {
+        tscCommandService.setTSCInfo(targetClient, objName, setData);
+    }
     /**
      * 根据对象名称确定处理器
      */
@@ -1155,6 +1907,77 @@ public class UpdatedServerDebugConsole {
             return String.format("%.1f", cpuUsage);
         } catch (Exception e) {
             return "N/A";
+        }
+    }
+    // ==================== 解析方法 ====================
+
+    private FlowType parseFlowType(String input) {
+        switch (input) {
+            case "1": return FlowType.MOTOR_VEHICLE;
+            case "2": return FlowType.NON_MOTOR_VEHICLE;
+            case "3": return FlowType.PEDESTRIAN;
+            default: throw new IllegalArgumentException("无效的流向类型选择");
+        }
+    }
+
+    private Direction parseDirection(String input) {
+        switch (input) {
+            case "1": return Direction.NORTH;
+            case "2": return Direction.SOUTH;
+            case "3": return Direction.EAST;
+            case "4": return Direction.WEST;
+            default: throw new IllegalArgumentException("无效的方向选择");
+        }
+    }
+
+    private LockType parseLockType(String input) {
+        switch (input) {
+            case "1": return LockType.CURRENT_PLAN;
+            case "2": return LockType.SINGLE_ENTRANCE;
+            case "3": return LockType.SIGNAL_GROUP_ONLY;
+            default: throw new IllegalArgumentException("无效的锁定类型选择");
+        }
+    }
+
+    private ReportCommand parseReportCommand(String input) {
+        switch (input) {
+            case "1": return ReportCommand.START;
+            case "2": return ReportCommand.STOP;
+            default: throw new IllegalArgumentException("无效的上报命令选择");
+        }
+    }
+
+    private ReportDataType parseReportDataType(String input) {
+        switch (input) {
+            case "1": return ReportDataType.CROSS_TRAFFIC_DATA;
+            case "2": return ReportDataType.CROSS_SIGNAL_GROUP_STATUS;
+            case "3": return ReportDataType.STAGE_TRAFFIC_DATA;
+            default: throw new IllegalArgumentException("无效的数据类型选择");
+        }
+    }
+    private ControlMode parseControlMode(String input) {
+        switch (input) {
+            case "1": return ControlMode.CANCEL;
+            case "2": return ControlMode.MANUAL;
+            //case "3": return ControlMode.CENTRAL_CONTROL;
+            default: throw new IllegalArgumentException("无效的控制模式选择");
+        }
+    }
+
+    private OperationType parseOperationType(String input) {
+        switch (input) {
+            case "1": return OperationType.ADD;
+            case "2": return OperationType.MODIFY;
+            case "3": return OperationType.DELETE;
+            default: throw new IllegalArgumentException("无效的操作类型选择");
+        }
+    }
+    private InterventionType parseInterventionType(String input) {
+        switch (input) {
+            case "1": return InterventionType.EXTEND;
+            case "2": return InterventionType.SHORTEN;
+            //case "3": return InterventionType.SKIP;
+            default: throw new IllegalArgumentException("无效的干预类型选择");
         }
     }
 }

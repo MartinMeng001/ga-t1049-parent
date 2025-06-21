@@ -76,8 +76,8 @@ public class PedestrianServiceImpl implements PedestrianService {
 
         validatePedestrianParam(pedestrianParam);
 
-        pedestrianParam.setCreateTime(LocalDateTime.now());
-        pedestrianParam.setUpdateTime(LocalDateTime.now());
+//        pedestrianParam.setCreateTime(LocalDateTime.now());
+//        pedestrianParam.setUpdateTime(LocalDateTime.now());
 
         String key = generateKey(pedestrianParam.getCrossId(), pedestrianParam.getPedestrianNo());
         pedestrianStorage.put(key, pedestrianParam);
@@ -101,7 +101,7 @@ public class PedestrianServiceImpl implements PedestrianService {
 
         validatePedestrianParam(pedestrianParam);
 
-        pedestrianParam.setUpdateTime(LocalDateTime.now());
+//        pedestrianParam.setUpdateTime(LocalDateTime.now());
         pedestrianStorage.put(key, pedestrianParam);
 
         logger.info("更新人行横道参数: crossId={}, pedestrianNo={}",
@@ -309,33 +309,33 @@ public class PedestrianServiceImpl implements PedestrianService {
 
             // 直接存储到map中，避免循环调用save方法
             String key1 = generateKey(pedestrian1.getCrossId(), pedestrian1.getPedestrianNo());
-            pedestrian1.setCreateTime(LocalDateTime.now());
-            pedestrian1.setUpdateTime(LocalDateTime.now());
+//            pedestrian1.setCreateTime(LocalDateTime.now());
+//            pedestrian1.setUpdateTime(LocalDateTime.now());
             pedestrianStorage.put(key1, pedestrian1);
 
             String key2 = generateKey(pedestrian2.getCrossId(), pedestrian2.getPedestrianNo());
-            pedestrian2.setCreateTime(LocalDateTime.now());
-            pedestrian2.setUpdateTime(LocalDateTime.now());
+//            pedestrian2.setCreateTime(LocalDateTime.now());
+//            pedestrian2.setUpdateTime(LocalDateTime.now());
             pedestrianStorage.put(key2, pedestrian2);
 
             String key3 = generateKey(pedestrian3.getCrossId(), pedestrian3.getPedestrianNo());
-            pedestrian3.setCreateTime(LocalDateTime.now());
-            pedestrian3.setUpdateTime(LocalDateTime.now());
+//            pedestrian3.setCreateTime(LocalDateTime.now());
+//            pedestrian3.setUpdateTime(LocalDateTime.now());
             pedestrianStorage.put(key3, pedestrian3);
 
             String key4 = generateKey(pedestrian4.getCrossId(), pedestrian4.getPedestrianNo());
-            pedestrian4.setCreateTime(LocalDateTime.now());
-            pedestrian4.setUpdateTime(LocalDateTime.now());
+//            pedestrian4.setCreateTime(LocalDateTime.now());
+//            pedestrian4.setUpdateTime(LocalDateTime.now());
             pedestrianStorage.put(key4, pedestrian4);
 
             String key5 = generateKey(pedestrian5.getCrossId(), pedestrian5.getPedestrianNo());
-            pedestrian5.setCreateTime(LocalDateTime.now());
-            pedestrian5.setUpdateTime(LocalDateTime.now());
+//            pedestrian5.setCreateTime(LocalDateTime.now());
+//            pedestrian5.setUpdateTime(LocalDateTime.now());
             pedestrianStorage.put(key5, pedestrian5);
 
             String key6 = generateKey(pedestrian6.getCrossId(), pedestrian6.getPedestrianNo());
-            pedestrian6.setCreateTime(LocalDateTime.now());
-            pedestrian6.setUpdateTime(LocalDateTime.now());
+//            pedestrian6.setCreateTime(LocalDateTime.now());
+//            pedestrian6.setUpdateTime(LocalDateTime.now());
             pedestrianStorage.put(key6, pedestrian6);
 
             logger.info("示例人行横道数据初始化完成");

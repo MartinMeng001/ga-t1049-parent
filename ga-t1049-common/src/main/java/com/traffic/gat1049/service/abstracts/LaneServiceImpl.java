@@ -136,8 +136,8 @@ public class LaneServiceImpl implements LaneService {
                             laneParam.getCrossId(), laneParam.getLaneNo()));
         }
 
-        laneParam.setCreateTime(LocalDateTime.now());
-        laneParam.setUpdateTime(LocalDateTime.now());
+//        laneParam.setCreateTime(LocalDateTime.now());
+//        laneParam.setUpdateTime(LocalDateTime.now());
 
         laneStorage.put(key, laneParam);
 
@@ -169,7 +169,7 @@ public class LaneServiceImpl implements LaneService {
                             laneParam.getCrossId(), laneParam.getLaneNo()));
         }
 
-        laneParam.setUpdateTime(LocalDateTime.now());
+//        laneParam.setUpdateTime(LocalDateTime.now());
         laneStorage.put(key, laneParam);
 
         // 更新可变车道状态（如果适用）

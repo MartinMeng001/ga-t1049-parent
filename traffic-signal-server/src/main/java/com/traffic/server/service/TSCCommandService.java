@@ -8,6 +8,7 @@ import com.traffic.gat1049.protocol.codec.MessageCodec;
 import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.protocol.model.command.TSCCmd;
 import com.traffic.gat1049.protocol.model.core.Message;
+import com.traffic.gat1049.protocol.util.ResultHandlingUtils;
 import com.traffic.server.network.client.ServerToClientSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,6 +141,42 @@ public class TSCCommandService {
 
         if (sessionToken == null || sessionToken.trim().isEmpty()) {
             throw new GatProtocolException("INVALID_TOKEN", "会话令牌不能为空");
+        }
+    }
+    /**
+     * 设置TSC信息
+     */
+    public void setTSCInfo(String clientId, String objName, Object setData) throws GatProtocolException {
+        String token = connectionManager.getToken(clientId);
+        Message message = sendTSCSet(objName, token, setData);
+        if(message == null) return;
+        sendMessage(clientId, message);
+    }
+    /**
+     * 通用TSC设置方法
+     */
+    public Message sendTSCSet(String objName, String token, Object setData) throws GatProtocolException {
+        validateParameters(objName, token);
+
+        try {
+            Message setMessage = MessageBuilder.createSetRequest(token, setData);
+            // 构建设置消息
+//            Message setMessage = MessageBuilder.create()
+//                    .request()
+//                    .fromTicp()
+//                    .toUtcs()
+//                    .token(token)
+//                    .set(setData)  // 使用Set操作
+//                    .build();
+
+            logger.info("发送设置请求: objName={}, seq={}",
+                    objName, setMessage.getSeq());
+
+            return setMessage;
+
+        } catch (Exception e) {
+            logger.error("发送TSC设置失败: objName={}", objName, e);
+            throw new GatProtocolException("SEND_REQUEST_FAILED", "发送设置请求失败: " + e.getMessage(), e);
         }
     }
 }

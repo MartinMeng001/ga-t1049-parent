@@ -19,7 +19,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "SignalController")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SignalController extends BaseParam {
+public class SignalController  {//extends BaseParam
 
     /**
      * 信号机编号 - 取值12位交通管理部门机构代码+5位数字

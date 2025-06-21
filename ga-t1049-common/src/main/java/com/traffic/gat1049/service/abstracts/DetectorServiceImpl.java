@@ -127,8 +127,8 @@ public class DetectorServiceImpl implements DetectorService {
                             detectorParam.getCrossId(), detectorParam.getDetectorNo()));
         }
 
-        detectorParam.setCreateTime(LocalDateTime.now());
-        detectorParam.setUpdateTime(LocalDateTime.now());
+//        detectorParam.setCreateTime(LocalDateTime.now());
+//        detectorParam.setUpdateTime(LocalDateTime.now());
 
         detectorStorage.put(key, detectorParam);
 
@@ -157,7 +157,7 @@ public class DetectorServiceImpl implements DetectorService {
                             detectorParam.getCrossId(), detectorParam.getDetectorNo()));
         }
 
-        detectorParam.setUpdateTime(LocalDateTime.now());
+//        detectorParam.setUpdateTime(LocalDateTime.now());
         detectorStorage.put(key, detectorParam);
 
         logger.info("更新检测器参数: crossId={}, detectorNo={}, type={}",

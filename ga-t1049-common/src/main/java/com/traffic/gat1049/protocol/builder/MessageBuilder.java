@@ -9,7 +9,11 @@ import com.traffic.gat1049.protocol.model.sdo.SdoHeartBeat;
 import com.traffic.gat1049.protocol.model.sdo.SdoMsgEntity;
 import com.traffic.gat1049.protocol.model.sdo.SdoUser;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
+import com.traffic.gat1049.protocol.util.ResultHandlingUtils;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -317,8 +321,8 @@ public class MessageBuilder {
     public static Message createSetRequest(String token, Object setData) {
         return MessageBuilder.create()
                 .request()
-                .fromUtcs()
-                .toTicp()
+                .fromTicp()
+                .toUtcs()
                 .token(token)
                 .set(setData)
                 .build();
@@ -361,6 +365,7 @@ public class MessageBuilder {
     }
     /**
      * 响应构建器内部类
+     * 在ResponseBuilder中添加对MultiDataWrapper的支持
      */
     public static class ResponseBuilder {
         private final Message request;
@@ -371,24 +376,90 @@ public class MessageBuilder {
             this.builder = MessageBuilder.create()
                     .seq(request.getSeq())
                     .token(request.getToken())
-                    .reverseAddress(request);
+                    .reverseAddress(request); // 使用reverseAddress，最合理的方式
         }
 
+        /**
+         * 原有的成功响应方法
+         */
         public ResponseBuilder success(Object data) {
             return success(ProtocolUtils.getOperationName(request), data);
         }
 
+        /**
+         * 增强的成功响应方法 - 支持MultiDataWrapper
+         */
         public ResponseBuilder success(String operation, Object data) {
-            builder.response().operation(operation, data);
+            // 检查是否为MultiDataWrapper，需要特殊处理
+            if (ResultHandlingUtils.isMultiDataWrapper(data)) {
+                return successWithMultiData(operation, (ResultHandlingUtils.MultiDataWrapper) data);
+            } else {
+                // 原有的处理方式
+                builder.response().operation(operation, data);
+                return this;
+            }
+        }
+
+        /**
+         * 处理多数据对象的成功响应
+         */
+        private ResponseBuilder successWithMultiData(String operation, ResultHandlingUtils.MultiDataWrapper wrapper) {
+            builder.response();
+
+            // 检查Operation是否支持多数据对象
+            if (ProtocolUtils.supportsMultipleData()) {
+                // 创建多数据对象Operation
+                List<Object> dataList = wrapper.getDataList();
+                Operation multiDataOperation = ProtocolUtils.createOperationWithMultipleData(
+                        1, operation, dataList);
+                builder.message.getBody().addOperation(multiDataOperation);
+            } else {
+                // 单数据对象版本：取第一个元素或保持为列表
+                List<Object> dataList = wrapper.getDataList();
+                Object singleData;
+                if (dataList.isEmpty()) {
+                    singleData = null;
+                } else if (dataList.size() == 1) {
+                    singleData = dataList.get(0);
+                } else {
+                    singleData = new ArrayList<>(dataList);
+                }
+                builder.operation(operation, singleData);
+            }
+
             return this;
         }
 
+        /**
+         * 原有的错误响应方法
+         */
         public ResponseBuilder error(String errorCode, String errorMessage) {
             SdoError error = new SdoError("", errorCode, errorMessage);
             builder.error().operation("Error", error);
             return this;
         }
 
+        /**
+         * 便捷的批量数据响应方法
+         */
+        public ResponseBuilder batch(Collection<?> dataCollection) {
+            ResultHandlingUtils.MultiDataWrapper wrapper =
+                    new ResultHandlingUtils.MultiDataWrapper(dataCollection);
+            return success(wrapper);
+        }
+
+        /**
+         * 便捷的批量数据响应方法（指定操作名）
+         */
+        public ResponseBuilder batch(String operation, Collection<?> dataCollection) {
+            ResultHandlingUtils.MultiDataWrapper wrapper =
+                    new ResultHandlingUtils.MultiDataWrapper(dataCollection);
+            return success(operation, wrapper);
+        }
+
+        /**
+         * 构建最终消息
+         */
         public Message build() {
             return builder.build();
         }
