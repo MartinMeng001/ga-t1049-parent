@@ -5,6 +5,10 @@ package com.traffic.gat1049.model.enums;
  * 方向枚举
  * 符合 GB/T 39900-2021 道路交通信号控制系统通用技术要求 A.18.3
  */
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * 线路类型枚举
  */
@@ -24,9 +28,11 @@ public enum RouteType {
         this.description = description;
     }
 
+    @JsonValue
     public String getCode() { return code; }
     public String getDescription() { return description; }
 
+    @JsonCreator
     public static RouteType fromCode(String code) {
         for (RouteType type : values()) {
             if (type.code.equals(code)) {

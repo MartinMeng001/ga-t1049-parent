@@ -9,6 +9,7 @@ import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.protocol.model.command.TSCCmd;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
+import com.traffic.gat1049.protocol.util.ResultHandlingUtils;
 import com.traffic.gat1049.service.interfaces.ServiceFactory;
 import com.traffic.gat1049.application.session.SessionManager;
 
@@ -50,7 +51,8 @@ public class TSCCommandHandler extends TokenRequiredHandler {
             Object result = dispatchQuery(tscCmd, sessionInfo);
 
             // 3. 返回响应
-            return createSuccessResponse(message, result);
+            //return createSuccessResponse(message, result);
+            return ResultHandlingUtils.createSuccessResponse(message, result);
 
         } catch (ValidationException e) {
             logger.error("TSCCmd validation failed: {}", e.getMessage());

@@ -6,6 +6,10 @@ package com.traffic.gat1049.model.enums;
  * 方向枚举
  * 符合 GB/T 39900-2021 道路交通信号控制系统通用技术要求 A.18.3
  */
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * 信号灯组类型枚举
  */
@@ -35,9 +39,11 @@ public enum LampGroupType {
         this.description = description;
     }
 
+    @JsonValue
     public String getCode() { return code; }
     public String getDescription() { return description; }
 
+    @JsonCreator
     public static LampGroupType fromCode(String code) {
         for (LampGroupType type : values()) {
             if (type.code.equals(code)) {

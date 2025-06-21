@@ -18,7 +18,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "DetectorParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DetectorParam extends BaseParam {
+public class DetectorParam  {//extends BaseParam
 
     /**
      * 路口编号

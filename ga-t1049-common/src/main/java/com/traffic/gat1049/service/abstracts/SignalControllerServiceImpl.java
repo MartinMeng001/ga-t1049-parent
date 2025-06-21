@@ -83,8 +83,8 @@ public class SignalControllerServiceImpl implements SignalControllerService {
 
         validateSignalController(signalController);
 
-        signalController.setCreateTime(LocalDateTime.now());
-        signalController.setUpdateTime(LocalDateTime.now());
+//        signalController.setCreateTime(LocalDateTime.now());
+//        signalController.setUpdateTime(LocalDateTime.now());
 
         signalControllerStorage.put(signalController.getSignalControllerId(), signalController);
 
@@ -109,7 +109,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
 
         validateSignalController(signalController);
 
-        signalController.setUpdateTime(LocalDateTime.now());
+//        signalController.setUpdateTime(LocalDateTime.now());
         signalControllerStorage.put(signalControllerId, signalController);
 
         logger.info("更新信号机参数: signalControllerId={}, supplier={}, type={}",
@@ -204,7 +204,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
 
         if (!controller.getCrossIdList().contains(crossId)) {
             controller.getCrossIdList().add(crossId);
-            controller.setUpdateTime(LocalDateTime.now());
+//            controller.setUpdateTime(LocalDateTime.now());
 
             logger.info("添加路口到信号机控制列表: signalControllerId={}, crossId={}",
                     signalControllerId, crossId);
@@ -223,7 +223,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
         SignalController controller = findById(signalControllerId);
 
         if (controller.getCrossIdList() != null && controller.getCrossIdList().remove(crossId)) {
-            controller.setUpdateTime(LocalDateTime.now());
+//            controller.setUpdateTime(LocalDateTime.now());
 
             logger.info("从信号机控制列表移除路口: signalControllerId={}, crossId={}",
                     signalControllerId, crossId);

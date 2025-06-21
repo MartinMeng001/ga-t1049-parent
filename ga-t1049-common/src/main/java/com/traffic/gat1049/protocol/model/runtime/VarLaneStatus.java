@@ -2,10 +2,8 @@ package com.traffic.gat1049.protocol.model.runtime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.traffic.gat1049.protocol.adapters.XmlAdapter.LampStatusAdapter;
 import com.traffic.gat1049.protocol.adapters.XmlAdapter.LaneMovementAdapter;
 import com.traffic.gat1049.protocol.adapters.XmlAdapter.VarLaneModeAdapter;
-import com.traffic.gat1049.protocol.model.base.BaseState;
 import com.traffic.gat1049.model.enums.LaneMovement;
 import com.traffic.gat1049.model.enums.VarLaneMode;
 

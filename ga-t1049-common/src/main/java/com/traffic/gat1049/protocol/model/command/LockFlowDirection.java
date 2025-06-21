@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "LockFlowDirection")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class LockFlowDirection extends BaseCommand {
+public class LockFlowDirection {// extends BaseCommand
 
     /**
      * 路口编号

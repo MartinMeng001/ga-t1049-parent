@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "PedestrianParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class PedestrianParam extends BaseParam {
+public class PedestrianParam  {//extends BaseParam
 
     /**
      * 路口编号

@@ -23,7 +23,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "LaneParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class LaneParam extends BaseParam {
+public class LaneParam  {//extends BaseParam
 
     /**
      * 路口编号
