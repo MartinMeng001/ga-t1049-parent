@@ -2,6 +2,7 @@ package com.traffic.gat1049.protocol.model.command;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.OperationTypeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseCommand;
 import com.traffic.gat1049.protocol.model.signal.ScheduleParam;
 import com.traffic.gat1049.model.enums.OperationType;
@@ -10,6 +11,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 设置调度参数命令
@@ -18,12 +20,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "SetScheduleParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SetScheduleParam extends BaseCommand {
+public class SetScheduleParam {//extends BaseCommand
 
     /**
      * 设置类型（新增，修改，删除）
      */
     @XmlElement(name = "Oper", required = true)
+    @XmlJavaTypeAdapter(OperationTypeAdapter.class)
     @JsonProperty("Oper")
     private OperationType oper;
 
@@ -36,11 +39,11 @@ public class SetScheduleParam extends BaseCommand {
 
     // 构造函数
     public SetScheduleParam() {
-        super();
+        //super();
     }
 
     public SetScheduleParam(OperationType oper, ScheduleParam scheduleParam) {
-        super();
+        //super();
         this.oper = oper;
         this.scheduleParam = scheduleParam;
     }
@@ -67,6 +70,6 @@ public class SetScheduleParam extends BaseCommand {
         return "SetScheduleParam{" +
                 "oper=" + oper +
                 ", scheduleParam=" + scheduleParam +
-                "} " + super.toString();
+                "} ";// + super.toString()
     }
 }

@@ -125,7 +125,7 @@ public class FlowControlHandler extends TokenRequiredHandler {
                 lockFlowDirection.getLockType(),
                 lockFlowDirection.getDuration());
 
-        return createSuccessResult("Flow direction locked successfully");
+        return lockFlowDirection;
     }
 
     private Object handleUnlockFlowDirection(UnlockFlowDirection unlockFlowDirection) throws BusinessException {
@@ -155,7 +155,7 @@ public class FlowControlHandler extends TokenRequiredHandler {
                 unlockFlowDirection.getEntrance(),
                 unlockFlowDirection.getExit());
 
-        return createSuccessResult("Flow direction unlocked successfully");
+        return unlockFlowDirection;
     }
 
     private Object handleStageCtrl(StageCtrl stageCtrl) throws BusinessException {
@@ -185,7 +185,7 @@ public class FlowControlHandler extends TokenRequiredHandler {
                 stageCtrl.getType(),
                 stageCtrl.getLen());
 
-        return createSuccessResult("Stage intervention executed successfully");
+        return stageCtrl;
     }
 
     private Object createSuccessResult(String message) {

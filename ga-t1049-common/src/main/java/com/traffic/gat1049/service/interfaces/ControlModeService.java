@@ -41,16 +41,6 @@ public interface ControlModeService {
     void setControlMode(CrossModePlan modePlan) throws BusinessException;
 
     /**
-     * 下发中心预案
-     *
-     * @param crossControlMode 控制模式
-     * @param planParam 配时方案参数
-     * @return 分配的方案号
-     * @throws BusinessException 业务异常
-     */
-    Integer setCenterPlan(ControlMode crossControlMode, PlanParam planParam) throws BusinessException;
-
-    /**
      * 获取所有路口的控制模式
      *
      * @return 所有路口控制模式列表

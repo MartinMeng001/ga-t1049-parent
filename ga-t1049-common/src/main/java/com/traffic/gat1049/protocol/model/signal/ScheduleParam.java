@@ -2,6 +2,7 @@ package com.traffic.gat1049.protocol.model.signal;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.ScheduleTypeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseParam;
 import com.traffic.gat1049.model.enums.ScheduleType;
 
@@ -10,6 +11,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 调度参数
@@ -42,6 +44,7 @@ public class ScheduleParam {//extends BaseParam
      * 调度类型
      */
     @XmlElement(name = "Type", required = true)
+    @XmlJavaTypeAdapter(ScheduleTypeAdapter.class)
     @JsonProperty("Type")
     private ScheduleType type;
 
@@ -80,11 +83,11 @@ public class ScheduleParam {//extends BaseParam
 
     // 构造函数
     public ScheduleParam() {
-        super();
+        //super();
     }
 
     public ScheduleParam(String crossId, Integer scheduleNo, ScheduleType type) {
-        super();
+        //super();
         this.crossId = crossId;
         this.scheduleNo = scheduleNo;
         this.type = type;

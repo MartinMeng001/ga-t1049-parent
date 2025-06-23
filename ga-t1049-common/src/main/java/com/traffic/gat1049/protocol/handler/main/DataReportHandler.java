@@ -47,7 +47,7 @@ public class DataReportHandler extends AbstractProtocolHandler {
             handleReportControl(reportCtrl);
 
             // 创建成功响应
-            return createSuccessResponse(message, createSuccessResult(reportCtrl));
+            return createSuccessResponse(message, reportCtrl);
 
         } catch (ValidationException e) {
             logger.error("Report control validation failed: {}", e.getMessage());

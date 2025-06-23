@@ -78,8 +78,9 @@ public class PlanControlHandler extends AbstractProtocolHandler {
                 setPlanParam.getPlanParam().getCrossId(),
                 setPlanParam.getPlanParam().getPlanNo());
 
-        return serviceFactory.getPlanService().setPlanParam(
+        serviceFactory.getPlanService().setPlanParam(
                 setPlanParam.getOper(), setPlanParam.getPlanParam());
+        return setPlanParam;
     }
 
     private Object handleSetDayPlanParam(SetDayPlanParam setDayPlanParam) throws BusinessException {
@@ -95,8 +96,9 @@ public class PlanControlHandler extends AbstractProtocolHandler {
                 setDayPlanParam.getDayPlanParam().getCrossId(),
                 setDayPlanParam.getDayPlanParam().getDayPlanNo());
 
-        return serviceFactory.getDayPlanService().setDayPlanParam(
+        serviceFactory.getDayPlanService().setDayPlanParam(
                 setDayPlanParam.getOper(), setDayPlanParam.getDayPlanParam());
+        return setDayPlanParam;
     }
 
     private Object handleSetScheduleParam(SetScheduleParam setScheduleParam) throws BusinessException {
@@ -112,8 +114,9 @@ public class PlanControlHandler extends AbstractProtocolHandler {
                 setScheduleParam.getScheduleParam().getCrossId(),
                 setScheduleParam.getScheduleParam().getScheduleNo());
 
-        return serviceFactory.getScheduleService().setScheduleParam(
+        serviceFactory.getScheduleService().setScheduleParam(
                 setScheduleParam.getOper(), setScheduleParam.getScheduleParam());
+        return setScheduleParam;
     }
 
     private Object handleCenterPlan(CenterPlan centerPlan) throws BusinessException {
@@ -132,10 +135,7 @@ public class PlanControlHandler extends AbstractProtocolHandler {
                 centerPlan.getCrossControlMode(), centerPlan.getPlanParam());
 
         // 返回分配的方案号
-        return new Object() {
-            public Integer getAssignedPlanNo() { return assignedPlanNo; }
-            public String getMessage() { return "Center plan set successfully"; }
-        };
+        return centerPlan;
     }
 
     @Override

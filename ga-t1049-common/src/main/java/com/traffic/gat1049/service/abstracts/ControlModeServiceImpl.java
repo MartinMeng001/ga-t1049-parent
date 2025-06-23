@@ -116,40 +116,6 @@ public class ControlModeServiceImpl implements ControlModeService {
     }
 
     @Override
-    public Integer setCenterPlan(ControlMode crossControlMode, PlanParam planParam) throws BusinessException {
-        if (crossControlMode == null) {
-            throw new ValidationException("crossControlMode", "控制模式不能为空");
-        }
-        if (planParam == null) {
-            throw new ValidationException("planParam", "配时方案参数不能为空");
-        }
-
-        // 验证方案参数（如果有PlanService的话）
-//        if (planService != null) {
-//            planService.validatePlan(planParam);
-//        }
-
-        String crossId = planParam.getCrossId();
-
-        // 为中心预案分配临时方案号（使用负数表示临时方案）
-        Integer assignedPlanNo = temporaryPlanNoGenerator.getAndDecrement();
-        planParam.setPlanNo(assignedPlanNo);
-        planParam.setPlanName("中心预案-" + LocalDateTime.now().toString());
-
-        // 存储临时方案
-        temporaryPlanStorage.computeIfAbsent(crossId, k -> new ConcurrentHashMap<>())
-                .put(assignedPlanNo, planParam);
-
-        // 设置控制模式为中心预案模式
-        setControlMode(crossId, crossControlMode, assignedPlanNo);
-
-        logger.info("下发中心预案: crossId={}, controlMode={}, assignedPlanNo={}",
-                crossId, crossControlMode.getDescription(), assignedPlanNo);
-
-        return assignedPlanNo;
-    }
-
-    @Override
     public List<CrossModePlan> getAllControlModes() throws BusinessException {
         List<Object> objs = dataProvider.getAllCrossModePlans();
 

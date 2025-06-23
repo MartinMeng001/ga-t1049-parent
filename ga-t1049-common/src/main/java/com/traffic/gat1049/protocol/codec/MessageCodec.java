@@ -5,8 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.traffic.gat1049.exception.MessageDecodingException;
 import com.traffic.gat1049.exception.MessageEncodingException;
 import com.traffic.gat1049.protocol.constants.GatConstants;
-import com.traffic.gat1049.protocol.model.command.LockFlowDirection;
-import com.traffic.gat1049.protocol.model.command.TSCCmd;
+import com.traffic.gat1049.protocol.model.command.*;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.model.core.Address;
 import com.traffic.gat1049.protocol.model.core.MessageBody;
@@ -131,7 +130,13 @@ public class MessageCodec {
                                 VarLaneStatus.class,
                                 RouteControlModeStatus.class,
                                 RouteSpeed.class,
-                                LockFlowDirection.class
+                                LockFlowDirection.class,
+                                UnlockFlowDirection.class,
+                                StageCtrl.class,
+                                CrossReportCtrl.class,
+                                CenterPlan.class,
+                                SetDayPlanParam.class,
+                                SetScheduleParam.class
                                 // 根据需要添加其他 SDO 类
                         };
 

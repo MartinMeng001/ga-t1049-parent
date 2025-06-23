@@ -2,6 +2,8 @@ package com.traffic.gat1049.protocol.model.command;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.DirectionAdapter;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.FlowTypeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseCommand;
 import com.traffic.gat1049.model.enums.Direction;
 import com.traffic.gat1049.model.enums.FlowType;
@@ -11,6 +13,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 解锁交通流向命令
@@ -19,7 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "UnlockFlowDirection")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class UnlockFlowDirection extends BaseCommand {
+public class UnlockFlowDirection {//extends BaseCommand
 
     /**
      * 路口编号
@@ -33,6 +36,7 @@ public class UnlockFlowDirection extends BaseCommand {
      * 交通流类型
      */
     @XmlElement(name = "Type", required = true)
+    @XmlJavaTypeAdapter(FlowTypeAdapter.class)
     @JsonProperty("Type")
     private FlowType type;
 
@@ -40,6 +44,7 @@ public class UnlockFlowDirection extends BaseCommand {
      * 进口方向
      */
     @XmlElement(name = "Entrance", required = true)
+    @XmlJavaTypeAdapter(DirectionAdapter.class)
     @JsonProperty("Entrance")
     private Direction entrance;
 
@@ -47,16 +52,17 @@ public class UnlockFlowDirection extends BaseCommand {
      * 出口方向
      */
     @XmlElement(name = "Exit", required = true)
+    @XmlJavaTypeAdapter(DirectionAdapter.class)
     @JsonProperty("Exit")
     private Direction exit;
 
     // 构造函数
     public UnlockFlowDirection() {
-        super();
+        //super();
     }
 
     public UnlockFlowDirection(String crossId, FlowType type, Direction entrance, Direction exit) {
-        super();
+        //super();
         this.crossId = crossId;
         this.type = type;
         this.entrance = entrance;
