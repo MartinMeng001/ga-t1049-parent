@@ -2,6 +2,7 @@ package com.traffic.gat1049.protocol.model.command;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.ControlModeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseCommand;
 import com.traffic.gat1049.protocol.model.signal.PlanParam;
 import com.traffic.gat1049.model.enums.ControlMode;
@@ -10,6 +11,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 下发中心预案命令
@@ -18,12 +20,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "CenterPlan")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CenterPlan extends BaseCommand {
+public class CenterPlan {//extends BaseCommand
 
     /**
      * 控制方式
      */
     @XmlElement(name = "CrossControlMode", required = true)
+    @XmlJavaTypeAdapter(ControlModeAdapter.class)
     @JsonProperty("CrossControlMode")
     private ControlMode crossControlMode;
 

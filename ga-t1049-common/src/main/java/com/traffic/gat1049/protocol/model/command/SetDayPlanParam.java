@@ -2,6 +2,7 @@ package com.traffic.gat1049.protocol.model.command;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.OperationTypeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseCommand;
 import com.traffic.gat1049.protocol.model.signal.DayPlanParam;
 import com.traffic.gat1049.model.enums.OperationType;
@@ -10,6 +11,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 设置日计划参数命令
@@ -18,12 +20,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "SetDayPlanParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SetDayPlanParam extends BaseCommand {
+public class SetDayPlanParam {//extends BaseCommand
 
     /**
      * 设置类型（新增，修改，删除）
      */
     @XmlElement(name = "Oper", required = true)
+    @XmlJavaTypeAdapter(OperationTypeAdapter.class)
     @JsonProperty("Oper")
     private OperationType oper;
 
@@ -36,11 +39,11 @@ public class SetDayPlanParam extends BaseCommand {
 
     // 构造函数
     public SetDayPlanParam() {
-        super();
+        //super();
     }
 
     public SetDayPlanParam(OperationType oper, DayPlanParam dayPlanParam) {
-        super();
+        //super();
         this.oper = oper;
         this.dayPlanParam = dayPlanParam;
     }

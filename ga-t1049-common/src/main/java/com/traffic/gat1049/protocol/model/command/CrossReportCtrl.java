@@ -2,12 +2,14 @@ package com.traffic.gat1049.protocol.model.command;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.ReportDataTypeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseCommand;
 import com.traffic.gat1049.model.enums.ReportCommand;
 import com.traffic.gat1049.model.enums.ReportDataType;
 
 import javax.validation.constraints.NotEmpty;
 import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +20,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "CrossReportCtrl")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CrossReportCtrl extends BaseCommand {
+public class CrossReportCtrl {//extends BaseCommand
 
     /**
      * 命令 - Start:开始主动上传，Stop:停止主动上传
@@ -31,6 +33,7 @@ public class CrossReportCtrl extends BaseCommand {
      * 上传数据类型
      */
     @XmlElement(name = "Type", required = true)
+    @XmlJavaTypeAdapter(ReportDataTypeAdapter.class)
     @JsonProperty("Type")
     private ReportDataType type;
 
@@ -45,11 +48,11 @@ public class CrossReportCtrl extends BaseCommand {
 
     // 构造函数
     public CrossReportCtrl() {
-        super();
+        //super();
     }
 
     public CrossReportCtrl(ReportCommand cmd, ReportDataType type) {
-        super();
+        //super();
         this.cmd = cmd;
         this.type = type;
     }

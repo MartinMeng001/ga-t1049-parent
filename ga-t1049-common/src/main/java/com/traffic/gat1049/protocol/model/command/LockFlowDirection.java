@@ -2,6 +2,9 @@ package com.traffic.gat1049.protocol.model.command;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.DirectionAdapter;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.FlowTypeAdapter;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.LockTypeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseCommand;
 import com.traffic.gat1049.model.enums.Direction;
 import com.traffic.gat1049.model.enums.FlowType;
@@ -13,6 +16,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 锁定交通流向命令
@@ -35,6 +39,7 @@ public class LockFlowDirection {// extends BaseCommand
      * 交通流类型
      */
     @XmlElement(name = "Type", required = true)
+    @XmlJavaTypeAdapter(FlowTypeAdapter.class)
     @JsonProperty("Type")
     private FlowType type;
 
@@ -42,6 +47,7 @@ public class LockFlowDirection {// extends BaseCommand
      * 进口方向
      */
     @XmlElement(name = "Entrance", required = true)
+    @XmlJavaTypeAdapter(DirectionAdapter.class)
     @JsonProperty("Entrance")
     private Direction entrance;
 
@@ -49,6 +55,7 @@ public class LockFlowDirection {// extends BaseCommand
      * 出口方向
      */
     @XmlElement(name = "Exit", required = true)
+    @XmlJavaTypeAdapter(DirectionAdapter.class)
     @JsonProperty("Exit")
     private Direction exit;
 
@@ -56,6 +63,7 @@ public class LockFlowDirection {// extends BaseCommand
      * 锁定阶段类型
      */
     @XmlElement(name = "LockType", required = true)
+    @XmlJavaTypeAdapter(LockTypeAdapter.class)
     @JsonProperty("LockType")
     private LockType lockType;
 

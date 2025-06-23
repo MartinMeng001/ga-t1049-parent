@@ -15,6 +15,9 @@ import com.traffic.gat1049.protocol.processor.MessageProcessor;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.constants.GatConstants;
+import com.traffic.gat1049.utils.PeriodGenerator;
+import com.traffic.gat1049.utils.ScheduleParamGenerator;
+import com.traffic.gat1049.utils.StageTimingGenerator;
 import com.traffic.server.service.EnhancedServerSubscriptionService;
 import com.traffic.server.network.client.ServerToClientSender;
 import com.traffic.server.service.TSCCommandService;
@@ -846,9 +849,9 @@ public class UpdatedServerDebugConsole {
             String crossId = scanner.nextLine().trim();
 
             System.out.println("请选择交通流类型:");
-            System.out.println("1. STRAIGHT - 直行");
-            System.out.println("2. LEFT_TURN - 左转");
-            System.out.println("3. RIGHT_TURN - 右转");
+            System.out.println("1. MOTOR - 机动车");
+            System.out.println("2. NONMOTOR - 非机动");
+            System.out.println("3. PEDSTRAIN - 人行");
             System.out.print("请选择 (1-3): ");
             FlowType flowType = parseFlowType(scanner.nextLine().trim());
 
@@ -913,10 +916,12 @@ public class UpdatedServerDebugConsole {
             ReportCommand cmd = parseReportCommand(scanner.nextLine().trim());
 
             System.out.println("请选择上报数据类型:");
-            System.out.println("1. CROSS_TRAFFIC_DATA - 路口交通流数据");
-            System.out.println("2. CROSS_SIGNAL_STATUS - 路口信号状态");
-            System.out.println("3. STAGE_TRAFFIC_DATA - 阶段交通流数据");
-            System.out.print("请选择 (1-3): ");
+            System.out.println("1. CrossCycle - 路口周期");
+            System.out.println("2. CrossStage - 路口阶段");
+            System.out.println("3. CrossSignalGroupStatus - 路口信号组灯态");
+            System.out.println("4. CrossTrafficData - 路口交通流数据");
+            System.out.println("5. StageTrafficData - 路口阶段交通流数据");
+            System.out.print("请选择 (1-5): ");
             ReportDataType type = parseReportDataType(scanner.nextLine().trim());
 
             System.out.print("请输入路口编号列表 (用逗号分隔，如: 001001001,001001002): ");
@@ -968,7 +973,7 @@ public class UpdatedServerDebugConsole {
             System.out.println("请选择控制模式:");
             System.out.println("1. COMPUTER_CONTROL - 计算机控制");
             System.out.println("2. MANUAL_CONTROL - 手动控制");
-            System.out.println("3. CENTRAL_CONTROL - 中心控制");
+            //System.out.println("3. CENTRAL_CONTROL - 中心控制");
             System.out.print("请选择 (1-3): ");
             ControlMode controlMode = parseControlMode(scanner.nextLine().trim());
 
@@ -986,6 +991,7 @@ public class UpdatedServerDebugConsole {
             planParam.setCrossId(crossId);
             planParam.setPlanName(planName);
             planParam.setCycleLen(cycleTime);
+            planParam.setStageTimingList(StageTimingGenerator.generateEvenStageTimingList(cycleTime, 2));
             // 这里可以添加更多阶段配时参数...
 
             // 构建命令
@@ -1040,13 +1046,13 @@ public class UpdatedServerDebugConsole {
             String planName = "";
             Integer cycleTime = null;
 
-            if (oper != OperationType.DELETE) {
-                System.out.print("请输入方案名称 (如: 早高峰方案): ");
-                planName = scanner.nextLine().trim();
+            System.out.print("请输入方案名称 (如: 早高峰方案): ");
+            planName = scanner.nextLine().trim();
 
-                System.out.print("请输入周期时长(秒) (如: 150): ");
-                cycleTime = Integer.parseInt(scanner.nextLine().trim());
-            }
+
+            System.out.print("请输入周期时长(秒) (如: 150): ");
+            cycleTime = Integer.parseInt(scanner.nextLine().trim());
+
 
             // 构建配时方案参数
             PlanParam planParam = new PlanParam();
@@ -1058,7 +1064,7 @@ public class UpdatedServerDebugConsole {
             if (cycleTime != null) {
                 planParam.setCycleLen(cycleTime);
             }
-
+            planParam.setStageTimingList(StageTimingGenerator.generateEvenStageTimingList(cycleTime, 2));
             // 构建命令
             SetPlanParam setPlan = new SetPlanParam();
             setPlan.setOper(oper);
@@ -1115,15 +1121,14 @@ public class UpdatedServerDebugConsole {
 
             String dayPlanName = "";
 
-            if (oper != OperationType.DELETE) {
-                System.out.print("请输入日计划名称 (如: 工作日计划): ");
-                dayPlanName = scanner.nextLine().trim();
-            }
+            System.out.print("请输入日计划名称 (如: 工作日计划): ");
+            dayPlanName = scanner.nextLine().trim();
 
             // 构建日计划参数
             DayPlanParam dayPlan = new DayPlanParam();
             dayPlan.setCrossId(crossId);
             dayPlan.setDayPlanNo(dayPlanNo);
+            dayPlan.setPeriodList(PeriodGenerator.generateEvenPeriodList(3));
 //            if (!dayPlanName.isEmpty()) {
 //                dayPlan.setDayPlanName(dayPlanName);
 //            }
@@ -1180,15 +1185,15 @@ public class UpdatedServerDebugConsole {
 
             String scheduleName = "";
 
-            if (oper != OperationType.DELETE) {
-                System.out.print("请输入调度名称 (如: 月度调度): ");
-                scheduleName = scanner.nextLine().trim();
-            }
+            //if (oper != OperationType.DELETE) {
+            System.out.print("请输入调度名称 (如: 月度调度): ");
+            scheduleName = scanner.nextLine().trim();
+            //}
 
             // 构建调度参数
-            ScheduleParam scheduleParam = new ScheduleParam();
-            scheduleParam.setCrossId(crossId);
-            scheduleParam.setScheduleNo(scheduleNo);
+            ScheduleParam scheduleParam = ScheduleParamGenerator.generateScheduleParam(crossId, scheduleNo, 2);//new ScheduleParam();
+//            scheduleParam.setCrossId(crossId);
+//            scheduleParam.setScheduleNo(scheduleNo);
 //            if (!scheduleName.isEmpty()) {
 //                scheduleParam.setScheduleName(scheduleName);
 //            }
@@ -1239,8 +1244,8 @@ public class UpdatedServerDebugConsole {
             System.out.println("请选择干预类型:");
             System.out.println("1. EXTEND - 延长");
             System.out.println("2. REDUCE - 缩短");
-            System.out.println("3. SKIP - 跳过");
-            System.out.print("请选择 (1-3): ");
+            //System.out.println("3. SKIP - 跳过");
+            System.out.print("请选择 (1-2): ");
             InterventionType type = parseInterventionType(scanner.nextLine().trim());
 
             System.out.print("请输入干预时长(秒) (如: 30): ");

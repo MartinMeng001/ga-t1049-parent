@@ -78,6 +78,15 @@ public class Operation implements Serializable {
             @XmlElement(name = "SetDayPlanParam", type = SetDayPlanParam.class),
             @XmlElement(name = "SetPlanParam", type = SetPlanParam.class),
 
+            // *** 添加这些缺失的控制命令注册 ***
+            @XmlElement(name = "LockFlowDirection", type = LockFlowDirection.class),
+            @XmlElement(name = "UnlockFlowDirection", type = UnlockFlowDirection.class),
+            @XmlElement(name = "StageCtrl", type = StageCtrl.class),
+            @XmlElement(name = "CrossReportCtrl", type = CrossReportCtrl.class),
+            @XmlElement(name = "CenterPlan", type = CenterPlan.class),
+            @XmlElement(name = "SetDayPlanParam", type = SetDayPlanParam.class),
+            @XmlElement(name = "SetScheduleParam", type = SetScheduleParam.class),
+
             @XmlElement(name = "CrossTrafficData", type = CrossTrafficData.class),
             @XmlElement(name = "StageTrafficData", type = StageTrafficData.class),
             @XmlElement(name = "VarLaneStatus", type = VarLaneStatus.class),

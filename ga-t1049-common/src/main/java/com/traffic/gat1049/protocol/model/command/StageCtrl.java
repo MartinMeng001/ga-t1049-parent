@@ -2,6 +2,7 @@ package com.traffic.gat1049.protocol.model.command;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.InterventionTypeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseCommand;
 import com.traffic.gat1049.model.enums.InterventionType;
 
@@ -12,6 +13,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 阶段干预指令
@@ -20,7 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "StageCtrl")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class StageCtrl extends BaseCommand {
+public class StageCtrl {//extends BaseCommand
 
     /**
      * 路口编号
@@ -42,6 +44,7 @@ public class StageCtrl extends BaseCommand {
      * 干预类型
      */
     @XmlElement(name = "Type", required = true)
+    @XmlJavaTypeAdapter(InterventionTypeAdapter.class)
     @JsonProperty("Type")
     private InterventionType type;
 
@@ -55,11 +58,11 @@ public class StageCtrl extends BaseCommand {
 
     // 构造函数
     public StageCtrl() {
-        super();
+        //super();
     }
 
     public StageCtrl(String crossId, Integer stageNo, InterventionType type, Integer len) {
-        super();
+        //super();
         this.crossId = crossId;
         this.stageNo = stageNo;
         this.type = type;
