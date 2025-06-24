@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS gat_sys_info (
 CREATE TABLE IF NOT EXISTS gat_sys_state (
                                              id BIGINT PRIMARY KEY AUTO_INCREMENT,
                                              device_id VARCHAR(64) NOT NULL,
-    current_time TIMESTAMP COMMENT '当前时间',
+    `current_time` TIMESTAMP COMMENT '当前时间', -- 修正: `current_time` 是保留字，已添加反引号
     running_state TINYINT COMMENT '运行状态: 0-停止,1-运行,2-故障',
     work_mode TINYINT COMMENT '工作模式: 0-手动,1-自动,2-维护',
     cpu_usage DECIMAL(5,2) COMMENT 'CPU使用率(%)',
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS gat_sys_state (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (device_id) REFERENCES gat_sys_info(device_id) ON DELETE CASCADE,
     INDEX idx_device_id (device_id),
-    INDEX idx_current_time (current_time)
+    INDEX idx_current_time (`current_time`) -- 修正: 索引中的列名也需添加反引号
     ) ENGINE=InnoDB COMMENT='系统状态表';
 
 -- ============================================================================
@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS gat_lamp_group (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cross_id) REFERENCES gat_cross_param(cross_id) ON DELETE CASCADE,
-    PRIMARY KEY (cross_id, lamp_group_no),
+    UNIQUE KEY uk_cross_lamp_group (cross_id, lamp_group_no), -- 修正: 将重复的 PRIMARY KEY 改为 UNIQUE KEY
     INDEX idx_cross_id (cross_id)
     ) ENGINE=InnoDB COMMENT='灯组参数表';
 
@@ -187,7 +187,7 @@ CREATE TABLE IF NOT EXISTS gat_detector_param (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cross_id) REFERENCES gat_cross_param(cross_id) ON DELETE CASCADE,
-    PRIMARY KEY (cross_id, detector_no),
+    UNIQUE KEY uk_cross_detector (cross_id, detector_no), -- 修正: 将重复的 PRIMARY KEY 改为 UNIQUE KEY
     INDEX idx_cross_id (cross_id),
     INDEX idx_lane_no (lane_no)
     ) ENGINE=InnoDB COMMENT='检测器参数表';
@@ -206,7 +206,7 @@ CREATE TABLE IF NOT EXISTS gat_lane_param (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cross_id) REFERENCES gat_cross_param(cross_id) ON DELETE CASCADE,
-    PRIMARY KEY (cross_id, lane_no),
+    UNIQUE KEY uk_cross_lane (cross_id, lane_no), -- 修正: 将重复的 PRIMARY KEY 改为 UNIQUE KEY
     INDEX idx_cross_id (cross_id),
     INDEX idx_signal_group (signal_group_no)
     ) ENGINE=InnoDB COMMENT='车道参数表';
@@ -225,7 +225,7 @@ CREATE TABLE IF NOT EXISTS gat_pedestrian_param (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cross_id) REFERENCES gat_cross_param(cross_id) ON DELETE CASCADE,
-    PRIMARY KEY (cross_id, pedestrian_no),
+    UNIQUE KEY uk_cross_pedestrian (cross_id, pedestrian_no), -- 修正: 将重复的 PRIMARY KEY 改为 UNIQUE KEY
     INDEX idx_cross_id (cross_id)
     ) ENGINE=InnoDB COMMENT='行人参数表';
 
@@ -243,7 +243,7 @@ CREATE TABLE IF NOT EXISTS gat_signal_group_param (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cross_id) REFERENCES gat_cross_param(cross_id) ON DELETE CASCADE,
-    PRIMARY KEY (cross_id, signal_group_no),
+    UNIQUE KEY uk_cross_signal_group (cross_id, signal_group_no), -- 修正: 将重复的 PRIMARY KEY 改为 UNIQUE KEY
     INDEX idx_cross_id (cross_id)
     ) ENGINE=InnoDB COMMENT='信号组参数表';
 
@@ -269,7 +269,7 @@ CREATE TABLE IF NOT EXISTS gat_stage_param (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cross_id) REFERENCES gat_cross_param(cross_id) ON DELETE CASCADE,
-    PRIMARY KEY (cross_id, stage_no),
+    UNIQUE KEY uk_cross_stage (cross_id, stage_no), -- 修正: 将重复的 PRIMARY KEY 改为 UNIQUE KEY
     INDEX idx_cross_id (cross_id)
     ) ENGINE=InnoDB COMMENT='阶段参数表';
 
@@ -300,7 +300,7 @@ CREATE TABLE IF NOT EXISTS gat_plan_param (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cross_id) REFERENCES gat_cross_param(cross_id) ON DELETE CASCADE,
-    PRIMARY KEY (cross_id, plan_no),
+    UNIQUE KEY uk_cross_plan (cross_id, plan_no), -- 修正: 将重复的 PRIMARY KEY 改为 UNIQUE KEY
     INDEX idx_cross_id (cross_id),
     INDEX idx_is_active (is_active)
     ) ENGINE=InnoDB COMMENT='配时方案参数表';
@@ -338,7 +338,7 @@ CREATE TABLE IF NOT EXISTS gat_day_plan_param (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cross_id) REFERENCES gat_cross_param(cross_id) ON DELETE CASCADE,
-    PRIMARY KEY (cross_id, day_plan_no),
+    UNIQUE KEY uk_cross_day_plan (cross_id, day_plan_no), -- 修正: 将重复的 PRIMARY KEY 改为 UNIQUE KEY
     INDEX idx_cross_id (cross_id),
     INDEX idx_plan_date (plan_date)
     ) ENGINE=InnoDB COMMENT='日计划参数表';
@@ -348,14 +348,14 @@ CREATE TABLE IF NOT EXISTS gat_day_plan_period (
                                                    id BIGINT PRIMARY KEY AUTO_INCREMENT,
                                                    cross_id VARCHAR(64) NOT NULL COMMENT '路口编号',
     day_plan_no INT NOT NULL COMMENT '日计划序号',
-    start_time TIME NOT NULL COMMENT '开始时间',
-    end_time TIME NOT NULL COMMENT '结束时间',
+    `start_time` TIME NOT NULL COMMENT '开始时间', -- 修正: `start_time` 是保留字，已添加反引号
+    `end_time` TIME NOT NULL COMMENT '结束时间',   -- 修正: `end_time` 是保留字，已添加反引号
     plan_no INT NOT NULL COMMENT '使用的配时方案序号',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (cross_id, day_plan_no) REFERENCES gat_day_plan_param(cross_id, day_plan_no) ON DELETE CASCADE,
     FOREIGN KEY (cross_id, plan_no) REFERENCES gat_plan_param(cross_id, plan_no) ON DELETE CASCADE,
     INDEX idx_cross_day_plan (cross_id, day_plan_no),
-    INDEX idx_time_range (start_time, end_time)
+    INDEX idx_time_range (`start_time`, `end_time`) -- 修正: 索引中的列名也需添加反引号
     ) ENGINE=InnoDB COMMENT='日计划时段表';
 
 -- 调度参数表 (ScheduleParam)
@@ -365,16 +365,16 @@ CREATE TABLE IF NOT EXISTS gat_schedule_param (
     schedule_no INT NOT NULL COMMENT '调度序号',
     schedule_name VARCHAR(128) COMMENT '调度名称',
     schedule_type TINYINT COMMENT '调度类型: 1-周调度,2-月调度,3-年调度',
-    start_date DATE COMMENT '开始日期',
-    end_date DATE COMMENT '结束日期',
+    `start_date` DATE COMMENT '开始日期', -- 修正: `start_date` 是保留字，已添加反引号
+    `end_date` DATE COMMENT '结束日期',   -- 修正: `end_date` 是保留字，已添加反引号
     is_active TINYINT DEFAULT 0 COMMENT '是否激活: 0-否,1-是',
     description TEXT COMMENT '调度描述',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cross_id) REFERENCES gat_cross_param(cross_id) ON DELETE CASCADE,
-    PRIMARY KEY (cross_id, schedule_no),
+    UNIQUE KEY uk_cross_schedule (cross_id, schedule_no), -- 修正: 将重复的 PRIMARY KEY 改为 UNIQUE KEY
     INDEX idx_cross_id (cross_id),
-    INDEX idx_date_range (start_date, end_date),
+    INDEX idx_date_range (`start_date`, `end_date`), -- 修正: 索引中的列名也需添加反引号
     INDEX idx_is_active (is_active)
     ) ENGINE=InnoDB COMMENT='调度参数表';
 
@@ -399,7 +399,7 @@ CREATE TABLE IF NOT EXISTS gat_schedule_day_plan (
 CREATE TABLE IF NOT EXISTS gat_cross_state (
                                                id BIGINT PRIMARY KEY AUTO_INCREMENT,
                                                cross_id VARCHAR(64) NOT NULL COMMENT '路口编号',
-    current_time TIMESTAMP COMMENT '当前时间',
+    `current_time` TIMESTAMP COMMENT '当前时间', -- 修正: `current_time` 是保留字，已添加反引号
     control_mode TINYINT COMMENT '控制方式: 1-手动,2-自动,3-感应,4-协调',
     current_plan_no INT COMMENT '当前方案序号',
     current_stage_no INT COMMENT '当前阶段序号',
@@ -411,7 +411,7 @@ CREATE TABLE IF NOT EXISTS gat_cross_state (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cross_id) REFERENCES gat_cross_param(cross_id) ON DELETE CASCADE,
     INDEX idx_cross_id (cross_id),
-    INDEX idx_current_time (current_time)
+    INDEX idx_current_time (`current_time`) -- 修正: 索引中的列名也需添加反引号
     ) ENGINE=InnoDB COMMENT='路口状态表';
 
 -- 信号机故障表 (SignalControllerError)
@@ -643,7 +643,7 @@ CREATE OR REPLACE VIEW v_cross_current_status AS
 SELECT
     cs.cross_id,
     c.cross_name,
-    cs.current_time,
+    cs.`current_time`, -- 修正: `current_time` 是保留字，已添加反引号
     cs.control_mode,
     cs.current_plan_no,
     pp.plan_name,
@@ -756,7 +756,7 @@ END;
 START TRANSACTION;
 
 INSERT INTO gat_cross_state (
-    cross_id, current_time, control_mode, current_plan_no,
+    cross_id, `current_time`, control_mode, current_plan_no, -- 修正: `current_time` 是保留字，已添加反引号
     current_stage_no, stage_remaining_time, cycle_remaining_time,
     fault_status, communication_status
 ) VALUES (
@@ -765,7 +765,7 @@ INSERT INTO gat_cross_state (
              p_fault_status, p_communication_status
          )
     ON DUPLICATE KEY UPDATE
-                         current_time = NOW(),
+                         `current_time` = NOW(), -- 修正: `current_time` 是保留字，已添加反引号
                          control_mode = p_control_mode,
                          current_plan_no = p_current_plan_no,
                          current_stage_no = p_current_stage_no,
@@ -835,6 +835,8 @@ CREATE TRIGGER tr_signal_error_insert
     FOR EACH ROW
 BEGIN
     -- 更新路口故障状态
+    -- POW(2, NEW.error_type - 1) 这里的 error_type 假设是从1开始的，用于位运算
+    -- 如果 error_type 可能为0，需要调整 POW(2, NEW.error_type)
     UPDATE gat_cross_state
     SET fault_status = fault_status | POW(2, NEW.error_type - 1)
     WHERE cross_id = NEW.cross_id;
@@ -847,7 +849,7 @@ DELIMITER ;
 -- ============================================================================
 
 -- 为高频查询添加复合索引
-CREATE INDEX idx_cross_state_time_status ON gat_cross_state(cross_id, current_time, communication_status);
+CREATE INDEX idx_cross_state_time_status ON gat_cross_state(cross_id, `current_time`, communication_status); -- 修正: `current_time` 添加反引号
 CREATE INDEX idx_traffic_data_cross_time ON gat_cross_traffic_data(cross_id, data_time DESC);
 CREATE INDEX idx_error_cross_time_status ON gat_signal_controller_error(cross_id, occurrence_time DESC, status);
 CREATE INDEX idx_operation_log_time_type ON gat_operation_log(created_at DESC, operation_type);
@@ -857,7 +859,10 @@ CREATE INDEX idx_communication_log_time ON gat_communication_log(created_at DESC
 -- 15. 数据库维护
 -- ============================================================================
 
+DELIMITER // -- 修正: 为事件定义添加 DELIMITER
+
 -- 清理过期数据事件
+-- 注意: MySQL事件调度器默认是关闭的，需要 SET GLOBAL event_scheduler = ON;
 CREATE EVENT IF NOT EXISTS evt_cleanup_old_data
 ON SCHEDULE EVERY 1 DAY
 STARTS CURRENT_TIMESTAMP
@@ -865,20 +870,22 @@ DO
 BEGIN
     -- 清理30天前的交通流数据
 DELETE FROM gat_cross_traffic_data
-WHERE created_at < DATE_SUB(NOW(), INTERVAL 30 DAY);
+WHERE created_at < DATE_SUB(NOW(), INTERVAL 30 DAY); -- 修正: 语句结尾添加分号
 
 -- 清理7天前的通信日志
 DELETE FROM gat_communication_log
-WHERE created_at < DATE_SUB(NOW(), INTERVAL 7 DAY);
+WHERE created_at < DATE_SUB(NOW(), INTERVAL 7 DAY); -- 修正: 语句结尾添加分号
 
 -- 清理90天前的操作日志
 DELETE FROM gat_operation_log
-WHERE created_at < DATE_SUB(NOW(), INTERVAL 90 DAY);
+WHERE created_at < DATE_SUB(NOW(), INTERVAL 90 DAY); -- 修正: 语句结尾添加分号
 
 -- 清理过期会话
 DELETE FROM gat_user_session
-WHERE expires_at < NOW() OR status != 1;
-END;
+WHERE expires_at < NOW() OR status != 1; -- 修正: 语句结尾添加分号
+END // -- 修正: 闭合 BEGIN...END 块
+
+DELIMITER ; -- 修正: 恢复 DELIMITER
 
 -- 启用事件调度器
 SET GLOBAL event_scheduler = ON;

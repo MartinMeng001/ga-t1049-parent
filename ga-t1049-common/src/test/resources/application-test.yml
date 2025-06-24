@@ -1,0 +1,15 @@
+# 测试环境配置
+logging:
+  level:
+    com.traffic.gat1049: DEBUG
+    org.springframework: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# 测试数据配置
+test:
+  mock:
+    enabled: true
+  timeout:
+    session: 300000  # 5分钟
+    heartbeat: 30000 # 30秒
