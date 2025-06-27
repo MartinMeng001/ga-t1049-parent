@@ -15,7 +15,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 public enum InterventionType {
     EXTEND("1", "延长"),
-    SHORTEN("2", "缩短");
+    SHORTEN("2", "缩短"),
+    NEXT_STAGE("3", "步进");
 
     private final String code;
     private final String description;

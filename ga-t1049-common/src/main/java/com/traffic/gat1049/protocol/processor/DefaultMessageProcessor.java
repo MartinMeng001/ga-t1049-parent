@@ -159,7 +159,7 @@ public class DefaultMessageProcessor implements MessageProcessor {
     private Message createUnsupportedResponse(Message request) {
         return MessageBuilder.create()
                 .error()
-                .fromUtcs()
+                .fromUtcs(request.getTo().getSubSys())
                 .toTicp()
                 .seq(request.getSeq())
                 .token(request.getToken())
@@ -180,7 +180,7 @@ public class DefaultMessageProcessor implements MessageProcessor {
 
         return MessageBuilder.create()
                 .error()
-                .fromUtcs()
+                .fromUtcs(request.getTo().getSubSys())
                 .toTicp()
                 .seq(request != null ? request.getSeq() : ProtocolUtils.generateSequence())
                 .token(request != null ? request.getToken() : null)

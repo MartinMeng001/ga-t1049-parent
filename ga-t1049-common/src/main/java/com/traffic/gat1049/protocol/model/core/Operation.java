@@ -3,8 +3,7 @@ package com.traffic.gat1049.protocol.model.core;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.traffic.gat1049.protocol.model.command.*;
-import com.traffic.gat1049.protocol.model.intersection.LampGroup;
-import com.traffic.gat1049.protocol.model.intersection.SignalController;
+import com.traffic.gat1049.protocol.model.intersection.*;
 import com.traffic.gat1049.protocol.model.runtime.*;
 import com.traffic.gat1049.protocol.model.sdo.*;
 import com.traffic.gat1049.protocol.model.signal.*;
@@ -59,19 +58,28 @@ public class Operation implements Serializable {
             @XmlElement(name = "SDO_TimeServer", type = SdoTimeServer.class),
 
             // 信号控制相关对象
-            @XmlElement(name = "SignalController", type = SignalController.class),
+            @XmlElement(name = "SignalControler", type = SignalControler.class),
             @XmlElement(name = "LampGroup", type = LampGroup.class),
+            @XmlElement(name = "LaneParam", type = LaneParam.class),
+            @XmlElement(name = "SignalGroupParam", type = SignalGroupParam.class),
+            @XmlElement(name = "PedestrianParam", type = PedestrianParam.class),
+            @XmlElement(name = "StageParam", type = StageParam.class),
             @XmlElement(name = "PlanParam", type = PlanParam.class),
             @XmlElement(name = "DayPlanParam", type = DayPlanParam.class),
+            @XmlElement(name = "ScheduleParam", type = ScheduleParam.class),
+            @XmlElement(name = "DetectorParam", type = DetectorParam.class),
 
-            // 路由和区域参数
+            // 路线和区域参数
             @XmlElement(name = "RouteParam", type = RouteParam.class),
             @XmlElement(name = "RegionParam", type = RegionParam.class),
             @XmlElement(name = "SubRegionParam", type = SubRegionParam.class),
+            @XmlElement(name = "CrossParam", type = CrossParam.class),
 
             // 系统信息对象
             @XmlElement(name = "SysInfo", type = SysInfo.class),
             @XmlElement(name = "SysState", type = SysState.class),
+            @XmlElement(name = "CrossState", type = CrossState.class),
+            @XmlElement(name = "SignalControlerError", type = SignalControllerError.class),
 
             // 命令对象
             @XmlElement(name = "TSCCmd", type = TSCCmd.class),

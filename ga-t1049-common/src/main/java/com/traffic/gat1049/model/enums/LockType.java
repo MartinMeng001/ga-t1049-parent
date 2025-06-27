@@ -15,7 +15,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum LockType {
     CURRENT_PLAN("1", "当前方案中放行此流向的阶段（推荐）"),
     SINGLE_ENTRANCE("2", "进口方向单口放行"),
-    SIGNAL_GROUP_ONLY("3", "只放行此流向信号组");
+    SIGNAL_GROUP_ONLY("3", "只放行此流向信号组"),
+    LOCK_STAGE("4", "锁定指定阶段");
 
     private final String code;
     private final String description;

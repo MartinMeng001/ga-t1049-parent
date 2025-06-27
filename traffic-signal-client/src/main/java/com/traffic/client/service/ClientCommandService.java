@@ -192,7 +192,7 @@ public class ClientCommandService {
         System.out.print("对象名称: ");
         String objName = scanner.nextLine().trim();
 
-        Message subscribeRequest = MessageBuilder.createSubscribeRequest(demoService.getToken(), msgType, operName, objName);
+        Message subscribeRequest = MessageBuilder.createSubscribeRequest(demoService.getToken(), msgType, operName, objName, client.getUsername());
         Message response = client.sendRequest(subscribeRequest, 10, TimeUnit.SECONDS);
 
         if (response != null) {
@@ -203,14 +203,14 @@ public class ClientCommandService {
     }
 
     private void performGat1049Heartbeat(GatTcpClient client) throws Exception {
-        Message heartbeat = MessageBuilder.createHeartbeatMessage(demoService.getToken());
+        Message heartbeat = MessageBuilder.createHeartbeatMessage(demoService.getToken(), client.getUsername());
         client.sendMessage(heartbeat);
         System.out.println("心跳已发送");
     }
 
     private void performGat1049Query(GatTcpClient client, Scanner scanner) throws Exception {
         SdoTimeServer timeServerQuery = new SdoTimeServer("", "", null);
-        Message queryRequest = MessageBuilder.createQueryRequest(demoService.getToken(), timeServerQuery);
+        Message queryRequest = MessageBuilder.createQueryRequest(demoService.getToken(), timeServerQuery, client.getUsername());
         Message response = client.sendRequest(queryRequest, 10, TimeUnit.SECONDS);
 
         if (response != null) {

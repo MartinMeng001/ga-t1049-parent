@@ -2,11 +2,13 @@ package com.traffic.gat1049.protocol.model.runtime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.SystemStateAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseState;
 import com.traffic.gat1049.model.enums.SystemState;
 
 import javax.validation.constraints.*;
 import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 路口状态
@@ -29,6 +31,7 @@ public class CrossState {//extends BaseState
      * 运行状态
      */
     @XmlElement(name = "Value", required = true)
+    @XmlJavaTypeAdapter(SystemStateAdapter.class)
     @JsonProperty("Value")
     private SystemState value;
 

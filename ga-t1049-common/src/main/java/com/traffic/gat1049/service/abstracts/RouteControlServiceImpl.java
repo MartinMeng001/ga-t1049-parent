@@ -41,7 +41,7 @@ public class RouteControlServiceImpl implements RouteControlService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public RouteControlServiceImpl() throws BusinessException {
         // 初始化示例数据
-        initializeSampleData();
+        //initializeSampleData();
     }
 
     @Override

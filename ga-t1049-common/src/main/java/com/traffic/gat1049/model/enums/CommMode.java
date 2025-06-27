@@ -14,9 +14,12 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 通信接口枚举
  */
 public enum CommMode {
-    ETHERNET("1", "以太网"),
-    SERIAL("2", "串口"),
-    OTHER("9", "其他");
+    ETHERNET("10", "以太网"),
+    TCPCLIENT("11", "TCP Client"),
+    TCPSERVER("12", "TCP Server"),
+    UDP("13", "UDP"),
+    SERIAL("20", "串口"),
+    OTHER("99", "其他");
 
     private final String code;
     private final String description;

@@ -98,7 +98,7 @@ public abstract class AbstractProtocolHandler implements ProtocolHandler {
         if (request == null) {
             return MessageBuilder.create()
                     .error()
-                    .fromUtcs()
+                    .fromUtcs(request.getTo().getSubSys())
                     .toTicp()
                     .seq(request.getSeq())
                     .operation("Error", createErrorData(errorCode, errorMessage, objName))
@@ -107,7 +107,7 @@ public abstract class AbstractProtocolHandler implements ProtocolHandler {
 
         return MessageBuilder.create()
                 .error()
-                .fromUtcs()
+                .fromUtcs(request.getTo().getSubSys())
                 .toTicp()
                 .seq(request.getSeq())
                 .token(request.getToken())

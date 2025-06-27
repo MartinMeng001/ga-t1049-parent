@@ -46,14 +46,14 @@ public class Message implements Serializable {
      */
     @XmlElement(name = "From", required = true)
     @JsonProperty("From")
-    private Address from;
+    private AddressWrapper from;
 
     /**
      * 目的地址 - 数据包接收的地址
      */
     @XmlElement(name = "To", required = true)
     @JsonProperty("To")
-    private Address to;
+    private AddressWrapper to;
 
     /**
      * 数据包类型 - REQUEST/RESPONSE/PUSH/ERROR
@@ -114,11 +114,11 @@ public class Message implements Serializable {
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }
 
-    public Address getFrom() { return from; }
-    public void setFrom(Address from) { this.from = from; }
+    public Address getFrom() { return from.getAddress(); }
+    public void setFrom(Address from) { this.from = new AddressWrapper(from); }
 
-    public Address getTo() { return to; }
-    public void setTo(Address to) { this.to = to; }
+    public Address getTo() { return to.getAddress(); }
+    public void setTo(Address to) { this.to = new AddressWrapper(to); }
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }

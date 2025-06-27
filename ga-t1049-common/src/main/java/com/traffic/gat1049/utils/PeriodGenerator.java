@@ -290,7 +290,7 @@ public class PeriodGenerator {
     private static String minutesToTimeString(int minutes) {
         int hours = (minutes / 60) % 24;
         int mins = minutes % 60;
-        return String.format("%02d:%02d:00", hours, mins);
+        return String.format("%02d:%02d", hours, mins);
     }
 
     /**

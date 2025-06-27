@@ -49,23 +49,35 @@ public class ClientDemoService {
         }
     }
 
-    private void performLogin(GatTcpClient client) throws Exception {
-        Message loginRequest = MessageBuilder.createLoginRequest("tsc_client", "tsc123");
+    private void performLogin_Main(GatTcpClient client) throws Exception {
+        Message loginRequest = MessageBuilder.createLoginRequest(client.getUsername(), client.getPassword());
         Message loginResponse = client.sendRequest(loginRequest, 10, TimeUnit.SECONDS);
 
         if (loginResponse != null && "RESPONSE".equals(loginResponse.getType())) {
             token = loginResponse.getToken();
             GatTcpClient.tocken = token;
             logger.info("登录成功，获得Token: {}", token);
-            sessionManager.registerLogin("tsc_client", SystemType.UTCS, "127.0.0.1", token);
+            sessionManager.registerLogin(client.getUsername(), SystemType.UTCS, client.getHost(), token);
         } else {
             logger.error("登录失败");
         }
     }
+    private void performLogin(GatTcpClient client) throws Exception {
+        Message loginRequest = MessageBuilder.createLoginRequest(client.getUsername(), client.getPassword());
+        client.sendMessage(loginRequest);
+
+        /*
+        测试目的
+         */
+        token = "sdsb-test";//loginResponse.getToken();
+        GatTcpClient.tocken = token;
+        logger.info("测试登录成功，获得Token: {}", token);
+        sessionManager.registerLogin(client.getUsername(), SystemType.UTCS, client.getHost(), token);
+    }
 
     private void performSubscribe(GatTcpClient client) throws Exception {
         Message subscribeRequest = MessageBuilder.createSubscribeRequest(
-                token, "PUSH", "Notify", "CrossSignalGroupStatus");
+                token, "PUSH", "Notify", "CrossSignalGroupStatus", client.getUsername());
         Message subscribeResponse = client.sendRequest(subscribeRequest, 10, TimeUnit.SECONDS);
 
         if (subscribeResponse != null && "RESPONSE".equals(subscribeResponse.getType())) {
@@ -75,7 +87,7 @@ public class ClientDemoService {
 
     private void performQuery(GatTcpClient client) throws Exception {
         SdoTimeServer timeServerQuery = new SdoTimeServer("", "", null);
-        Message queryRequest = MessageBuilder.createQueryRequest(token, timeServerQuery);
+        Message queryRequest = MessageBuilder.createQueryRequest(token, timeServerQuery, client.getUsername());
         Message queryResponse = client.sendRequest(queryRequest, 10, TimeUnit.SECONDS);
 
         if (queryResponse != null) {

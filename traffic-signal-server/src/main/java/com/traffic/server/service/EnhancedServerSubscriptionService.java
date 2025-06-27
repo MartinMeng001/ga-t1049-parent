@@ -41,7 +41,7 @@ public class EnhancedServerSubscriptionService {
 
     // 消息编解码器
     private final MessageCodec messageCodec = MessageCodec.getInstance();
-
+    private final String testUsername = "sdsb";
     // 网络发送器（需要注入实际的网络连接管理器）
     @Autowired(required = false)
     private ServerToClientSender clientSender;
@@ -94,7 +94,7 @@ public class EnhancedServerSubscriptionService {
                 Message subscribeRequest = MessageBuilder.create()
                         .request()
                         .fromTicp()  // 服务端发送
-                        .toUtcs()    // 发送给客户端
+                        .toUtcs(testUsername)    // 发送给客户端
                         .token(token)
                         .subscribe(subscription)
                         .build();
@@ -215,7 +215,7 @@ public class EnhancedServerSubscriptionService {
             Message unsubscribeRequest = MessageBuilder.create()
                     .request()
                     .fromTicp()
-                    .toUtcs()
+                    .toUtcs(testUsername)
                     .token(token)
                     .unsubscribe(unsubscription)
                     .build();

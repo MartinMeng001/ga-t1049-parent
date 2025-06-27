@@ -14,10 +14,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 public enum RouteType {
     COORDINATED("1", "协调干线"),
-    HIGH_FLOW("2", "大流量通道"),
-    COMMUTE("3", "通勤路径"),
-    BUS_PRIORITY("4", "公交优先线路"),
-    SPECIAL("5", "特勤线路"),
+    BUS_PRIORITY("2", "公交优先线路"),
+    SPECIAL("3", "特勤线路"),
+    TRAMLINES("4", "有轨电车线路"),
+    EXPRESSWAY("5", "快速路"),
     OTHER("9", "其他");
 
     private final String code;

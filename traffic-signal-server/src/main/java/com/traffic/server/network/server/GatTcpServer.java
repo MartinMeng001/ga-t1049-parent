@@ -7,10 +7,13 @@ import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
 import com.traffic.server.network.client.ServerToClientSender;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.codec.string.StringDecoder;
@@ -77,13 +80,21 @@ public class GatTcpServer {
                         ChannelPipeline pipeline = ch.pipeline();
 
                         // 添加长度字段解码器
-                        pipeline.addLast("frameDecoder",
-                                new LengthFieldBasedFrameDecoder(
-                                        GatConstants.Network.MAX_MESSAGE_SIZE,
-                                        0, 4, 0, 4));
+//                        pipeline.addLast("frameDecoder",
+//                                new LengthFieldBasedFrameDecoder(
+//                                        GatConstants.Network.MAX_MESSAGE_SIZE,
+//                                        0, 4, 0, 4));
+//
+//                        // 添加长度字段编码器
+//                        pipeline.addLast("frameEncoder", new LengthFieldPrepender(4));
 
-                        // 添加长度字段编码器
-                        pipeline.addLast("frameEncoder", new LengthFieldPrepender(4));
+                        ByteBuf delimiter = Unpooled.copiedBuffer("</Message>".getBytes(CharsetUtil.UTF_8));
+                        pipeline.addLast("frameDecoder",
+                                new DelimiterBasedFrameDecoder(
+                                        GatConstants.Network.MAX_MESSAGE_SIZE,
+                                        false,  // stripDelimiter = false，保留分隔符（关键修改）
+                                        delimiter
+                                ));
 
                         // 字符串编解码器
                         pipeline.addLast("decoder", new StringDecoder(CharsetUtil.UTF_8));
@@ -183,10 +194,17 @@ public class GatTcpServer {
 
                 // 发送响应
                 if (response != null && !response.trim().isEmpty()) {
+                    // 确保响应消息以 </Message> 结尾（MessageCodec通常已经保证了这一点）
+                    if (!response.trim().endsWith("</Message>")) {
+                        logger.warn("Response doesn't end with </Message>, this may cause parsing issues");
+                    }
+
                     ctx.writeAndFlush(response);
                     logger.debug("发送响应: {}", response);
-                    if(messageProcessor.getTempToken().isEmpty()==false)
+
+                    if(messageProcessor.getTempToken().isEmpty() == false) {
                         connectionManager.registerConnection(ctx.channel().id().asShortText(), messageProcessor.getTempToken());
+                    }
                 }
 
             } catch (Exception e) {

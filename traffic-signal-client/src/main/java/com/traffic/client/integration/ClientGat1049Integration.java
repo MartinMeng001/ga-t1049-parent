@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.PostConstruct;
 import java.util.concurrent.Executors;
@@ -26,6 +27,12 @@ public class ClientGat1049Integration {
     private String currentToken;
     private boolean connected = false;
 
+    @Value("${client.username}")
+    private String username;
+
+    @Value("${client.password}")
+    private String password;
+
     @Autowired
     private SessionManager sessionManager;
 
@@ -35,7 +42,7 @@ public class ClientGat1049Integration {
         heartbeatExecutor = Executors.newSingleThreadScheduledExecutor();
 
         // 自动登录
-        login("tsc_client", "tsc123");
+        login(username, password);
 
         // 启动心跳
         startHeartbeat();
@@ -80,7 +87,7 @@ public class ClientGat1049Integration {
         }
 
         try {
-            Message subscribeRequest = MessageBuilder.createSubscribeRequest(currentToken, msgType, operName, objName);
+            Message subscribeRequest = MessageBuilder.createSubscribeRequest(currentToken, msgType, operName, objName, username);
             String requestXml = messageCodec.encode(subscribeRequest);
             String responseXml = sendToServer(requestXml);
 
@@ -103,7 +110,7 @@ public class ClientGat1049Integration {
         }
 
         try {
-            Message heartbeat = MessageBuilder.createHeartbeatMessage(currentToken);
+            Message heartbeat = MessageBuilder.createHeartbeatMessage(currentToken, username);
             String heartbeatXml = messageCodec.encode(heartbeat);
             sendToServer(heartbeatXml);
             logger.debug("发送心跳");

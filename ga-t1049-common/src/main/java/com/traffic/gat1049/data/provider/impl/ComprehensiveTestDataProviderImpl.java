@@ -374,21 +374,21 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<SignalController> getAllSignalControllers() throws BusinessException {
+    public List<SignalControler> getAllSignalControllers() throws BusinessException {
         ensureInitialized();
 
         String cacheKey = "AllSignalControllers";
         if (dataCache.containsKey(cacheKey)) {
-            return (List<SignalController>) dataCache.get(cacheKey);
+            return (List<SignalControler>) dataCache.get(cacheKey);
         }
 
         try {
-            List<SignalController> controllers = new ArrayList<>();
+            List<SignalControler> controllers = new ArrayList<>();
             JsonNode controllerArray = testDataRoot.get("SignalParam");
 
             if (controllerArray != null && controllerArray.isArray()) {
                 for (JsonNode controllerNode : controllerArray) {
-                    SignalController controller = parseSignalController(controllerNode);
+                    SignalControler controller = parseSignalController(controllerNode);
                     controllers.add(controller);
                 }
             }
@@ -401,12 +401,12 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     }
 
     @Override
-    public SignalController getSignalControllerById(String signalControllerId) throws BusinessException {
+    public SignalControler getSignalControllerById(String signalControllerId) throws BusinessException {
         if (signalControllerId == null || signalControllerId.trim().isEmpty()) {
             throw new BusinessException("INVALID_PARAMETER", "信号机ID不能为空");
         }
 
-        List<SignalController> controllers = getAllSignalControllers();
+        List<SignalControler> controllers = getAllSignalControllers();
         return controllers.stream()
                 .filter(controller -> signalControllerId.equals(controller.getSignalControllerId()))
                 .findFirst()
@@ -414,12 +414,12 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     }
 
     @Override
-    public List<SignalController> getSignalControllersByCrossId(String crossId) throws BusinessException {
+    public List<SignalControler> getSignalControllersByCrossId(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
         }
 
-        List<SignalController> allControllers = getAllSignalControllers();
+        List<SignalControler> allControllers = getAllSignalControllers();
         return allControllers.stream()
                 .filter(controller -> controller.getCrossIdList() != null &&
                         controller.getCrossIdList().contains(crossId))
@@ -1362,9 +1362,10 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         sysInfo.setSysVersion(String.valueOf(sysParamNode.path("SysVersion").asDouble(2.0)));
         sysInfo.setSupplier(sysParamNode.path("Supplier").asText("山东双百电子有限公司"));
         sysInfo.setCrossIdList(parseStringList(sysParamNode, "CrossIDList"));
+        sysInfo.setSubRegionIdList(parseStringList(sysParamNode, "SubRegionIDList"));
         sysInfo.setRouteIdList(parseStringList(sysParamNode, "RouteIDList"));
         sysInfo.setRegionIdList(parseStringList(sysParamNode, "RegionIDList"));
-        sysInfo.setSignalControllerIdList(parseStringList(sysParamNode, "SignalControlerIDList"));
+        sysInfo.setSignalControllerIdList(parseStringList(sysParamNode, "SignalControllerIDList"));
 //        sysInfo.setCreateTime(LocalDateTime.now());
 //        sysInfo.setUpdateTime(LocalDateTime.now());
         return sysInfo;
@@ -1434,14 +1435,14 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         cross.setPlanNoList(parseIntList(crossNode, "PlanNoList"));
         cross.setDayPlanNoList(parseIntList(crossNode, "DayPlanNoList"));
         cross.setScheduleNoList(parseIntList(crossNode, "ScheduleNoList"));
-        cross.setLongitude(crossNode.path("Longitude").asDouble());
-        cross.setLatitude(crossNode.path("Latitude").asDouble());
-        cross.setAltitude(crossNode.path("Altitude").asDouble());
+//        cross.setLongitude(crossNode.path("Longitude").asDouble());
+//        cross.setLatitude(crossNode.path("Latitude").asDouble());
+//        cross.setAltitude(crossNode.path("Altitude").asDouble());
         return cross;
     }
 
-    private SignalController parseSignalController(JsonNode controllerNode) {
-        SignalController controller = new SignalController();
+    private SignalControler parseSignalController(JsonNode controllerNode) {
+        SignalControler controller = new SignalControler();
         controller.setSignalControllerId(controllerNode.path("SignalControlerID").asText());
         controller.setSupplier(controllerNode.path("Supplier").asText());
         controller.setType(controllerNode.path("Type").asText());
@@ -1719,7 +1720,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         String startTimeStr = periodNode.path("StartTime").asText();
         if (startTimeStr != null && !startTimeStr.isEmpty() && !"null".equals(startTimeStr)) {
             // 使用Period类的标准化方法处理时间格式
-            period.setStartTime(Period.normalizeTimeFormat(startTimeStr));
+            period.setStartTime(Period.normalizeTimeFormat2(startTimeStr));
         } else {
             // 设置默认时间
             period.setStartTime("00:00:00");

@@ -1,7 +1,7 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
-import com.traffic.gat1049.protocol.model.intersection.SignalController;
+import com.traffic.gat1049.protocol.model.intersection.SignalControler;
 import com.traffic.gat1049.protocol.model.runtime.SignalControllerError;
 import com.traffic.gat1049.model.enums.CommMode;
 import com.traffic.gat1049.model.enums.ControllerErrorType;
@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * 信号机服务接口
  */
-public interface SignalControllerService extends BaseService<SignalController, String> {
+public interface SignalControllerService extends BaseService<SignalControler, String> {
 
     /**
      * 根据供应商查询信号机
@@ -20,7 +20,7 @@ public interface SignalControllerService extends BaseService<SignalController, S
      * @return 信号机列表
      * @throws BusinessException 业务异常
      */
-    List<SignalController> findBySupplier(String supplier) throws BusinessException;
+    List<SignalControler> findBySupplier(String supplier) throws BusinessException;
 
     /**
      * 根据规格型号查询信号机
@@ -29,7 +29,7 @@ public interface SignalControllerService extends BaseService<SignalController, S
      * @return 信号机列表
      * @throws BusinessException 业务异常
      */
-    List<SignalController> findByType(String type) throws BusinessException;
+    List<SignalControler> findByType(String type) throws BusinessException;
 
     /**
      * 根据通信接口查询信号机
@@ -38,7 +38,7 @@ public interface SignalControllerService extends BaseService<SignalController, S
      * @return 信号机列表
      * @throws BusinessException 业务异常
      */
-    List<SignalController> findByCommMode(CommMode commMode) throws BusinessException;
+    List<SignalControler> findByCommMode(CommMode commMode) throws BusinessException;
 
     /**
      * 获取信号机控制的路口列表

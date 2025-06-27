@@ -131,6 +131,9 @@ public class MessageBuilder {
     public MessageBuilder fromUtcs() {
         return from(GatConstants.SystemAddress.UTCS);
     }
+    public MessageBuilder fromUtcs(String subsys) {
+        return from(GatConstants.SystemAddress.UTCS, subsys, "");
+    }
 
     /**
      * 设置TICP目标地址
@@ -138,12 +141,18 @@ public class MessageBuilder {
     public MessageBuilder toTicp() {
         return to(GatConstants.SystemAddress.TICP, null, null);
     }
+    public MessageBuilder toTicp(String username) {
+        return to(GatConstants.SystemAddress.TICP, username, null);
+    }
 
     /**
      * 设置UTCS目标地址
      */
     public MessageBuilder toUtcs() {
         return to(GatConstants.SystemAddress.UTCS);
+    }
+    public MessageBuilder toUtcs(String username) {
+        return to(GatConstants.SystemAddress.UTCS, username, "");
     }
 
     /**
@@ -221,7 +230,7 @@ public class MessageBuilder {
 
         return MessageBuilder.create()
                 .request()
-                .fromUtcs()
+                .fromUtcs(userName)
                 .toTicp()
                 .login(user)
                 .build();
@@ -232,7 +241,7 @@ public class MessageBuilder {
 
         return MessageBuilder.create()
                 .request()
-                .fromUtcs()
+                .fromUtcs(userName)
                 .toTicp()
                 .token(token)
                 .logout(user)
@@ -273,13 +282,13 @@ public class MessageBuilder {
     /**
      * 创建心跳消息
      */
-    public static Message createHeartbeatMessage(String token) {
+    public static Message createHeartbeatMessage(String token, String username) {
         SdoHeartBeat heartbeat =
                 new SdoHeartBeat();
 
         return MessageBuilder.create()
                 .push()
-                .fromUtcs()
+                .fromUtcs(username)
                 .toTicp()
                 .token(token)
                 .notify(heartbeat)
@@ -289,13 +298,13 @@ public class MessageBuilder {
     /**
      * 创建订阅请求消息
      */
-    public static Message createSubscribeRequest(String token, String msgType, String operName, String objName) {
+    public static Message createSubscribeRequest(String token, String msgType, String operName, String objName, String username) {
         SdoMsgEntity subscription =
                 new SdoMsgEntity(msgType, operName, objName);
 
         return MessageBuilder.create()
                 .request()
-                .fromUtcs()
+                .fromUtcs(username)
                 .toTicp()
                 .token(token)
                 .subscribe(subscription)
@@ -305,10 +314,10 @@ public class MessageBuilder {
     /**
      * 创建查询请求消息
      */
-    public static Message createQueryRequest(String token, Object queryData) {
+    public static Message createQueryRequest(String token, Object queryData, String userName) {
         return MessageBuilder.create()
                 .request()
-                .fromUtcs()
+                .fromUtcs(userName)
                 .toTicp()
                 .token(token)
                 .get(queryData)
@@ -323,6 +332,15 @@ public class MessageBuilder {
                 .request()
                 .fromTicp()
                 .toUtcs()
+                .token(token)
+                .set(setData)
+                .build();
+    }
+    public static Message createSetRequest(String token, Object setData, String username) {
+        return MessageBuilder.create()
+                .request()
+                .fromTicp()
+                .toUtcs(username)
                 .token(token)
                 .set(setData)
                 .build();

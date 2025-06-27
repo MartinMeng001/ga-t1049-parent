@@ -88,8 +88,8 @@ public class CrossServiceImpl implements CrossService {
 
         validateCrossParam(crossParam);
 
-        crossParam.setCreateTime(LocalDateTime.now());
-        crossParam.setUpdateTime(LocalDateTime.now());
+//        crossParam.setCreateTime(LocalDateTime.now());
+//        crossParam.setUpdateTime(LocalDateTime.now());
 
         crossStorage.put(crossParam.getCrossId(), crossParam);
 
@@ -116,7 +116,7 @@ public class CrossServiceImpl implements CrossService {
 
         validateCrossParam(crossParam);
 
-        crossParam.setUpdateTime(LocalDateTime.now());
+//        crossParam.setUpdateTime(LocalDateTime.now());
         crossStorage.put(crossId, crossParam);
 
         logger.info("更新路口参数: crossId={}, crossName={}",
@@ -340,11 +340,11 @@ public class CrossServiceImpl implements CrossService {
         vo.setCrossName(cross.getCrossName());
         vo.setFeature(cross.getFeature());
         vo.setGrade(cross.getGrade());
-        vo.setLongitude(cross.getLongitude());
-        vo.setLatitude(cross.getLatitude());
+//        vo.setLongitude(cross.getLongitude());
+//        vo.setLatitude(cross.getLatitude());
         vo.setLaneCount(cross.getLaneNoList() != null ? cross.getLaneNoList().size() : 0);
         vo.setSignalGroupCount(cross.getSignalGroupNoList() != null ? cross.getSignalGroupNoList().size() : 0);
-        vo.setLastUpdateTime(cross.getUpdateTime());
+//        vo.setLastUpdateTime(cross.getUpdateTime());
 
         // 设置状态
         CrossState state = crossStateStorage.get(cross.getCrossId());
@@ -362,8 +362,8 @@ public class CrossServiceImpl implements CrossService {
         CrossParam cross1 = new CrossParam("11010000100001", "示例路口1");
         cross1.setFeature(CrossFeature.CROSS);
         cross1.setGrade(CrossGrade.LEVEL_1);
-        cross1.setLongitude(116.397128);
-        cross1.setLatitude(39.916527);
+//        cross1.setLongitude(116.397128);
+//        cross1.setLatitude(39.916527);
 
         List<Integer> laneNos1 = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8);
         List<Integer> signalGroupNos1 = Arrays.asList(1, 2, 3, 4);
@@ -376,8 +376,8 @@ public class CrossServiceImpl implements CrossService {
         CrossParam cross2 = new CrossParam("11010000100002", "示例路口2");
         cross2.setFeature(CrossFeature.T_SHAPE);
         cross2.setGrade(CrossGrade.LEVEL_2);
-        cross2.setLongitude(116.407128);
-        cross2.setLatitude(39.926527);
+//        cross2.setLongitude(116.407128);
+//        cross2.setLatitude(39.926527);
 
         List<Integer> laneNos2 = Arrays.asList(1, 2, 3, 4, 5, 6);
         List<Integer> signalGroupNos2 = Arrays.asList(1, 2, 3);

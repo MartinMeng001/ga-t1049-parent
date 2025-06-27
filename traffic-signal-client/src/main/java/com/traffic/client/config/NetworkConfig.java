@@ -19,7 +19,9 @@ public class NetworkConfig {
         String host = env.getProperty("tcp.client.server-host", "localhost");
         int port = env.getProperty("tcp.client.server-port", Integer.class, 9999);
         String clientId = env.getProperty("client.cross-id", "110100001");
+        String username = env.getProperty("client.username", "sdsb");
+        String password = env.getProperty("client.password", "sdsb");
 
-        return new GatTcpClient(host, port, clientId, messageProcessor);
+        return new GatTcpClient(host, port, clientId, messageProcessor, username, password);
     }
 }

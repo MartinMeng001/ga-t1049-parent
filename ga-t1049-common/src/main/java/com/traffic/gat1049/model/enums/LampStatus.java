@@ -14,12 +14,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 信号组灯态枚举
  */
 public enum LampStatus {
-    OFF("11", "灭灯"),
-    RED("21", "红灯"),
-    YELLOW("22", "黄灯"),
-    GREEN("23", "绿灯"),
-    YELLOW_FLASH("32", "黄闪"),
-    GREEN_FLASH("33", "绿闪");
+    NONE("0", "无灯"),
+    OFF("1", "灭灯"),
+    LIGHT("2", "亮灯"),
+    FLASH("3", "闪灯");
 
     private final String code;
     private final String description;

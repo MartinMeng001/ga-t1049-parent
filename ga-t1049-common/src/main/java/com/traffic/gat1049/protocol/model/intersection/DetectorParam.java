@@ -2,12 +2,15 @@ package com.traffic.gat1049.protocol.model.intersection;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.DetectorPositionAdapter;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.DetectorTypeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseParam;
 import com.traffic.gat1049.model.enums.DetectorPosition;
 import com.traffic.gat1049.model.enums.DetectorType;
 
 import javax.validation.constraints.*;
 import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +45,7 @@ public class DetectorParam  {//extends BaseParam
      * 检测器类型
      */
     @XmlElement(name = "Type", required = true)
+    @XmlJavaTypeAdapter(DetectorTypeAdapter.class)
     @JsonProperty("Type")
     private DetectorType type;
 
@@ -49,6 +53,7 @@ public class DetectorParam  {//extends BaseParam
      * 检测位置
      */
     @XmlElement(name = "Position", required = true)
+    @XmlJavaTypeAdapter(DetectorPositionAdapter.class)
     @JsonProperty("Position")
     private DetectorPosition position;
 

@@ -12,19 +12,19 @@ app:
   role: client
 
 # TCP客户端配置
-tcp:
-  client:
-    server-host: localhost
-    server-port: 9999
-    reconnect-interval: 30000
-    heartbeat-interval: 60000
-
 #tcp:
 #  client:
-#    server-host: 116.62.227.109
-#    server-port: 2112
+#    server-host: localhost
+#    server-port: 9999
 #    reconnect-interval: 30000
 #    heartbeat-interval: 60000
+
+tcp:
+  client:
+    server-host: 116.62.227.109
+    server-port: 2112
+    reconnect-interval: 30000
+    heartbeat-interval: 60000
 
 # 客户端配置
 client:
@@ -32,10 +32,10 @@ client:
   signal-controller-id: "110100001001"
   system-type: "UTCS"
   auto-login: true
-  password: "tsc123"
-  username: "tsc_client"
-#  password: "sdsb"
-#  username: "sdsb"
+#  password: "tsc123"
+#  username: "tsc_client"
+  password: "sdsb"
+  username: "sdsb"
   data-directory: "./data"
   report-interval: 300000  # 5分钟上报一次
 

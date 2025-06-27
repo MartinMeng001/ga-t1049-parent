@@ -16,6 +16,7 @@ public enum LaneFeature {
     MOTOR("1", "机动车车道"),
     NON_MOTOR("2", "非机动车车道"),
     MIXED("3", "机非混合车道"),
+    PEDESTRIAN("4", "行人便道"),
     OTHER("9", "其他");
 
     private final String code;
