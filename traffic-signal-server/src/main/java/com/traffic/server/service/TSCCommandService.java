@@ -22,6 +22,7 @@ public class TSCCommandService {
     private static final Logger logger = LoggerFactory.getLogger(EnhancedServerSubscriptionService.class);
     // 消息编解码器
     private final MessageCodec messageCodec = MessageCodec.getInstance();
+    private final String testUsername = "sdsb";
     // 网络发送器（需要注入实际的网络连接管理器）
     @Autowired(required = false)
     private ServerToClientSender clientSender;
@@ -90,7 +91,7 @@ public class TSCCommandService {
             Message queryMessage = MessageBuilder.create()
                     .request()
                     .fromUtcs()
-                    .toTicp()
+                    .toTicp(testUsername)
                     .token(token)
                     .get(tscCmd)
                     .build();
@@ -159,7 +160,7 @@ public class TSCCommandService {
         validateParameters(objName, token);
 
         try {
-            Message setMessage = MessageBuilder.createSetRequest(token, setData);
+            Message setMessage = MessageBuilder.createSetRequest(token, setData, testUsername);
             // 构建设置消息
 //            Message setMessage = MessageBuilder.create()
 //                    .request()

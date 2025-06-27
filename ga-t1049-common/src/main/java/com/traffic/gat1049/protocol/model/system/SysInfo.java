@@ -69,21 +69,29 @@ public class SysInfo {//extends BaseParam
     private List<String> regionIdList = new ArrayList<>();
 
     /**
+     * 子区编号列表
+     */
+    @XmlElementWrapper(name = "SubRegionIDList")
+    @XmlElement(name = "SubRegionID")
+    @JsonProperty("SubRegionIDList")
+    private List<String> subRegionIdList = new ArrayList<>();
+
+    /**
      * 信号机编号列表
      */
     @NotEmpty(message = "信号机编号列表不能为空")
-    @XmlElementWrapper(name = "SignalControlerIDList")
-    @XmlElement(name = "SignalControlerID")
-    @JsonProperty("SignalControlerIDList")
+    @XmlElementWrapper(name = "SignalControllerIDList")
+    @XmlElement(name = "SignalControllerID")
+    @JsonProperty("SignalControllerIDList")
     private List<String> signalControllerIdList = new ArrayList<>();
 
     // 构造函数
     public SysInfo() {
-        super();
+        //super();
     }
 
     public SysInfo(String sysName, String sysVersion, String supplier) {
-        super();
+        //super();
         this.sysName = sysName;
         this.sysVersion = sysVersion;
         this.supplier = supplier;
@@ -136,6 +144,14 @@ public class SysInfo {//extends BaseParam
 
     public void setRegionIdList(List<String> regionIdList) {
         this.regionIdList = regionIdList;
+    }
+
+    public List<String> getSubRegionIdList() {
+        return subRegionIdList;
+    }
+
+    public void setSubRegionIdList(List<String> subRegionIdList) {
+        this.subRegionIdList = subRegionIdList;
     }
 
     public List<String> getSignalControllerIdList() {

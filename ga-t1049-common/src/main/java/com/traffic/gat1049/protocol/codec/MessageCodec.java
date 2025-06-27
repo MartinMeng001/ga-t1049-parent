@@ -104,7 +104,7 @@ public class MessageCodec {
                                 RouteCross.class,
                                 RouteParam.class,
                                 CrossParam.class,
-                                SignalController.class,
+                                SignalControler.class,
                                 PedestrianParam.class,
                                 LampGroup.class,
                                 DetectorParam.class,
@@ -170,11 +170,12 @@ public class MessageCodec {
 
             StringWriter writer = new StringWriter();
             //writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-            logger.info(message.toString());
+            //logger.info(message.toString());
             marshaller.marshal(message, writer);
 
             String result = writer.toString();
             logger.debug("Encoded message: seq={}, type={}", message.getSeq(), message.getType());
+            logger.info(result);
             return result;
 
         } catch (JAXBException e) {

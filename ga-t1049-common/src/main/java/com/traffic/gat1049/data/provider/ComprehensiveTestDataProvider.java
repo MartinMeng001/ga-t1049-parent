@@ -7,7 +7,7 @@ import com.traffic.gat1049.protocol.model.system.RegionParam;
 import com.traffic.gat1049.protocol.model.system.SubRegionParam;
 import com.traffic.gat1049.protocol.model.system.RouteParam;
 import com.traffic.gat1049.protocol.model.intersection.CrossParam;
-import com.traffic.gat1049.protocol.model.intersection.SignalController;
+import com.traffic.gat1049.protocol.model.intersection.SignalControler;
 import com.traffic.gat1049.protocol.model.intersection.LampGroup;
 import com.traffic.gat1049.protocol.model.intersection.DetectorParam;
 import com.traffic.gat1049.protocol.model.intersection.LaneParam;
@@ -104,17 +104,17 @@ public interface ComprehensiveTestDataProvider {
     /**
      * 获取所有信号机参数
      */
-    List<SignalController> getAllSignalControllers() throws BusinessException;
+    List<SignalControler> getAllSignalControllers() throws BusinessException;
 
     /**
      * 根据信号机ID获取信号机参数
      */
-    SignalController getSignalControllerById(String signalControllerId) throws BusinessException;
+    SignalControler getSignalControllerById(String signalControllerId) throws BusinessException;
 
     /**
      * 根据路口ID获取该路口的信号机
      */
-    List<SignalController> getSignalControllersByCrossId(String crossId) throws BusinessException;
+    List<SignalControler> getSignalControllersByCrossId(String crossId) throws BusinessException;
 
     // ==================== 灯组管理相关 ====================
 

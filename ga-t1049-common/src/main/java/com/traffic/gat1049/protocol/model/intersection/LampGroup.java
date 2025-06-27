@@ -2,6 +2,8 @@ package com.traffic.gat1049.protocol.model.intersection;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.DirectionAdapter;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.LampGroupTypeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseParam;
 import com.traffic.gat1049.model.enums.Direction;
 import com.traffic.gat1049.model.enums.LampGroupType;
@@ -14,6 +16,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlAdapter;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 信号灯组参数
@@ -46,6 +50,7 @@ public class LampGroup {//extends BaseParam
      * 信号灯组控制的进口方向
      */
     @XmlElement(name = "Direction", required = true)
+    @XmlJavaTypeAdapter(DirectionAdapter.class)
     @JsonProperty("Direction")
     private Direction direction;
 
@@ -53,6 +58,7 @@ public class LampGroup {//extends BaseParam
      * 信号灯组类型
      */
     @XmlElement(name = "Type", required = true)
+    @XmlJavaTypeAdapter(LampGroupTypeAdapter.class)
     @JsonProperty("Type")
     private LampGroupType type;
 

@@ -9,10 +9,13 @@ import com.traffic.gat1049.protocol.processor.DefaultMessageProcessor;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
 import com.traffic.gat1049.service.abstracts.DefaultServiceFactory;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.codec.string.StringDecoder;
@@ -53,13 +56,29 @@ public class GatTcpClient {
     private ScheduledExecutorService reconnectExecutor;
     private ScheduledFuture<?> reconnectTask;
     private int reconnectAttempts = 0;
-    private static final int MAX_RECONNECT_ATTEMPTS = 10;
-    private static final long RECONNECT_DELAY = 5000; // 5秒
+    private static final int MAX_RECONNECT_ATTEMPTS = 10000;
+    private static final long RECONNECT_DELAY = 10000; // 10秒
+    private String username;
+    private String password;
 
     public GatTcpClient(String host, int port, String clientId, MessageProcessor messageProcessor) throws Exception {
         this.host = host;
         this.port = port;
         this.clientId = clientId;
+        this.username = "";
+        this.password = "";
+        this.responseHandler = new MessageResponseHandler();
+        this.messageProcessor = messageProcessor;
+        this.codec = MessageCodec.getInstance();
+        this.reconnectExecutor = Executors.newSingleThreadScheduledExecutor(
+                r -> new Thread(r, "GatTcpClient-Reconnect"));
+    }
+    public GatTcpClient(String host, int port, String clientId, MessageProcessor messageProcessor, String username, String password) throws Exception {
+        this.host = host;
+        this.port = port;
+        this.clientId = clientId;
+        this.username = username;
+        this.password = password;
         this.responseHandler = new MessageResponseHandler();
         this.messageProcessor = messageProcessor;
         this.codec = MessageCodec.getInstance();
@@ -89,14 +108,20 @@ public class GatTcpClient {
                         ChannelPipeline pipeline = ch.pipeline();
 
                         // 添加长度字段解码器
-                        pipeline.addLast("frameDecoder",
-                                new LengthFieldBasedFrameDecoder(
-                                        GatConstants.Network.MAX_MESSAGE_SIZE,
-                                        0, 4, 0, 4));
+//                        pipeline.addLast("frameDecoder",
+//                                new LengthFieldBasedFrameDecoder(
+//                                        GatConstants.Network.MAX_MESSAGE_SIZE,
+//                                        0, 4, 0, 4));
 
                         // 添加长度字段编码器
-                        pipeline.addLast("frameEncoder", new LengthFieldPrepender(4));
-
+                        //pipeline.addLast("frameEncoder", new LengthFieldPrepender(4));
+                        ByteBuf delimiter = Unpooled.copiedBuffer("</Message>".getBytes(CharsetUtil.UTF_8));
+                        pipeline.addLast("frameDecoder",
+                                new DelimiterBasedFrameDecoder(
+                                        GatConstants.Network.MAX_MESSAGE_SIZE,
+                                        false,  // stripDelimiter = false，保留分隔符（关键修改）
+                                        delimiter
+                                ));
                         // 字符串编解码器
                         pipeline.addLast("decoder", new StringDecoder(CharsetUtil.UTF_8));
                         pipeline.addLast("encoder", new StringEncoder(CharsetUtil.UTF_8));
@@ -200,7 +225,7 @@ public class GatTcpClient {
         try {
             // 使用具体的 SdoUser 对象
             SdoUser user =
-                    new SdoUser(/*clientId*/"tsc_client", "tsc123");
+                    new SdoUser(this.username, this.password);
 
             Message loginMessage = MessageBuilder.create()
                     .request()
@@ -258,7 +283,7 @@ public class GatTcpClient {
      */
     private void sendHeartbeat() {
         try {
-            Message heartbeat = MessageBuilder.createHeartbeatMessage(tocken);
+            Message heartbeat = MessageBuilder.createHeartbeatMessage(tocken, this.username);
             sendMessage(heartbeat);
 
             logger.debug("Heartbeat sent");
@@ -288,6 +313,9 @@ public class GatTcpClient {
         return responseHandler;
     }
 
+    public String getUsername(){ return username; }
+    public String getPassword(){ return password; }
+    public String getHost() { return host; }
     /**
      * 安排重连
      */

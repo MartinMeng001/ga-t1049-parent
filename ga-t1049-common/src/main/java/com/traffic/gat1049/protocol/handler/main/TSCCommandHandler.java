@@ -222,7 +222,7 @@ public class TSCCommandHandler extends TokenRequiredHandler {
     // ==================== 配置参数处理方法 ====================
 
     private Object handleRegionParam(String regionId) throws BusinessException {
-        if (regionId == null) {
+        if (regionId == null || "".equals(regionId)) {
             return serviceFactory.getRegionService().findAll();
         }
         return serviceFactory.getRegionService().findById(regionId);

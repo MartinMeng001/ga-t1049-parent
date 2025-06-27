@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 public class Gat1049IntegrationExample {
 
     private static final Logger logger = LoggerFactory.getLogger(Gat1049IntegrationExample.class);
+    private static final String username = "sdsb";
+    private static final String password = "sdsb";
 
     public static void main(String[] args) {
         logger.info("GA/T 1049.1交通信号控制系统通信协议示例");
@@ -75,7 +77,7 @@ public class Gat1049IntegrationExample {
         logger.info("\n=== 示例1：登录流程 ===");
 
         // 创建登录请求消息
-        Message loginRequest = MessageBuilder.createLoginRequest("tsc_client", "tsc123");
+        Message loginRequest = MessageBuilder.createLoginRequest(username, password);
         logger.info("发送登录请求: {}", loginRequest);
 
         // 处理登录请求
@@ -105,7 +107,7 @@ public class Gat1049IntegrationExample {
 
         // 创建订阅请求
         Message subscribeRequest = MessageBuilder.createSubscribeRequest(
-                token, "PUSH", "Notify", "CrossSignalGroupStatus");
+                token, "PUSH", "Notify", "CrossSignalGroupStatus", username);
         logger.info("发送订阅请求: {}", subscribeRequest);
 
         // 处理订阅请求
@@ -127,7 +129,7 @@ public class Gat1049IntegrationExample {
         String token = "TKN_sample_token_for_demo";
 
         // 创建心跳消息
-        Message heartbeatMessage = MessageBuilder.createHeartbeatMessage(token);
+        Message heartbeatMessage = MessageBuilder.createHeartbeatMessage(token, username);
         logger.info("发送心跳消息: {}", heartbeatMessage);
 
         // 处理心跳消息（PUSH类型通常不需要响应）
@@ -149,7 +151,7 @@ public class Gat1049IntegrationExample {
 
         // 查询对时服务器
         SdoTimeServer timeServerQuery = new SdoTimeServer("", "", null);
-        Message queryRequest = MessageBuilder.createQueryRequest(token, timeServerQuery);
+        Message queryRequest = MessageBuilder.createQueryRequest(token, timeServerQuery, username);
         logger.info("发送查询请求: {}", queryRequest);
 
         // 处理查询请求

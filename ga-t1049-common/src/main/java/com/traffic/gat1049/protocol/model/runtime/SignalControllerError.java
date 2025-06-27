@@ -3,6 +3,7 @@ package com.traffic.gat1049.protocol.model.runtime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.ControllerErrorTypeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseState;
 import com.traffic.gat1049.protocol.model.base.LocalDateTimeAdapter;
 import com.traffic.gat1049.model.enums.ControllerErrorType;
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
  * 对应文档中的 SignalControllerError
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@XmlRootElement(name = "SignalControllerError")
+@XmlRootElement(name = "SignalControlerError")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SignalControllerError {//extends BaseState
 
@@ -36,6 +37,7 @@ public class SignalControllerError {//extends BaseState
      * 故障类型
      */
     @XmlElement(name = "ErrorType", required = true)
+    @XmlJavaTypeAdapter(ControllerErrorTypeAdapter.class)
     @JsonProperty("ErrorType")
     private ControllerErrorType errorType;
 
@@ -49,23 +51,26 @@ public class SignalControllerError {//extends BaseState
     /**
      * 故障发生时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+//    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+//    @XmlElement(name = "OccurTime", required = true)
+//    @XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
+//    @JsonProperty("OccurTime")
+//    private LocalDateTime occurTime;
     @XmlElement(name = "OccurTime", required = true)
-    @XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
     @JsonProperty("OccurTime")
-    private LocalDateTime occurTime;
+    private String occurTime;
 
     // 构造函数
     public SignalControllerError() {
         //super();
-        this.occurTime = LocalDateTime.now();
+        this.occurTime = "";    //LocalDateTime.now();
     }
 
     public SignalControllerError(String signalControllerId, ControllerErrorType errorType) {
         //super();
         this.signalControllerId = signalControllerId;
         this.errorType = errorType;
-        this.occurTime = LocalDateTime.now();
+        this.occurTime = "";//LocalDateTime.now();
     }
 
     // Getters and Setters
@@ -93,11 +98,11 @@ public class SignalControllerError {//extends BaseState
         this.errorDesc = errorDesc;
     }
 
-    public LocalDateTime getOccurTime() {
+    public String getOccurTime() {
         return occurTime;
     }
 
-    public void setOccurTime(LocalDateTime occurTime) {
+    public void setOccurTime(String occurTime) {
         this.occurTime = occurTime;
     }
 
@@ -108,6 +113,6 @@ public class SignalControllerError {//extends BaseState
                 ", errorType=" + errorType +
                 ", errorDesc='" + errorDesc + '\'' +
                 ", occurTime=" + occurTime +
-                "} " + super.toString();
+                "} ";// + super.toString()
     }
 }

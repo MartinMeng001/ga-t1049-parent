@@ -2,6 +2,10 @@ package com.traffic.gat1049.protocol.model.intersection;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.DirectionAdapter;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.LaneAttributeAdapter;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.LaneFeatureAdapter;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.LaneMovementAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseParam;
 import com.traffic.gat1049.model.enums.Direction;
 import com.traffic.gat1049.model.enums.LaneAttribute;
@@ -13,6 +17,8 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlAdapter;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +53,7 @@ public class LaneParam  {//extends BaseParam
      * 进口车道所在的方向
      */
     @XmlElement(name = "Direction", required = true)
+    @XmlJavaTypeAdapter(DirectionAdapter.class)
     @JsonProperty("Direction")
     private Direction direction;
 
@@ -54,6 +61,7 @@ public class LaneParam  {//extends BaseParam
      * 车道属性
      */
     @XmlElement(name = "Attribute", required = true)
+    @XmlJavaTypeAdapter(LaneAttributeAdapter.class)
     @JsonProperty("Attribute")
     private LaneAttribute attribute;
 
@@ -61,6 +69,7 @@ public class LaneParam  {//extends BaseParam
      * 转向
      */
     @XmlElement(name = "Movement", required = true)
+    @XmlJavaTypeAdapter(LaneMovementAdapter.class)
     @JsonProperty("Movement")
     private LaneMovement movement;
 
@@ -68,6 +77,7 @@ public class LaneParam  {//extends BaseParam
      * 车道特性
      */
     @XmlElement(name = "Feature", required = true)
+    @XmlJavaTypeAdapter(LaneFeatureAdapter.class)
     @JsonProperty("Feature")
     private LaneFeature feature;
 

@@ -2,6 +2,7 @@ package com.traffic.gat1049.protocol.model.system;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.SystemStateAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseState;
 import com.traffic.gat1049.model.enums.SystemState;
 
@@ -9,6 +10,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 系统状态
@@ -23,6 +25,7 @@ public class SysState {//extends BaseState
      * 系统运行状态
      */
     @XmlElement(name = "Value", required = true)
+    @XmlJavaTypeAdapter(SystemStateAdapter.class)
     @JsonProperty("Value")
     private SystemState value;
 

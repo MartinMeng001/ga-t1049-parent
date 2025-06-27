@@ -4,9 +4,13 @@
     "SysVersion": 2.0,
     "Supplier": "山东双百电子有限公司",
     "CrossIDList": [
-      "11010110001",
-      "11010110002",
-      "11010110003"
+      "11010110000001",
+      "11010110000002",
+      "11010110000003"
+    ],
+    "SubRegionIDList": [
+      "11010100103",
+      "11010100104"
     ],
     "RouteIDList": [
       "110101001",
@@ -16,7 +20,7 @@
       "110101001",
       "110101002"
     ],
-    "SignalControlerIDList": [
+    "SignalControllerIDList": [
       "11010140000111001",
       "11010140000111002",
       "11010140000111003"
@@ -31,8 +35,8 @@
         "11010100102"
       ],
       "CrossIDList": [
-        "11010110001",
-        "11010110002"
+        "11010110000001",
+        "11010110000002"
       ]
     }
   ],
@@ -43,11 +47,11 @@
       "Type": 1,
       "RouteCrossList": [
         {
-          "CrossID": "11010110001",
+          "CrossID": "11010110000001",
           "Distance": 0
         },
         {
-          "CrossID": "11010110002",
+          "CrossID": "11010110000002",
           "Distance": 800
         }
       ],
@@ -61,17 +65,17 @@
       "SubRegionID": "11010100101",
       "SubRegionName": "王府井商业区",
       "CrossIDList": [
-        "11010110001",
-        "11010110002"
+        "11010110000001",
+        "11010110000002"
       ],
       "KeyCrossIDList": [
-        "11010110001"
+        "11010110000001"
       ]
     }
   ],
   "CrossParam": [
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "CrossName": "长安街与王府井大街",
       "Feature": "11",
       "Grade": "11",
@@ -134,31 +138,31 @@
       "Type": "GA-Utc365-5U",
       "CommMode": "1",
       "CrossIDList": [
-        "11010110001"
+        "11010110000001"
       ]
     }
   ],
   "LightGroup": [
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "LampGroupNo": "01",
       "Direction": "1",
       "Type": "10"
     },
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "LampGroupNo": "02",
       "Direction": "3",
       "Type": "10"
     },
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "LampGroupNo": "03",
       "Direction": "5",
       "Type": "10"
     },
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "LampGroupNo": "04",
       "Direction": "7",
       "Type": "10"
@@ -166,7 +170,7 @@
   ],
   "DetectorParam": [
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "DetectorNo": "001",
       "Type": "2",
       "Position": "1",
@@ -181,7 +185,7 @@
   ],
   "LaneParam": [
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "LaneNo": "01",
       "Direction": "1",
       "Attribute": "0",
@@ -192,7 +196,7 @@
       "VarMovementList": []
     },
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "LaneNo": "02",
       "Direction": "1",
       "Attribute": "0",
@@ -205,7 +209,7 @@
   ],
   "PedestrianParam": [
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "PedestrianNo": "01",
       "Direction": "1",
       "Attribute": "1"
@@ -213,7 +217,7 @@
   ],
   "SignalGroup": [
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "SignalGroupNo": "01",
       "Name": "北进口直行",
       "GreenFlushLen": 3,
@@ -224,7 +228,7 @@
   ],
   "StageParam": [
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "StageNo": "01",
       "StageName": "东西直行",
       "Attribute": "0",
@@ -250,7 +254,7 @@
   ],
   "PlanParam": [
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "PlanNo": "001",
       "PlanName": "工作日白天方案",
       "CycleLen": 120,
@@ -286,7 +290,7 @@
   ],
   "DayPlanParam": [
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "DayPlanNo": "00001",
       "PeriodList": [
         {
@@ -314,7 +318,7 @@
   ],
   "Schedule": [
     {
-      "CrossID": "11010110001",
+      "CrossID": "11010110000001",
       "ScheduleNo": "001",
       "Type": "3",
       "StartDay": "01-01",
@@ -329,8 +333,8 @@
     },
     "CrossState": [
       {
-        "CrossID": "11010110001",
-        "Value": "ONLINE"
+        "CrossID": "11010110000001",
+        "Value": "Online"
       }
     ],
     "SignalControllerError": [
@@ -338,26 +342,26 @@
         "SignalControlerID": "11010140000111001",
         "ErrorType": "1",
         "ErrorDesc": "3号灯组输出异常",
-        "OccurTime": "2025-06-13T14:30:25"
+        "OccurTime": "2025-06-13 14:30:25"
       }
     ],
     "CrossModePlan": [
       {
-        "CrossID": "11010110001",
+        "CrossID": "11010110000001",
         "ControlMode": "31",
         "PlanNo": "001"
       }
     ],
     "CrossCycle": [
       {
-        "CrossID": "11010110001",
+        "CrossID": "11010110000001",
         "StartTime": "2025-06-13T14:35:00",
         "LastCycleLen": 118
       }
     ],
     "CrossStage": [
       {
-        "CrossID": "11010110001",
+        "CrossID": "11010110000001",
         "LastStageNo": "01",
         "LastStageLen": 40,
         "CurStageNo": "02",
@@ -366,7 +370,7 @@
     ],
     "CrossSignalGroupStatus": [
       {
-        "CrossID": "11010110001",
+        "CrossID": "11010110000001",
         "SignalGroupStatusList": [
           {
             "SignalGroupNo": "01",
@@ -389,7 +393,7 @@
     ],
     "CrossTrafficData": [
       {
-        "CrossID": "11010110001",
+        "CrossID": "11010110000001",
         "EndTime": "2025-06-13T14:35:00",
         "Interval": 300,
         "DataList": [
@@ -424,7 +428,7 @@
     ],
     "StageTrafficData": [
       {
-        "CrossID": "11010110001",
+        "CrossID": "11010110000001",
         "StartTime": "2025-06-13T14:30:15",
         "EndTime": "2025-06-13T14:30:55",
         "StageNo": "01",
@@ -443,7 +447,7 @@
     ],
     "VarLaneStatus": [
       {
-        "CrossID": "11010110001",
+        "CrossID": "11010110000001",
         "LaneNo": "05",
         "CurMovement": "11",
         "CurMode": "1"
@@ -460,8 +464,8 @@
         "RouteID": "110101001",
         "RoadSectionSpeedList": [
           {
-            "UpCrossID": "11010110001",
-            "DownCrossID": "11010110002",
+            "UpCrossID": "11010110000001",
+            "DownCrossID": "11010110000002",
             "RecommendSpeed": 45
           }
         ]

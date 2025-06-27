@@ -13,9 +13,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 干线控制方式枚举
  */
 public enum RouteControlMode {
-    TIMING_COORDINATED("11", "定时协调"),
-    ACTUATED_COORDINATED("12", "感应协调控制"),
-    ADAPTIVE_COORDINATED("13", "自适应协调控制");
+    NONE_COORDINATED("00", "未进行干线协调控制"),
+    FIX_COORDINATED("11", "固定方案协调控制"),
+    ADAPTIVE_COORDINATED("12", "自适应协调控制");
 
     private final String code;
     private final String description;

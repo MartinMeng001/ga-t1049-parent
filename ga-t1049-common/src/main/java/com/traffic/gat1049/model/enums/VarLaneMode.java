@@ -13,8 +13,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 可变车道控制方式枚举
  */
 public enum VarLaneMode {
-    FIXED("1", "固定"),
-    ADAPTIVE("2", "自适应"),
+    CONTROLLER("00", "恢复信号机控制"),
+    CONTROLLER_FIXED("11", "信号机控制-固定方案"),
+    CONTROLLER_ADAPTIVE("12", "信号机控制-自适应"),
+    INTERVENTION_FIXED("21", "干预控制-固定方案"),
+    INTERVENTION_ADAPTIVE("22", "干预控制-自适应"),
     OTHER("9", "其他");
 
     private final String code;

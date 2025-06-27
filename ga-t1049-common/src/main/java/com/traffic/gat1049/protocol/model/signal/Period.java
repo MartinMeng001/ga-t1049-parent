@@ -121,6 +121,32 @@ public class Period {
     }
 
     /**
+     * 将时间字符串标准化为 HH:MM 格式
+     * @param time 时间字符串（HH:MM 或 HH:MM:SS）
+     * @return 标准化后的时间字符串
+     */
+    public static String normalizeTimeFormat2(String time) {
+        if (time == null || time.trim().isEmpty()) {
+            return "00:00"; // Changed default to HH:MM
+        }
+
+        time = time.trim();
+
+        // If it's HH:MM:SS format, remove seconds and return HH:MM
+        if (time.matches("^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$")) {
+            return time.substring(0, 5); // Extract HH:MM part
+        }
+
+        // If it's already HH:MM format, return directly
+        if (time.matches("^([01]?[0-9]|2[0-3]):[0-5][0-9]$")) {
+            return time;
+        }
+
+        // If format is incorrect, return default HH:MM
+        return "00:00"; // Changed default to HH:MM
+    }
+
+    /**
      * 比较两个时间字符串的大小
      * @param time1 时间1
      * @param time2 时间2

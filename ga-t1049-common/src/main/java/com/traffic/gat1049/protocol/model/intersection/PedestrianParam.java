@@ -2,6 +2,8 @@ package com.traffic.gat1049.protocol.model.intersection;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.DirectionAdapter;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.PedestrianAttributeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseParam;
 import com.traffic.gat1049.model.enums.Direction;
 import com.traffic.gat1049.model.enums.PedestrianAttribute;
@@ -14,6 +16,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 人行横道参数
@@ -46,6 +49,7 @@ public class PedestrianParam  {//extends BaseParam
      * 人行横道所在进口的方向
      */
     @XmlElement(name = "Direction", required = true)
+    @XmlJavaTypeAdapter(DirectionAdapter.class)
     @JsonProperty("Direction")
     private Direction direction;
 
@@ -53,6 +57,7 @@ public class PedestrianParam  {//extends BaseParam
      * 人行横道属性
      */
     @XmlElement(name = "Attribute", required = true)
+    @XmlJavaTypeAdapter(PedestrianAttributeAdapter.class)
     @JsonProperty("Attribute")
     private PedestrianAttribute attribute;
 
@@ -108,6 +113,6 @@ public class PedestrianParam  {//extends BaseParam
                 ", pedestrianNo=" + pedestrianNo +
                 ", direction=" + direction +
                 ", attribute=" + attribute +
-                "} " + super.toString();
+                "} ";// + super.toString()
     }
 }

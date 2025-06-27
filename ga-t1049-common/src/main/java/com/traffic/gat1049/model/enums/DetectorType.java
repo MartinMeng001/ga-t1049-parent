@@ -19,6 +19,7 @@ public enum DetectorType {
     MAGNETIC("3", "地磁"),
     MICROWAVE("4", "微波"),
     RFID("5", "汽车电子标识（RFID）"),
+    RADAR_VIDEO("6", "雷视一体"),
     OTHER("9", "其他");
 
     private final String code;

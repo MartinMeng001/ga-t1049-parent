@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
@@ -371,7 +372,7 @@ public class ClientDataPushService {
                     error.setSignalControllerId(controllerId);
                     error.setErrorType(ControllerErrorType.OTHER);
                     error.setErrorDesc("检测器通信超时");
-                    error.setOccurTime(LocalDateTime.now());
+                    error.setOccurTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
                     Message pushMessage = createPushMessage(error);
                     sendPushMessage(serverId, pushMessage);

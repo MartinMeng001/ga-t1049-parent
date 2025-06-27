@@ -73,40 +73,37 @@ public class ServerToClientSender {
      * @param message 消息内容
      * @return 发送结果的Future
      */
-    public CompletableFuture<Boolean> sendToClient(String clientId, String message) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-
+    public CompletableFuture<Boolean> sendToClient(String clientId, String xmlMessage) {
         Channel channel = clientChannels.get(clientId);
-        if (channel == null) {
-            logger.warn("客户端连接不存在: {}", clientId);
-            future.complete(false);
-            return future;
-        }
-
-        if (!channel.isActive()) {
-            logger.warn("客户端连接不活跃: {}", clientId);
-            clientChannels.remove(clientId);
-            clientStatus.remove(clientId);
-            future.complete(false);
-            return future;
+        if (channel == null || !channel.isActive()) {
+            logger.warn("客户端连接不可用: {}", clientId);
+            return CompletableFuture.completedFuture(false);
         }
 
         try {
-            channel.writeAndFlush(message).addListener(channelFuture -> {
+            // 确保消息以 </Message> 结尾（MessageCodec通常已经保证了这一点）
+            if (!xmlMessage.trim().endsWith("</Message>")) {
+                logger.warn("Message doesn't end with </Message>, this may cause parsing issues: clientId={}", clientId);
+            }
+
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+
+            channel.writeAndFlush(xmlMessage).addListener(channelFuture -> {
                 if (channelFuture.isSuccess()) {
-                    logger.debug("消息发送成功到客户端: {}, messageLength={}", clientId, message.length());
+                    logger.debug("消息发送成功到客户端: {}", clientId);
                     future.complete(true);
                 } else {
                     logger.error("消息发送失败到客户端: {}", clientId, channelFuture.cause());
                     future.complete(false);
                 }
             });
-        } catch (Exception e) {
-            logger.error("发送消息异常: clientId={}", clientId, e);
-            future.complete(false);
-        }
 
-        return future;
+            return future;
+
+        } catch (Exception e) {
+            logger.error("发送消息时发生异常: clientId={}", clientId, e);
+            return CompletableFuture.completedFuture(false);
+        }
     }
 
     /**

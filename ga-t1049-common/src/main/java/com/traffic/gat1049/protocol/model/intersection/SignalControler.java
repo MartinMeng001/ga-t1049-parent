@@ -2,13 +2,14 @@ package com.traffic.gat1049.protocol.model.intersection;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.traffic.gat1049.protocol.model.base.BaseParam;
 import com.traffic.gat1049.model.enums.CommMode;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.CommModeAdapter;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
 import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,9 +18,9 @@ import java.util.List;
  * 对应文档中的 SignalController
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@XmlRootElement(name = "SignalController")
+@XmlRootElement(name = "SignalControler")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SignalController  {//extends BaseParam
+public class SignalControler {//extends BaseParam
 
     /**
      * 信号机编号 - 取值12位交通管理部门机构代码+5位数字
@@ -50,6 +51,7 @@ public class SignalController  {//extends BaseParam
      * 通信接口
      */
     @XmlElement(name = "CommMode", required = true)
+    @XmlJavaTypeAdapter(CommModeAdapter.class)
     @JsonProperty("CommMode")
     private CommMode commMode;
 
@@ -63,11 +65,11 @@ public class SignalController  {//extends BaseParam
     private List<String> crossIdList = new ArrayList<>();
 
     // 构造函数
-    public SignalController() {
+    public SignalControler() {
         super();
     }
 
-    public SignalController(String signalControllerId, String supplier, String type) {
+    public SignalControler(String signalControllerId, String supplier, String type) {
         super();
         this.signalControllerId = signalControllerId;
         this.supplier = supplier;

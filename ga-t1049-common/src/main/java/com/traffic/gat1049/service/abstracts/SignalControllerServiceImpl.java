@@ -6,8 +6,7 @@ import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.model.dto.PageRequestDto;
-import com.traffic.gat1049.protocol.model.intersection.SignalController;
-import com.traffic.gat1049.protocol.model.runtime.CrossState;
+import com.traffic.gat1049.protocol.model.intersection.SignalControler;
 import com.traffic.gat1049.protocol.model.runtime.SignalControllerError;
 import com.traffic.gat1049.service.interfaces.SignalControllerService;
 import com.traffic.gat1049.model.enums.CommMode;
@@ -16,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -28,7 +29,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
     private static final Logger logger = LoggerFactory.getLogger(SignalControllerServiceImpl.class);
     private ComprehensiveTestDataProviderImpl dataPrider = ComprehensiveTestDataProviderImpl.getInstance();
     // 信号机参数存储
-    private final Map<String, SignalController> signalControllerStorage = new ConcurrentHashMap<>();
+    private final Map<String, SignalControler> signalControllerStorage = new ConcurrentHashMap<>();
 
     // 信号机故障存储 - key: signalControllerId, value: 故障列表
     private final Map<String, List<SignalControllerError>> errorStorage = new ConcurrentHashMap<>();
@@ -39,28 +40,28 @@ public class SignalControllerServiceImpl implements SignalControllerService {
     }
 
     @Override
-    public SignalController findById(String signalControllerId) throws BusinessException {
+    public SignalControler findById(String signalControllerId) throws BusinessException {
         if (signalControllerId == null || signalControllerId.trim().isEmpty()) {
             throw new ValidationException("signalControllerId", "信号机编号不能为空");
         }
 
-        SignalController signalController = dataPrider.getSignalControllerById(signalControllerId);//signalControllerStorage.get(signalControllerId);
-        if (signalController == null) {
+        SignalControler signalControler = dataPrider.getSignalControllerById(signalControllerId);//signalControllerStorage.get(signalControllerId);
+        if (signalControler == null) {
             throw new DataNotFoundException("SignalController", signalControllerId);
         }
 
-        return signalController;
+        return signalControler;
     }
 
     @Override
-    public List<SignalController> findAll() throws BusinessException {
+    public List<SignalControler> findAll() throws BusinessException {
         return dataPrider.getAllSignalControllers();
         //return new ArrayList<>(signalControllerStorage.values());
     }
 
     @Override
-    public List<SignalController> findPage(PageRequestDto pageRequest) throws BusinessException {
-        List<SignalController> allControllers = findAll();
+    public List<SignalControler> findPage(PageRequestDto pageRequest) throws BusinessException {
+        List<SignalControler> allControllers = findAll();
 
         int pageSize = pageRequest.getPageSize() != null ? pageRequest.getPageSize() : 10;
         int pageNum = pageRequest.getPageNum() != null ? pageRequest.getPageNum() : 1;
@@ -76,48 +77,48 @@ public class SignalControllerServiceImpl implements SignalControllerService {
     }
 
     @Override
-    public SignalController save(SignalController signalController) throws BusinessException {
-        if (signalController == null) {
+    public SignalControler save(SignalControler signalControler) throws BusinessException {
+        if (signalControler == null) {
             throw new ValidationException("signalController", "信号机参数不能为空");
         }
 
-        validateSignalController(signalController);
+        validateSignalController(signalControler);
 
 //        signalController.setCreateTime(LocalDateTime.now());
 //        signalController.setUpdateTime(LocalDateTime.now());
 
-        signalControllerStorage.put(signalController.getSignalControllerId(), signalController);
+        signalControllerStorage.put(signalControler.getSignalControllerId(), signalControler);
 
         logger.info("保存信号机参数: signalControllerId={}, supplier={}, type={}",
-                signalController.getSignalControllerId(),
-                signalController.getSupplier(),
-                signalController.getType());
+                signalControler.getSignalControllerId(),
+                signalControler.getSupplier(),
+                signalControler.getType());
 
-        return signalController;
+        return signalControler;
     }
 
     @Override
-    public SignalController update(SignalController signalController) throws BusinessException {
-        if (signalController == null) {
+    public SignalControler update(SignalControler signalControler) throws BusinessException {
+        if (signalControler == null) {
             throw new ValidationException("signalController", "信号机参数不能为空");
         }
 
-        String signalControllerId = signalController.getSignalControllerId();
+        String signalControllerId = signalControler.getSignalControllerId();
         if (!signalControllerStorage.containsKey(signalControllerId)) {
             throw new DataNotFoundException("SignalController", signalControllerId);
         }
 
-        validateSignalController(signalController);
+        validateSignalController(signalControler);
 
 //        signalController.setUpdateTime(LocalDateTime.now());
-        signalControllerStorage.put(signalControllerId, signalController);
+        signalControllerStorage.put(signalControllerId, signalControler);
 
         logger.info("更新信号机参数: signalControllerId={}, supplier={}, type={}",
-                signalController.getSignalControllerId(),
-                signalController.getSupplier(),
-                signalController.getType());
+                signalControler.getSignalControllerId(),
+                signalControler.getSupplier(),
+                signalControler.getType());
 
-        return signalController;
+        return signalControler;
     }
 
     @Override
@@ -126,7 +127,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
             throw new ValidationException("signalControllerId", "信号机编号不能为空");
         }
 
-        SignalController removed = signalControllerStorage.remove(signalControllerId);
+        SignalControler removed = signalControllerStorage.remove(signalControllerId);
         if (removed == null) {
             throw new DataNotFoundException("SignalController", signalControllerId);
         }
@@ -151,7 +152,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
     }
 
     @Override
-    public List<SignalController> findBySupplier(String supplier) throws BusinessException {
+    public List<SignalControler> findBySupplier(String supplier) throws BusinessException {
         if (supplier == null || supplier.trim().isEmpty()) {
             throw new ValidationException("supplier", "供应商不能为空");
         }
@@ -162,7 +163,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
     }
 
     @Override
-    public List<SignalController> findByType(String type) throws BusinessException {
+    public List<SignalControler> findByType(String type) throws BusinessException {
         if (type == null || type.trim().isEmpty()) {
             throw new ValidationException("type", "规格型号不能为空");
         }
@@ -173,7 +174,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
     }
 
     @Override
-    public List<SignalController> findByCommMode(CommMode commMode) throws BusinessException {
+    public List<SignalControler> findByCommMode(CommMode commMode) throws BusinessException {
         if (commMode == null) {
             throw new ValidationException("commMode", "通信接口不能为空");
         }
@@ -185,7 +186,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
 
     @Override
     public List<String> getControlledCrosses(String signalControllerId) throws BusinessException {
-        SignalController controller = findById(signalControllerId);
+        SignalControler controller = findById(signalControllerId);
         return controller.getCrossIdList() != null ?
                 new ArrayList<>(controller.getCrossIdList()) : new ArrayList<>();
     }
@@ -196,7 +197,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
 
-        SignalController controller = findById(signalControllerId);
+        SignalControler controller = findById(signalControllerId);
 
         if (controller.getCrossIdList() == null) {
             controller.setCrossIdList(new ArrayList<>());
@@ -220,7 +221,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
 
-        SignalController controller = findById(signalControllerId);
+        SignalControler controller = findById(signalControllerId);
 
         if (controller.getCrossIdList() != null && controller.getCrossIdList().remove(crossId)) {
 //            controller.setUpdateTime(LocalDateTime.now());
@@ -250,7 +251,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
         error.setSignalControllerId(signalControllerId);
         error.setErrorType(errorType);
         error.setErrorDesc(errorDesc != null ? errorDesc : "");
-        error.setOccurTime(LocalDateTime.now());
+        error.setOccurTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         errorStorage.computeIfAbsent(signalControllerId, k -> new ArrayList<>()).add(error);
 
@@ -316,28 +317,28 @@ public class SignalControllerServiceImpl implements SignalControllerService {
     /**
      * 验证信号机参数
      */
-    private void validateSignalController(SignalController signalController) throws BusinessException {
-        if (signalController.getSignalControllerId() == null ||
-                signalController.getSignalControllerId().trim().isEmpty()) {
+    private void validateSignalController(SignalControler signalControler) throws BusinessException {
+        if (signalControler.getSignalControllerId() == null ||
+                signalControler.getSignalControllerId().trim().isEmpty()) {
             throw new ValidationException("signalControllerId", "信号机编号不能为空");
         }
 
-        if (signalController.getSupplier() == null ||
-                signalController.getSupplier().trim().isEmpty()) {
+        if (signalControler.getSupplier() == null ||
+                signalControler.getSupplier().trim().isEmpty()) {
             throw new ValidationException("supplier", "供应商不能为空");
         }
 
-        if (signalController.getType() == null ||
-                signalController.getType().trim().isEmpty()) {
+        if (signalControler.getType() == null ||
+                signalControler.getType().trim().isEmpty()) {
             throw new ValidationException("type", "规格型号不能为空");
         }
 
-        if (signalController.getCommMode() == null) {
+        if (signalControler.getCommMode() == null) {
             throw new ValidationException("commMode", "通信接口不能为空");
         }
 
         // 验证信号机编号格式（根据注解定义应为17位数字）
-        String signalControllerId = signalController.getSignalControllerId();
+        String signalControllerId = signalControler.getSignalControllerId();
         if (!signalControllerId.matches("\\d{17}")) {
             throw new ValidationException("signalControllerId", "信号机编号格式不正确，应为17位数字");
         }
@@ -349,7 +350,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
     private void initializeSampleData() {
         try {
             // 创建示例信号机1
-            SignalController controller1 = new SignalController();
+            SignalControler controller1 = new SignalControler();
             controller1.setSignalControllerId("11010000100010001");
             controller1.setSupplier("海信网络科技");
             controller1.setType("HiSmart-TC400");
@@ -359,7 +360,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
             controller1.setCrossIdList(crossIds1);
 
             // 创建示例信号机2
-            SignalController controller2 = new SignalController();
+            SignalControler controller2 = new SignalControler();
             controller2.setSignalControllerId("11010000100020001");
             controller2.setSupplier("青岛易触科技");
             controller2.setType("YC-TSC300");
@@ -369,7 +370,7 @@ public class SignalControllerServiceImpl implements SignalControllerService {
             controller2.setCrossIdList(crossIds2);
 
             // 创建示例信号机3
-            SignalController controller3 = new SignalController();
+            SignalControler controller3 = new SignalControler();
             controller3.setSignalControllerId("11010000100030001");
             controller3.setSupplier("大华技术");
             controller3.setType("DH-TSC200");

@@ -1,11 +1,14 @@
 package com.traffic.gat1049.protocol.model.intersection;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.CrossFeatureAdapter;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.CrossGradeAdapter;
 import com.traffic.gat1049.protocol.model.base.BaseLocationEntity;
 import com.traffic.gat1049.model.enums.*;
 
 import javax.validation.constraints.*;
 import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +19,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "CrossParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CrossParam extends BaseLocationEntity {
+public class CrossParam {// extends BaseLocationEntity
 
     /**
      * 路口编号 - 全局唯一，取值区域编号+5位数字
@@ -38,6 +41,7 @@ public class CrossParam extends BaseLocationEntity {
      * 路口形状
      */
     @XmlElement(name = "Feature", required = true)
+    @XmlJavaTypeAdapter(CrossFeatureAdapter.class)
     @JsonProperty("Feature")
     private CrossFeature feature;
 
@@ -45,6 +49,7 @@ public class CrossParam extends BaseLocationEntity {
      * 路口等级
      */
     @XmlElement(name = "Grade", required = true)
+    @XmlJavaTypeAdapter(CrossGradeAdapter.class)
     @JsonProperty("Grade")
     private CrossGrade grade;
 
@@ -240,6 +245,6 @@ public class CrossParam extends BaseLocationEntity {
                 ", planNoList=" + planNoList +
                 ", dayPlanNoList=" + dayPlanNoList +
                 ", scheduleNoList=" + scheduleNoList +
-                "} " + super.toString();
+                "} ";// + super.toString()
     }
 }

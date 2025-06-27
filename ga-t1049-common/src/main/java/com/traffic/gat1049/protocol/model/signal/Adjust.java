@@ -3,10 +3,12 @@ package com.traffic.gat1049.protocol.model.signal;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.traffic.gat1049.model.enums.AdjustOperation;
+import com.traffic.gat1049.protocol.adapters.XmlAdapter.AdjustOperationAdapter;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * 信号组迟开早闭调整信息
@@ -19,6 +21,7 @@ public class Adjust {
      * 调整方式
      */
     @XmlAttribute(name = "Oper")
+    @XmlJavaTypeAdapter(AdjustOperationAdapter.class)
     @JsonProperty("Oper")
     private AdjustOperation oper;
 

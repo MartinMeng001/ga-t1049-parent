@@ -386,7 +386,7 @@ public class ServerDebugConsole {
     }
 
     private Message createTestHeartbeat() {
-        return MessageBuilder.createHeartbeatMessage("TEST_TOKEN");
+        return MessageBuilder.createHeartbeatMessage("TEST_TOKEN", "");
     }
 
     private String createTestMessage() {
