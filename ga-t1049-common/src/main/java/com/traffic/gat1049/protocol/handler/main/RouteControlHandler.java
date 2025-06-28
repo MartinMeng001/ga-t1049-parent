@@ -77,8 +77,7 @@ public class RouteControlHandler extends AbstractProtocolHandler {
 
         // 根据控制方式执行相应操作
         switch (mode) {
-            case TIMING_COORDINATED:
-            case ACTUATED_COORDINATED:
+            case FIX_COORDINATED:
             case ADAPTIVE_COORDINATED:
                 // 启动协调控制
                 serviceFactory.getRouteControlService().startCoordination(routeId);

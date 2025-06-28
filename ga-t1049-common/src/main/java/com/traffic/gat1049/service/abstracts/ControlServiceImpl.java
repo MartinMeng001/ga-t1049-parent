@@ -24,18 +24,18 @@ public class ControlServiceImpl implements ControlService {
 
     @Override
     public void lockFlowDirection(String crossId, FlowType flowType, Direction entrance, Direction exit,
-                                  LockType lockType, Integer duration) throws BusinessException {
-        validateLockParameters(crossId, flowType, entrance, exit, lockType, duration);
+                                  LockType lockType, Integer lockStageNo, Integer duration) throws BusinessException {
+        validateLockParameters(crossId, flowType, entrance, exit, lockType, lockStageNo, duration);
 
         String lockKey = generateLockKey(crossId, flowType, entrance, exit);
-        FlowLockInfo lockInfo = new FlowLockInfo(crossId, flowType, entrance, exit, lockType, duration);
+        FlowLockInfo lockInfo = new FlowLockInfo(crossId, flowType, entrance, exit, lockType, lockStageNo, duration);
         lockInfo.setLockTime(LocalDateTime.now());
 
         flowLockStorage.put(lockKey, lockInfo);
 
-        logger.info("锁定交通流向: crossId={}, flowType={}, entrance={}, exit={}, lockType={}, duration={}",
+        logger.info("锁定交通流向: crossId={}, flowType={}, entrance={}, exit={}, lockType={}, lockStageNo={}, duration={}",
                 crossId, flowType.getDescription(), entrance.getDescription(),
-                exit.getDescription(), lockType.getDescription(), duration);
+                exit.getDescription(), lockType.getDescription(), lockStageNo, duration);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class ControlServiceImpl implements ControlService {
     }
 
     private void validateLockParameters(String crossId, FlowType flowType, Direction entrance, Direction exit,
-                                        LockType lockType, Integer duration) throws BusinessException {
+                                        LockType lockType, Integer lockStageNo, Integer duration) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
@@ -149,8 +149,26 @@ public class ControlServiceImpl implements ControlService {
         if (lockType == null) {
             throw new ValidationException("lockType", "锁定类型不能为空");
         }
-        if (duration == null || duration < 0) {
-            throw new ValidationException("duration", "锁定时间不能为负数");
+        if (lockStageNo == null) {
+            throw new ValidationException("lockStageNo", "锁定阶段号不能为空");
+        }
+        if (duration == null || duration < 0 || duration > 3600) {
+            throw new ValidationException("duration", "锁定持续时间必须在0-3600秒范围内");
+        }
+
+        // 验证锁定阶段号与锁定类型的一致性
+        validateLockStageNoConsistency(lockType, lockStageNo);
+    }
+
+    private void validateLockStageNoConsistency(LockType lockType, Integer lockStageNo) throws ValidationException {
+        if (lockType.usesDefaultStageNo() && lockStageNo != 0) {
+            throw new ValidationException("lockStageNo",
+                    String.format("锁定类型为%s时，锁定阶段号必须为0", lockType.getDescription()));
+        }
+
+        if (lockType.requiresStageNo() && lockStageNo <= 0) {
+            throw new ValidationException("lockStageNo",
+                    String.format("锁定类型为%s时，锁定阶段号必须大于0", lockType.getDescription()));
         }
     }
 
@@ -201,16 +219,18 @@ public class ControlServiceImpl implements ControlService {
         private final Direction exit;
         private final LockType lockType;
         private final Integer duration;
+        private final Integer lockStage;
         private LocalDateTime lockTime;
 
         public FlowLockInfo(String crossId, FlowType flowType, Direction entrance, Direction exit,
-                            LockType lockType, Integer duration) {
+                            LockType lockType, Integer lockStage, Integer duration) {
             this.crossId = crossId;
             this.flowType = flowType;
             this.entrance = entrance;
             this.exit = exit;
             this.lockType = lockType;
             this.duration = duration;
+            this.lockStage = lockStage;
         }
 
         // Getters
@@ -222,5 +242,6 @@ public class ControlServiceImpl implements ControlService {
         public Integer getDuration() { return duration; }
         public LocalDateTime getLockTime() { return lockTime; }
         public void setLockTime(LocalDateTime lockTime) { this.lockTime = lockTime; }
+        public Integer getLockStage() { return lockStage; }
     }
 }

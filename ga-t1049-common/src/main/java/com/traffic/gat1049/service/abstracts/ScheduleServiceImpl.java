@@ -4,6 +4,7 @@ import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
+import com.traffic.gat1049.model.enums.ScheduleType;
 import com.traffic.gat1049.protocol.model.signal.ScheduleParam;
 import com.traffic.gat1049.model.enums.OperationType;
 import com.traffic.gat1049.service.interfaces.ScheduleService;
@@ -168,6 +169,46 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
+    public boolean existsScheduleNo(String crossId, Integer scheduleNo) throws BusinessException {
+        return false;
+    }
+
+    @Override
+    public Integer getNextAvailableScheduleNo(String crossId) throws BusinessException {
+        return 0;
+    }
+
+    @Override
+    public List<ScheduleParam> batchAddSchedules(List<ScheduleParam> scheduleParams) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public void batchDeleteSchedules(String crossId, List<Integer> scheduleNos) throws BusinessException {
+
+    }
+
+    @Override
+    public List<ScheduleParam> copySchedulesToCross(String sourceCrossId, String targetCrossId, List<Integer> scheduleNos) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public List<ScheduleParam> createStandardScheduleTemplate(String crossId, Integer workdayDayPlanNo, Integer weekendDayPlanNo, Integer holidayDayPlanNo) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public List<ScheduleParam> resetToDefaultSchedules(String crossId, boolean keepExisting) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public ScheduleStatistics getScheduleStatistics(String crossId) throws BusinessException {
+        return null;
+    }
+
+    @Override
     public List<ScheduleParam> findByDayPlanNo(String crossId, Integer dayPlanNo) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
@@ -180,6 +221,31 @@ public class ScheduleServiceImpl implements ScheduleService {
         return allSchedules.stream()
                 .filter(schedule -> dayPlanNo.equals(schedule.getDayPlanNo()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ScheduleParam> findByScheduleType(String crossId, ScheduleType scheduleType) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public List<ScheduleParam> findByScheduleNameLike(String crossId, String scheduleName) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public ScheduleParam getEffectiveSchedule(String crossId, LocalDate targetDate) throws BusinessException {
+        return null;
+    }
+
+    @Override
+    public ScheduleParam getCurrentEffectiveSchedule(String crossId) throws BusinessException {
+        return null;
+    }
+
+    @Override
+    public List<ScheduleParam> predictScheduleForDays(String crossId, int days) throws BusinessException {
+        return List.of();
     }
 
     /**

@@ -14,14 +14,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * 路口阶段
  * 对应文档中的 CrossStage
+ * 符合 GA/T 1049 标准 5.2.6 路口阶段定义
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "CrossStage")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CrossStage  {//extends BaseState
+public class CrossStage {//extends BaseState
 
     /**
      * 路口编号
+     * 取值同表B.6中路口编号
      */
     @NotBlank(message = "路口编号不能为空")
     @XmlElement(name = "CrossID", required = true)
@@ -51,6 +53,14 @@ public class CrossStage  {//extends BaseState
     private Integer curStageNo;
 
     /**
+     * 当前阶段开始时间
+     * 符合 GA/T 543.6 的 DE0 055405
+     */
+    @XmlElement(name = "CurStageStartTime", required = true)
+    @JsonProperty("CurStageStartTime")
+    private String curStageStartTime;
+
+    /**
      * 当前阶段已执行时长（秒）
      */
     @Min(value = 0, message = "阶段时长不能为负数")
@@ -68,6 +78,17 @@ public class CrossStage  {//extends BaseState
         this.crossId = crossId;
         this.curStageNo = curStageNo;
         this.curStageLen = 0;
+    }
+
+    public CrossStage(String crossId, Integer lastStageNo, Integer lastStageLen,
+                      Integer curStageNo, String curStageStartTime, Integer curStageLen) {
+        //super();
+        this.crossId = crossId;
+        this.lastStageNo = lastStageNo;
+        this.lastStageLen = lastStageLen;
+        this.curStageNo = curStageNo;
+        this.curStageStartTime = curStageStartTime;
+        this.curStageLen = curStageLen;
     }
 
     // Getters and Setters
@@ -103,6 +124,14 @@ public class CrossStage  {//extends BaseState
         this.curStageNo = curStageNo;
     }
 
+    public String getCurStageStartTime() {
+        return curStageStartTime;
+    }
+
+    public void setCurStageStartTime(String curStageStartTime) {
+        this.curStageStartTime = curStageStartTime;
+    }
+
     public Integer getCurStageLen() {
         return curStageLen;
     }
@@ -118,6 +147,7 @@ public class CrossStage  {//extends BaseState
                 ", lastStageNo=" + lastStageNo +
                 ", lastStageLen=" + lastStageLen +
                 ", curStageNo=" + curStageNo +
+                ", curStageStartTime='" + curStageStartTime + '\'' +
                 ", curStageLen=" + curStageLen +
                 "} ";
     }

@@ -8,7 +8,7 @@ import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.protocol.model.command.LockFlowDirection;
 import com.traffic.gat1049.protocol.model.command.UnlockFlowDirection;
-import com.traffic.gat1049.protocol.model.command.StageCtrl;
+import com.traffic.gat1049.protocol.model.command.AdjustStage;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
 import com.traffic.gat1049.service.interfaces.ServiceFactory;
 import com.traffic.gat1049.application.session.SessionManager;
@@ -34,7 +34,7 @@ public class FlowControlHandler extends TokenRequiredHandler {
         Object data = ProtocolUtils.getOperationData(message);
         return data instanceof LockFlowDirection ||
                 data instanceof UnlockFlowDirection ||
-                data instanceof StageCtrl;
+                data instanceof AdjustStage;
     }
 
 //    @Override
@@ -73,8 +73,8 @@ public class FlowControlHandler extends TokenRequiredHandler {
                 result = handleLockFlowDirection((LockFlowDirection) data);
             } else if (data instanceof UnlockFlowDirection) {
                 result = handleUnlockFlowDirection((UnlockFlowDirection) data);
-            } else if (data instanceof StageCtrl) {
-                result = handleStageCtrl((StageCtrl) data);
+            } else if (data instanceof AdjustStage) {
+                result = handleStageCtrl((AdjustStage) data);
             }
             // 3. 返回响应
             return createSuccessResponse(message, result);
@@ -123,6 +123,7 @@ public class FlowControlHandler extends TokenRequiredHandler {
                 lockFlowDirection.getEntrance(),
                 lockFlowDirection.getExit(),
                 lockFlowDirection.getLockType(),
+                lockFlowDirection.getLockStageNo(),
                 lockFlowDirection.getDuration());
 
         return lockFlowDirection;
@@ -158,34 +159,34 @@ public class FlowControlHandler extends TokenRequiredHandler {
         return unlockFlowDirection;
     }
 
-    private Object handleStageCtrl(StageCtrl stageCtrl) throws BusinessException {
+    private Object handleStageCtrl(AdjustStage adjustStage) throws BusinessException {
         // 验证必要参数
-        if (stageCtrl.getCrossId() == null || stageCtrl.getCrossId().trim().isEmpty()) {
+        if (adjustStage.getCrossId() == null || adjustStage.getCrossId().trim().isEmpty()) {
             throw new ValidationException("crossId", "Cross ID cannot be null or empty");
         }
-        if (stageCtrl.getStageNo() == null) {
+        if (adjustStage.getStageNo() == null) {
             throw new ValidationException("stageNo", "Stage number cannot be null");
         }
-        if (stageCtrl.getType() == null) {
+        if (adjustStage.getType() == null) {
             throw new ValidationException("type", "Intervention type cannot be null");
         }
-        if (stageCtrl.getLen() == null || stageCtrl.getLen() <= 0) {
+        if (adjustStage.getLen() == null || adjustStage.getLen() <= 0) {
             throw new ValidationException("len", "Intervention length must be positive");
         }
 
         logger.info("Stage intervention: crossId={}, stageNo={}, type={}, len={}",
-                stageCtrl.getCrossId(),
-                stageCtrl.getStageNo(),
-                stageCtrl.getType(),
-                stageCtrl.getLen());
+                adjustStage.getCrossId(),
+                adjustStage.getStageNo(),
+                adjustStage.getType(),
+                adjustStage.getLen());
 
         serviceFactory.getControlService().stageIntervention(
-                stageCtrl.getCrossId(),
-                stageCtrl.getStageNo(),
-                stageCtrl.getType(),
-                stageCtrl.getLen());
+                adjustStage.getCrossId(),
+                adjustStage.getStageNo(),
+                adjustStage.getType(),
+                adjustStage.getLen());
 
-        return stageCtrl;
+        return adjustStage;
     }
 
     private Object createSuccessResult(String message) {

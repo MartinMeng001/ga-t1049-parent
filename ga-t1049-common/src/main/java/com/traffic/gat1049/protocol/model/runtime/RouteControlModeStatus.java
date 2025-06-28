@@ -18,7 +18,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  * 对应文档中的 RouteControlMode
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@XmlRootElement(name = "RouteControlMode")
+@XmlRootElement(name = "RouteCtrlInfo")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RouteControlModeStatus {//extends BaseState
 
@@ -33,9 +33,9 @@ public class RouteControlModeStatus {//extends BaseState
     /**
      * 控制方式
      */
-    @XmlElement(name = "Value", required = true)
+    @XmlElement(name = "CtrlMode", required = true)
     @XmlJavaTypeAdapter(RouteControlModeAdapter.class)
-    @JsonProperty("Value")
+    @JsonProperty("CtrlMode")
     private RouteControlMode value;
 
     // 构造函数

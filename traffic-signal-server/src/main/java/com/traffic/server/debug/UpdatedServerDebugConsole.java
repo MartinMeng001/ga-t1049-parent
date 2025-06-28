@@ -5,12 +5,10 @@ import com.traffic.gat1049.application.subscription.SubscriptionManager;
 import com.traffic.gat1049.exception.GatProtocolException;
 import com.traffic.gat1049.model.enums.*;
 import com.traffic.gat1049.protocol.model.command.*;
-import com.traffic.gat1049.protocol.model.intersection.CrossParam;
 import com.traffic.gat1049.protocol.model.sdo.SdoMsgEntity;
 import com.traffic.gat1049.protocol.model.signal.DayPlanParam;
 import com.traffic.gat1049.protocol.model.signal.PlanParam;
 import com.traffic.gat1049.protocol.model.signal.ScheduleParam;
-import com.traffic.gat1049.protocol.model.system.SysInfo;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.model.core.Message;
@@ -1252,11 +1250,11 @@ public class UpdatedServerDebugConsole {
             Integer len = Integer.parseInt(scanner.nextLine().trim());
 
             // 构建命令
-            StageCtrl stageCtrl = new StageCtrl();
-            stageCtrl.setCrossId(crossId);
-            stageCtrl.setStageNo(stageNo);
-            stageCtrl.setType(type);
-            stageCtrl.setLen(len);
+            AdjustStage adjustStage = new AdjustStage();
+            adjustStage.setCrossId(crossId);
+            adjustStage.setStageNo(stageNo);
+            adjustStage.setType(type);
+            adjustStage.setLen(len);
 
             // 显示设置信息
             System.out.println("\n=== 设置信息确认 ===");
@@ -1274,7 +1272,7 @@ public class UpdatedServerDebugConsole {
             }
 
             // 发送命令
-            sendSettingCommand(selectedClient, stageCtrl, "阶段干预控制");
+            sendSettingCommand(selectedClient, adjustStage, "阶段干预控制");
 
         } catch (Exception e) {
             System.out.println("参数输入错误: " + e.getMessage());

@@ -3,7 +3,6 @@ package com.traffic.gat1049.protocol.model.command;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.traffic.gat1049.protocol.adapters.XmlAdapter.InterventionTypeAdapter;
-import com.traffic.gat1049.protocol.model.base.BaseCommand;
 import com.traffic.gat1049.model.enums.InterventionType;
 
 import javax.validation.constraints.Min;
@@ -20,9 +19,9 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  * 对应文档中的 StageCtrl
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@XmlRootElement(name = "StageCtrl")
+@XmlRootElement(name = "AdjustStage")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class StageCtrl {//extends BaseCommand
+public class AdjustStage {//extends BaseCommand
 
     /**
      * 路口编号
@@ -57,11 +56,11 @@ public class StageCtrl {//extends BaseCommand
     private Integer len;
 
     // 构造函数
-    public StageCtrl() {
+    public AdjustStage() {
         //super();
     }
 
-    public StageCtrl(String crossId, Integer stageNo, InterventionType type, Integer len) {
+    public AdjustStage(String crossId, Integer stageNo, InterventionType type, Integer len) {
         //super();
         this.crossId = crossId;
         this.stageNo = stageNo;

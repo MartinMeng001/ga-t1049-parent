@@ -83,6 +83,15 @@ public class HandlerRegistry {
         // 10. 取消订阅处理器
         registerHandler(new NotifyUnsubscribeHandler(subscriptionManager, sessionManager));
 
+        // 11. 可变车道处理器
+        registerHandler(new CtrlVarLaneHandler(serviceFactory));
+
+        // 12. 重传运行信息处理器
+        registerHandler(new RunInfoRetransHandler(serviceFactory));
+
+        // 13. 路口控制方式方案处理器
+        registerHandler(new CrossCtrlInfoHandler(serviceFactory));
+
         logger.info("Registered {} protocol handlers", handlers.size());
     }
 

@@ -8,19 +8,15 @@ import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.model.dto.TrafficDataQueryDto;
 import com.traffic.gat1049.model.vo.LaneStatisticsVo;
 import com.traffic.gat1049.model.vo.TrafficStatisticsVo;
-import com.traffic.gat1049.protocol.model.runtime.CrossCycle;
-import com.traffic.gat1049.protocol.model.runtime.CrossModePlan;
-import com.traffic.gat1049.protocol.model.runtime.CrossStage;
+import com.traffic.gat1049.protocol.model.runtime.*;
 import com.traffic.gat1049.protocol.model.traffic.CrossTrafficData;
 import com.traffic.gat1049.protocol.model.traffic.LaneTrafficData;
 import com.traffic.gat1049.protocol.model.traffic.StageTrafficData;
-import com.traffic.gat1049.protocol.model.traffic.StageTrafficFlowData;
 import com.traffic.gat1049.model.enums.ReportDataType;
 import com.traffic.gat1049.service.interfaces.TrafficDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -308,6 +304,66 @@ public class TrafficDataServiceImpl implements TrafficDataService {
         }
 
         logger.info("清理历史数据完成: beforeDate={}, cleanedCount={}", beforeDate, cleanedCount);
+    }
+
+    @Override
+    public List<SignalControllerError> getSignalControllerErrors(String crossId, String startTime, String endTime) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public List<CrossModePlan> getCrossModePlans(String crossId, String startTime, String endTime) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public List<CrossTrafficData> getCrossTrafficData(String crossId, String startTime, String endTime) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public List<CrossCycle> getCrossCycles(String crossId, String startTime, String endTime) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public List<CrossStage> getCrossStages(String crossId, String startTime, String endTime) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public List<CrossSignalGroupStatus> getSignalGroupStatus(String crossId, String startTime, String endTime) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public List<StageTrafficData> getStageTrafficData(String crossId, String startTime, String endTime) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public List<Object> getBatchHistoryData(List<String> crossIds, String startTime, String endTime, String dataType) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public long countHistoryData(String crossId, String startTime, String endTime, String dataType) throws BusinessException {
+        return 0;
+    }
+
+    @Override
+    public PageResult<Object> getHistoryDataByPage(String crossId, String startTime, String endTime, String dataType, int pageNum, int pageSize) throws BusinessException {
+        return null;
+    }
+
+    @Override
+    public DataIntegrityResult validateDataIntegrity(String crossId, String startTime, String endTime, String dataType) throws BusinessException {
+        return null;
+    }
+
+    @Override
+    public long cleanupExpiredData(String beforeTime, String dataType) throws BusinessException {
+        return 0;
     }
 
     // 私有辅助方法

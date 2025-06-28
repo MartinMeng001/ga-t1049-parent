@@ -43,6 +43,8 @@ public interface SystemService {
      */
     void updateSystemState(SystemState state) throws BusinessException;
 
+    void updateSystemState(SysState sysState) throws BusinessException;
+
     /**
      * 系统初始化
      *

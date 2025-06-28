@@ -295,18 +295,18 @@ public class ClientDataPushService {
 
                 // 模拟4个信号组的状态
                 List<SignalGroupStatus> groupList = new CopyOnWriteArrayList<>();
-                for (int i = 1; i <= 4; i++) {
-                    SignalGroupStatus groupStatus = new SignalGroupStatus();
-                    groupStatus.setSignalGroupNo(i);
-                    int status1 = random.nextInt(3)+1;
-                    LampStatus lampStatus;
-                    if(status1==1) lampStatus = LampStatus.RED;
-                    else if(status1==3) lampStatus = LampStatus.GREEN;
-                    else if(status1==2) lampStatus = LampStatus.YELLOW;
-                    else lampStatus = LampStatus.OFF;
-                    groupStatus.setLampStatus(lampStatus); // 1=红 2=黄 3=绿
-                    groupList.add(groupStatus);
-                }
+//                for (int i = 1; i <= 4; i++) {
+//                    SignalGroupStatus groupStatus = new SignalGroupStatus();
+//                    groupStatus.setSignalGroupNo(i);
+//                    int status1 = random.nextInt(3)+1;
+//                    LampStatus lampStatus;
+//                    if(status1==1) lampStatus = LampStatus.RED;
+//                    else if(status1==3) lampStatus = LampStatus.GREEN;
+//                    else if(status1==2) lampStatus = LampStatus.YELLOW;
+//                    else lampStatus = LampStatus.OFF;
+//                    groupStatus.setLampStatus(lampStatus); // 1=红 2=黄 3=绿
+//                    groupList.add(groupStatus);
+//                }
                 status.setSignalGroupStatusList(groupList);
 
                 Message pushMessage = createPushMessage(status);

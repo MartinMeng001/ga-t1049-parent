@@ -360,6 +360,18 @@ public class MessageBuilder {
     /**
      * 创建错误响应消息
      */
+    public static Message createErrorResponse(Message request, Object data) {
+        return MessageBuilder.create()
+                .response()
+                .reverseAddress(request)
+                .seq(request.getSeq())
+                .token(request.getToken())
+                .operation("Error", data)
+                .build();
+    }
+    /**
+     * 创建错误响应消息
+     */
     public static Message createErrorResponse(String seq, String token, String errorCode, String errorMessage) {
         SdoError error =
                 new SdoError("", errorCode, errorMessage);

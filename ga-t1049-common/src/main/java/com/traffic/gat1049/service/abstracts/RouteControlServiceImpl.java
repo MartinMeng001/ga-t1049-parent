@@ -331,8 +331,7 @@ public class RouteControlServiceImpl implements RouteControlService {
      * 检查控制方式是否支持协调控制
      */
     private boolean isCoordinationSupportedMode(RouteControlMode mode) {
-        return mode == RouteControlMode.TIMING_COORDINATED ||
-                mode == RouteControlMode.ACTUATED_COORDINATED ||
+        return mode == RouteControlMode.FIX_COORDINATED ||
                 mode == RouteControlMode.ADAPTIVE_COORDINATED;
     }
 
@@ -343,7 +342,7 @@ public class RouteControlServiceImpl implements RouteControlService {
         try {
             // 创建示例干线 1
             String routeId1 = "110100001";
-            RouteControlMode mode1 = RouteControlMode.TIMING_COORDINATED;
+            RouteControlMode mode1 = RouteControlMode.FIX_COORDINATED;
             setRouteControlMode(routeId1, mode1);
 
             // 创建示例路段车速信息
@@ -358,7 +357,7 @@ public class RouteControlServiceImpl implements RouteControlService {
 
             // 创建示例干线 2
             String routeId2 = "110100002";
-            RouteControlMode mode2 = RouteControlMode.ACTUATED_COORDINATED;
+            RouteControlMode mode2 = RouteControlMode.ADAPTIVE_COORDINATED;
             setRouteControlMode(routeId2, mode2);
 
             // 创建示例路段车速信息

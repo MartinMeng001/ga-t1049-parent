@@ -58,7 +58,7 @@ public class Operation implements Serializable {
             @XmlElement(name = "SDO_TimeServer", type = SdoTimeServer.class),
 
             // 信号控制相关对象
-            @XmlElement(name = "SignalControler", type = SignalControler.class),
+            @XmlElement(name = "SignalControler", type = SignalController.class),
             @XmlElement(name = "LampGroup", type = LampGroup.class),
             @XmlElement(name = "LaneParam", type = LaneParam.class),
             @XmlElement(name = "SignalGroupParam", type = SignalGroupParam.class),
@@ -89,7 +89,7 @@ public class Operation implements Serializable {
             // *** 添加这些缺失的控制命令注册 ***
             @XmlElement(name = "LockFlowDirection", type = LockFlowDirection.class),
             @XmlElement(name = "UnlockFlowDirection", type = UnlockFlowDirection.class),
-            @XmlElement(name = "StageCtrl", type = StageCtrl.class),
+            @XmlElement(name = "StageCtrl", type = AdjustStage.class),
             @XmlElement(name = "CrossReportCtrl", type = CrossReportCtrl.class),
             @XmlElement(name = "CenterPlan", type = CenterPlan.class),
             @XmlElement(name = "SetDayPlanParam", type = SetDayPlanParam.class),
@@ -103,7 +103,12 @@ public class Operation implements Serializable {
             @XmlElement(name = "CrossStage", type = CrossStage.class),
             @XmlElement(name = "CrossSignalGroupStatus", type = CrossSignalGroupStatus.class),
             @XmlElement(name = "RouteControlModeStatus", type = RouteControlModeStatus.class),
-            @XmlElement(name = "RouteSpeed", type = RouteSpeed.class)
+            @XmlElement(name = "RouteSpeed", type = RouteSpeed.class),
+
+            // 新增：重传运行信息命令
+            @XmlElement(name = "CtrlVarLane", type = CtrlVarLane.class),
+            @XmlElement(name = "CrossCtrlInfo", type = CrossCtrlInfo.class),
+            @XmlElement(name = "CrossRunInfoRetrans", type = CrossRunInfoRetrans.class)
 
             // 通用对象支持
             //@XmlElement(name = "GenericObject", type = Object.class)

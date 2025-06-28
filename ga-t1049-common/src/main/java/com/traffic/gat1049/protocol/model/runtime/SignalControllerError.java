@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
  * 对应文档中的 SignalControllerError
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@XmlRootElement(name = "SignalControlerError")
+@XmlRootElement(name = "SignalControllerError")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SignalControllerError {//extends BaseState
 
@@ -29,8 +29,8 @@ public class SignalControllerError {//extends BaseState
      * 信号机编号
      */
     @NotBlank(message = "信号机编号不能为空")
-    @XmlElement(name = "SignalControlerID", required = true)
-    @JsonProperty("SignalControlerID")
+    @XmlElement(name = "SignalControllerID", required = true)
+    @JsonProperty("SignalControllerID")
     private String signalControllerId;
 
     /**

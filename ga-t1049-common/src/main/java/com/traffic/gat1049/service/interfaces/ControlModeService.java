@@ -1,6 +1,7 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
+import com.traffic.gat1049.protocol.model.command.CrossCtrlInfo;
 import com.traffic.gat1049.protocol.model.runtime.CrossModePlan;
 import com.traffic.gat1049.protocol.model.signal.PlanParam;
 import com.traffic.gat1049.model.enums.ControlMode;
@@ -110,4 +111,21 @@ public interface ControlModeService {
      * @throws BusinessException 业务异常
      */
     boolean canSwitchToMode(String crossId, ControlMode targetMode) throws BusinessException;
+
+    /**
+     * 设置路口控制方式方案（使用CrossCtrlInfo对象）
+     *
+     * @param ctrlInfo 控制方式方案信息
+     * @throws BusinessException 业务异常
+     */
+    void setControlModeInfo(CrossCtrlInfo ctrlInfo) throws BusinessException;
+
+    /**
+     * 获取路口控制方式方案信息
+     *
+     * @param crossId 路口编号
+     * @return 控制方式方案信息
+     * @throws BusinessException 业务异常
+     */
+    CrossCtrlInfo getControlModeInfo(String crossId) throws BusinessException;
 }

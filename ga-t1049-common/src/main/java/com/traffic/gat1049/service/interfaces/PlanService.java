@@ -60,14 +60,29 @@ public interface PlanService {
     void deletePlan(String crossId, Integer planNo) throws BusinessException;
 
     /**
-     * 设置中心控制方案
+     * 设置中心预案（新版本）
+     * 支持预案最大运行时长
+     *
+     * @param controlMode 控制模式
+     * @param maxRunTime 预案最大运行时长（分钟）
+     * @param planParam 配时方案参数
+     * @return 分配的方案号
+     * @throws BusinessException 业务异常
+     */
+    Integer setCenterPlan(ControlMode controlMode, Integer maxRunTime, PlanParam planParam) throws BusinessException;
+
+    /**
+     * 设置中心预案（兼容版本）
+     * 为保持向后兼容性，maxRunTime默认为60分钟
      *
      * @param controlMode 控制模式
      * @param planParam 配时方案参数
      * @return 分配的方案号
      * @throws BusinessException 业务异常
      */
-    Integer setCenterPlan(ControlMode controlMode, PlanParam planParam) throws BusinessException;
+    default Integer setCenterPlan(ControlMode controlMode, PlanParam planParam) throws BusinessException {
+        return setCenterPlan(controlMode, 60, planParam);
+    }
 
     /**
      * 获取当前控制模式和方案

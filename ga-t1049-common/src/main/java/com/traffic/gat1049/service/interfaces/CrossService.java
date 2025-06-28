@@ -102,7 +102,7 @@ public interface CrossService extends BaseService<CrossParam, String> {
      * @return 信号组序号列表
      * @throws BusinessException 业务异常
      */
-    List<Integer> getSignalGroupNos(String crossId) throws BusinessException;
+    List<String> getSignalGroupNos(String crossId) throws BusinessException;
 
     /**
      * 获取路口的配时方案序号列表
