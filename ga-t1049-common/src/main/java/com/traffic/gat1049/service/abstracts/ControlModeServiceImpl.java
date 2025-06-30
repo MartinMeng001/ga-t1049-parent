@@ -5,6 +5,7 @@ import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
+import com.traffic.gat1049.protocol.model.command.CrossCtrlInfo;
 import com.traffic.gat1049.protocol.model.runtime.CrossModePlan;
 import com.traffic.gat1049.protocol.model.signal.PlanParam;
 import com.traffic.gat1049.model.enums.ControlMode;
@@ -285,6 +286,16 @@ public class ControlModeServiceImpl implements ControlModeService {
         }
 
         return true;
+    }
+
+    @Override
+    public void setControlModeInfo(CrossCtrlInfo ctrlInfo) throws BusinessException {
+
+    }
+
+    @Override
+    public CrossCtrlInfo getControlModeInfo(String crossId) throws BusinessException {
+        return null;
     }
 
     /**

@@ -297,7 +297,7 @@ public class RouteServiceImpl implements RouteService {
         );
         route1.setRouteCrossList(routeCrossList1);
 
-        RouteParam route2 = new RouteParam("110100002", "示例大流量通道", RouteType.HIGH_FLOW);
+        RouteParam route2 = new RouteParam("110100002", "示例大流量通道", RouteType.EXPRESSWAY);
         route2.setSubRegionIdList(Arrays.asList("110100002", "110100003"));
 
         List<RouteCross> routeCrossList2 = Arrays.asList(

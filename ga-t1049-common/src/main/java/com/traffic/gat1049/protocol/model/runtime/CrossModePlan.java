@@ -19,7 +19,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "CrossModePlan")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CrossModePlan {//extends BaseState
+public class CrossModePlan {// 被CrossCtrlInfo替代，这里没有删除
 
     /**
      * 路口编号

@@ -281,7 +281,7 @@ public class CrossServiceImpl implements CrossService {
     }
 
     @Override
-    public List<Integer> getSignalGroupNos(String crossId) throws BusinessException {
+    public List<String> getSignalGroupNos(String crossId) throws BusinessException {
         CrossParam cross = findById(crossId);
         return cross.getSignalGroupNoList() != null ? cross.getSignalGroupNoList() : new ArrayList<>();
     }
@@ -359,40 +359,40 @@ public class CrossServiceImpl implements CrossService {
 
     private void initializeSampleData() {
         // 创建示例路口数据
-        CrossParam cross1 = new CrossParam("11010000100001", "示例路口1");
-        cross1.setFeature(CrossFeature.CROSS);
-        cross1.setGrade(CrossGrade.LEVEL_1);
-//        cross1.setLongitude(116.397128);
-//        cross1.setLatitude(39.916527);
-
-        List<Integer> laneNos1 = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8);
-        List<Integer> signalGroupNos1 = Arrays.asList(1, 2, 3, 4);
-        List<Integer> planNos1 = Arrays.asList(1, 2, 3);
-
-        cross1.setLaneNoList(laneNos1);
-        cross1.setSignalGroupNoList(signalGroupNos1);
-        cross1.setPlanNoList(planNos1);
-
-        CrossParam cross2 = new CrossParam("11010000100002", "示例路口2");
-        cross2.setFeature(CrossFeature.T_SHAPE);
-        cross2.setGrade(CrossGrade.LEVEL_2);
-//        cross2.setLongitude(116.407128);
-//        cross2.setLatitude(39.926527);
-
-        List<Integer> laneNos2 = Arrays.asList(1, 2, 3, 4, 5, 6);
-        List<Integer> signalGroupNos2 = Arrays.asList(1, 2, 3);
-        List<Integer> planNos2 = Arrays.asList(1, 2);
-
-        cross2.setLaneNoList(laneNos2);
-        cross2.setSignalGroupNoList(signalGroupNos2);
-        cross2.setPlanNoList(planNos2);
-
-        try {
-            save(cross1);
-            save(cross2);
-            logger.info("示例路口数据初始化完成");
-        } catch (BusinessException e) {
-            logger.error("示例路口数据初始化失败", e);
-        }
+//        CrossParam cross1 = new CrossParam("11010000100001", "示例路口1");
+//        cross1.setFeature(CrossFeature.CROSS);
+//        cross1.setGrade(CrossGrade.LEVEL_1);
+////        cross1.setLongitude(116.397128);
+////        cross1.setLatitude(39.916527);
+//
+//        List<Integer> laneNos1 = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8);
+//        List<Integer> signalGroupNos1 = Arrays.asList(1, 2, 3, 4);
+//        List<Integer> planNos1 = Arrays.asList(1, 2, 3);
+//
+//        cross1.setLaneNoList(laneNos1);
+//        cross1.setSignalGroupNoList(signalGroupNos1);
+//        cross1.setPlanNoList(planNos1);
+//
+//        CrossParam cross2 = new CrossParam("11010000100002", "示例路口2");
+//        cross2.setFeature(CrossFeature.T_SHAPE);
+//        cross2.setGrade(CrossGrade.LEVEL_2);
+////        cross2.setLongitude(116.407128);
+////        cross2.setLatitude(39.926527);
+//
+//        List<Integer> laneNos2 = Arrays.asList(1, 2, 3, 4, 5, 6);
+//        List<Integer> signalGroupNos2 = Arrays.asList(1, 2, 3);
+//        List<Integer> planNos2 = Arrays.asList(1, 2);
+//
+//        cross2.setLaneNoList(laneNos2);
+//        cross2.setSignalGroupNoList(signalGroupNos2);
+//        cross2.setPlanNoList(planNos2);
+//
+//        try {
+//            save(cross1);
+//            save(cross2);
+//            logger.info("示例路口数据初始化完成");
+//        } catch (BusinessException e) {
+//            logger.error("示例路口数据初始化失败", e);
+//        }
     }
 }

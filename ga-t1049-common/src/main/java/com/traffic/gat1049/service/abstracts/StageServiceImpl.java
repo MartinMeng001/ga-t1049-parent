@@ -354,68 +354,68 @@ public class StageServiceImpl implements StageService {
     }
 
     private void initializeSampleData() {
-        try {
-            // 创建示例阶段数据 - 路口1的阶段
-            StageParam stage1 = new StageParam("11010000100001", 1);
-            stage1.setStageName("东西直行");
-            stage1.setAttribute(0); // 一般阶段
-
-            List<SignalGroupStatus> statusList1 = Arrays.asList(
-                    createSignalGroupStatus(1, LampStatus.GREEN, 30),
-                    createSignalGroupStatus(2, LampStatus.RED, 0),
-                    createSignalGroupStatus(3, LampStatus.GREEN, 30),
-                    createSignalGroupStatus(4, LampStatus.RED, 0)
-            );
-            stage1.setSignalGroupStatusList(statusList1);
-
-            StageParam stage2 = new StageParam("11010000100001", 2);
-            stage2.setStageName("东西左转");
-            stage2.setAttribute(1); // 感应阶段
-
-            List<SignalGroupStatus> statusList2 = Arrays.asList(
-                    createSignalGroupStatus(1, LampStatus.RED, 0),
-                    createSignalGroupStatus(2, LampStatus.GREEN, 25),
-                    createSignalGroupStatus(3, LampStatus.RED, 0),
-                    createSignalGroupStatus(4, LampStatus.GREEN, 25)
-            );
-            stage2.setSignalGroupStatusList(statusList2);
-
-            StageParam stage3 = new StageParam("11010000100001", 3);
-            stage3.setStageName("南北直行");
-            stage3.setAttribute(0);
-
-            List<SignalGroupStatus> statusList3 = Arrays.asList(
-                    createSignalGroupStatus(1, LampStatus.RED, 0),
-                    createSignalGroupStatus(2, LampStatus.RED, 0),
-                    createSignalGroupStatus(3, LampStatus.RED, 0),
-                    createSignalGroupStatus(4, LampStatus.RED, 0)
-            );
-            stage3.setSignalGroupStatusList(statusList3);
-
-            // 创建示例阶段数据 - 路口2的阶段
-            StageParam stage4 = new StageParam("11010000100002", 1);
-            stage4.setStageName("主路直行");
-            stage4.setAttribute(0);
-
-            List<SignalGroupStatus> statusList4 = Arrays.asList(
-                    createSignalGroupStatus(1, LampStatus.GREEN, 35),
-                    createSignalGroupStatus(2, LampStatus.RED, 0),
-                    createSignalGroupStatus(3, LampStatus.GREEN, 35)
-            );
-            stage4.setSignalGroupStatusList(statusList4);
-
-            save(stage1);
-            save(stage2);
-            save(stage3);
-            save(stage4);
-
-            logger.info("示例阶段数据初始化完成");
-        } catch (BusinessException e) {
-            logger.error("示例阶段数据初始化失败", e);
-        }
+//        try {
+//            // 创建示例阶段数据 - 路口1的阶段
+//            StageParam stage1 = new StageParam("11010000100001", 1);
+//            stage1.setStageName("东西直行");
+//            stage1.setAttribute(0); // 一般阶段
+//
+//            List<SignalGroupStatus> statusList1 = Arrays.asList(
+//                    createSignalGroupStatus(1, LampStatus.GREEN, 30),
+//                    createSignalGroupStatus(2, LampStatus.RED, 0),
+//                    createSignalGroupStatus(3, LampStatus.GREEN, 30),
+//                    createSignalGroupStatus(4, LampStatus.RED, 0)
+//            );
+//            stage1.setSignalGroupStatusList(statusList1);
+//
+//            StageParam stage2 = new StageParam("11010000100001", 2);
+//            stage2.setStageName("东西左转");
+//            stage2.setAttribute(1); // 感应阶段
+//
+//            List<SignalGroupStatus> statusList2 = Arrays.asList(
+//                    createSignalGroupStatus(1, LampStatus.RED, 0),
+//                    createSignalGroupStatus(2, LampStatus.GREEN, 25),
+//                    createSignalGroupStatus(3, LampStatus.RED, 0),
+//                    createSignalGroupStatus(4, LampStatus.GREEN, 25)
+//            );
+//            stage2.setSignalGroupStatusList(statusList2);
+//
+//            StageParam stage3 = new StageParam("11010000100001", 3);
+//            stage3.setStageName("南北直行");
+//            stage3.setAttribute(0);
+//
+//            List<SignalGroupStatus> statusList3 = Arrays.asList(
+//                    createSignalGroupStatus(1, LampStatus.RED, 0),
+//                    createSignalGroupStatus(2, LampStatus.RED, 0),
+//                    createSignalGroupStatus(3, LampStatus.RED, 0),
+//                    createSignalGroupStatus(4, LampStatus.RED, 0)
+//            );
+//            stage3.setSignalGroupStatusList(statusList3);
+//
+//            // 创建示例阶段数据 - 路口2的阶段
+//            StageParam stage4 = new StageParam("11010000100002", 1);
+//            stage4.setStageName("主路直行");
+//            stage4.setAttribute(0);
+//
+//            List<SignalGroupStatus> statusList4 = Arrays.asList(
+//                    createSignalGroupStatus(1, LampStatus.GREEN, 35),
+//                    createSignalGroupStatus(2, LampStatus.RED, 0),
+//                    createSignalGroupStatus(3, LampStatus.GREEN, 35)
+//            );
+//            stage4.setSignalGroupStatusList(statusList4);
+//
+//            save(stage1);
+//            save(stage2);
+//            save(stage3);
+//            save(stage4);
+//
+//            logger.info("示例阶段数据初始化完成");
+//        } catch (BusinessException e) {
+//            logger.error("示例阶段数据初始化失败", e);
+//        }
     }
 
-    private SignalGroupStatus createSignalGroupStatus(Integer signalGroupNo, LampStatus lampStatus, Integer countDown) {
+    private SignalGroupStatus createSignalGroupStatus(Integer signalGroupNo, String lampStatus, Integer countDown) {
         SignalGroupStatus status = new SignalGroupStatus();
         status.setSignalGroupNo(signalGroupNo);
         status.setLampStatus(lampStatus);

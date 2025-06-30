@@ -1,4 +1,5 @@
 package com.traffic.gat1049.service.abstracts;
+
 import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
@@ -10,14 +11,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * 系统服务实现
+ * 已更新以支持新的SysState定义（包含Time字段）
  */
-
 public class SystemServiceImpl implements SystemService {
 
     private static final Logger logger = LoggerFactory.getLogger(SystemServiceImpl.class);
@@ -34,7 +33,7 @@ public class SystemServiceImpl implements SystemService {
 
     @Override
     public SysInfo getSystemInfo() throws BusinessException {
-        SysInfo info = dataPrider.getSystemInfo();//systemInfo.get();
+        SysInfo info = dataPrider.getSystemInfo();
         if (info == null) {
             throw new DataNotFoundException("系统信息未配置");
         }
@@ -49,8 +48,6 @@ public class SystemServiceImpl implements SystemService {
         }
 
         validateSystemInfo(sysInfo);
-
-//        sysInfo.setUpdateTime(LocalDateTime.now());
         systemInfo.set(sysInfo);
 
         logger.info("更新系统信息: 系统名称={}, 版本={}, 供应商={}",
@@ -61,7 +58,7 @@ public class SystemServiceImpl implements SystemService {
 
     @Override
     public SysState getSystemState() throws BusinessException {
-        SysState state = dataPrider.getSystemState();//systemState.get();
+        SysState state = dataPrider.getSystemState();
         if (state == null) {
             throw new DataNotFoundException("系统状态未初始化");
         }
@@ -74,11 +71,37 @@ public class SystemServiceImpl implements SystemService {
             throw new BusinessException("INVALID_PARAMETER", "系统状态不能为空");
         }
 
+        // 创建新的SysState对象，包含时间信息
         SysState sysState = new SysState(state);
-//        sysState.setStateTime(LocalDateTime.now());
         systemState.set(sysState);
 
-        logger.info("更新系统状态: {}", state.getDescription());
+        logger.info("更新系统状态: {}, 时间: {}", state.getDescription(), sysState.getTime());
+    }
+
+    @Override
+    public void updateSystemState(SysState sysState) throws BusinessException {
+        if (sysState == null) {
+            throw new BusinessException("INVALID_PARAMETER", "系统状态对象不能为空");
+        }
+
+        if (sysState.getValue() == null) {
+            throw new BusinessException("INVALID_PARAMETER", "系统状态值不能为空");
+        }
+
+        // 如果没有时间信息，则设置当前时间
+        if (sysState.getTime() == null || sysState.getTime().trim().isEmpty()) {
+            sysState.setTimeFromLocalDateTime(LocalDateTime.now());
+        }
+
+        // 验证时间格式
+        if (!sysState.isValidTimeFormat()) {
+            throw new BusinessException("INVALID_PARAMETER", "时间格式不正确，应为yyyy-MM-dd HH:mm:ss");
+        }
+
+        systemState.set(sysState);
+
+        logger.info("更新系统状态: {}, 时间: {}",
+                sysState.getValue().getDescription(), sysState.getTime());
     }
 
     @Override
@@ -127,53 +150,80 @@ public class SystemServiceImpl implements SystemService {
         }
     }
 
-    private void initializeDefaultSystemInfo() {
-        SysInfo info = new SysInfo("GA/T 1049.2 交通信号控制系统", "2.0", "系统默认供应商");
-
-        // 添加默认路口列表
-        List<String> crossIds = new ArrayList<>();
-        crossIds.add("11010000100001");
-        crossIds.add("11010000100002");
-        info.setCrossIdList(crossIds);
-
-        // 添加默认信号机列表
-        List<String> signalControllerIds = new ArrayList<>();
-        signalControllerIds.add("11010000000000001");
-        signalControllerIds.add("11010000000000002");
-        info.setSignalControllerIdList(signalControllerIds);
-
-//        info.setCreateTime(LocalDateTime.now());
-//        info.setUpdateTime(LocalDateTime.now());
-
-        systemInfo.set(info);
-        logger.info("初始化默认系统信息完成");
+    /**
+     * 初始化默认系统信息
+     */
+    private void initializeDefaultSystemInfo() throws BusinessException {
+        try {
+            SysInfo defaultInfo = createDefaultSystemInfo();
+            systemInfo.set(defaultInfo);
+            logger.info("初始化默认系统信息完成");
+        } catch (Exception e) {
+            throw new BusinessException("SYSTEM_INIT_ERROR", "初始化默认系统信息失败", e);
+        }
     }
 
-    private void initializeDefaultSystemState() {
-        SysState state = new SysState(SystemState.ONLINE);
-        systemState.set(state);
-        logger.info("初始化默认系统状态完成");
+    /**
+     * 初始化默认系统状态
+     */
+    private void initializeDefaultSystemState() throws BusinessException {
+        try {
+            SysState defaultState = new SysState(SystemState.ONLINE);
+            systemState.set(defaultState);
+            logger.info("初始化默认系统状态: {}, 时间: {}",
+                    defaultState.getValue().getDescription(), defaultState.getTime());
+        } catch (Exception e) {
+            throw new BusinessException("SYSTEM_INIT_ERROR", "初始化默认系统状态失败", e);
+        }
     }
 
+    /**
+     * 创建默认系统信息
+     */
+    private SysInfo createDefaultSystemInfo() {
+        SysInfo sysInfo = new SysInfo();
+        sysInfo.setSysName("交通信号控制系统");
+        sysInfo.setSysVersion("1.0.0");
+        sysInfo.setSupplier("Traffic Control Systems Ltd.");
+        return sysInfo;
+    }
+
+    /**
+     * 验证系统信息
+     */
     private void validateSystemInfo(SysInfo sysInfo) throws BusinessException {
         if (sysInfo.getSysName() == null || sysInfo.getSysName().trim().isEmpty()) {
             throw new BusinessException("INVALID_PARAMETER", "系统名称不能为空");
         }
-
         if (sysInfo.getSysVersion() == null || sysInfo.getSysVersion().trim().isEmpty()) {
-            throw new BusinessException("INVALID_PARAMETER", "版本号不能为空");
+            throw new BusinessException("INVALID_PARAMETER", "系统版本不能为空");
         }
-
         if (sysInfo.getSupplier() == null || sysInfo.getSupplier().trim().isEmpty()) {
             throw new BusinessException("INVALID_PARAMETER", "供应商不能为空");
         }
+    }
 
-        if (sysInfo.getCrossIdList() == null || sysInfo.getCrossIdList().isEmpty()) {
-            throw new BusinessException("INVALID_PARAMETER", "路口编号列表不能为空");
+    /**
+     * 获取系统状态统计信息
+     */
+    public String getSystemStateInfo() throws BusinessException {
+        SysState state = getSystemState();
+        if (state == null) {
+            return "系统状态未知";
         }
 
-        if (sysInfo.getSignalControllerIdList() == null || sysInfo.getSignalControllerIdList().isEmpty()) {
-            throw new BusinessException("INVALID_PARAMETER", "信号机编号列表不能为空");
+        StringBuilder info = new StringBuilder();
+        info.append("系统状态: ").append(state.getValue().getDescription());
+        info.append(", 更新时间: ").append(state.getTime());
+
+        if (state.isOnline()) {
+            info.append(" [正常运行]");
+        } else if (state.isOffline()) {
+            info.append(" [离线状态]");
+        } else if (state.hasError()) {
+            info.append(" [异常故障]");
         }
+
+        return info.toString();
     }
 }

@@ -11,8 +11,6 @@ import com.traffic.gat1049.service.interfaces.DayPlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -156,6 +154,46 @@ public class DayPlanServiceImpl implements DayPlanService {
 
         // 验证时段信息
         validatePeriods(dayPlan.getPeriodList());
+    }
+
+    @Override
+    public boolean isDayPlanNameDuplicate(String crossId, String dayPlanName, Integer excludeDayPlanNo) throws BusinessException {
+        return false;
+    }
+
+    @Override
+    public DayPlanParam findByName(String crossId, String dayPlanName) throws BusinessException {
+        return null;
+    }
+
+    @Override
+    public List<DayPlanParam> batchSetDayPlanParams(OperationType operationType, List<DayPlanParam> dayPlanParams) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public DayPlanParam copyDayPlan(String sourceCrossId, Integer sourceDayPlanNo, String targetCrossId, Integer targetDayPlanNo, String targetDayPlanName) throws BusinessException {
+        return null;
+    }
+
+    @Override
+    public boolean isDayPlanInUse(String crossId, Integer dayPlanNo) throws BusinessException {
+        return false;
+    }
+
+    @Override
+    public List<Integer> getDayPlanUsage(String crossId, Integer dayPlanNo) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public void validatePeriodConfiguration(DayPlanParam dayPlanParam) throws BusinessException {
+
+    }
+
+    @Override
+    public DayPlanParam optimizePeriodConfiguration(DayPlanParam dayPlanParam) throws BusinessException {
+        return null;
     }
 
     /**

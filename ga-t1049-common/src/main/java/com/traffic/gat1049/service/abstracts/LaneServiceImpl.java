@@ -351,7 +351,7 @@ public class LaneServiceImpl implements LaneService {
         varLaneStatus.setCrossId(laneParam.getCrossId());
         varLaneStatus.setLaneNo(laneParam.getLaneNo());
         varLaneStatus.setCurMovement(laneParam.getMovement()); // 使用默认转向
-        varLaneStatus.setCurMode(VarLaneMode.FIXED); // 默认为固定模式
+        varLaneStatus.setCurMode(VarLaneMode.CONTROLLER_FIXED); // 默认为固定模式
 //        varLaneStatus.setCreateTime(LocalDateTime.now());
 //        varLaneStatus.setUpdateTime(LocalDateTime.now());
 

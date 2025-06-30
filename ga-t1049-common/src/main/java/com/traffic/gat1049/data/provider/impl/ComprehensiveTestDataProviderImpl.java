@@ -374,21 +374,21 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<SignalControler> getAllSignalControllers() throws BusinessException {
+    public List<SignalController> getAllSignalControllers() throws BusinessException {
         ensureInitialized();
 
         String cacheKey = "AllSignalControllers";
         if (dataCache.containsKey(cacheKey)) {
-            return (List<SignalControler>) dataCache.get(cacheKey);
+            return (List<SignalController>) dataCache.get(cacheKey);
         }
 
         try {
-            List<SignalControler> controllers = new ArrayList<>();
+            List<SignalController> controllers = new ArrayList<>();
             JsonNode controllerArray = testDataRoot.get("SignalParam");
 
             if (controllerArray != null && controllerArray.isArray()) {
                 for (JsonNode controllerNode : controllerArray) {
-                    SignalControler controller = parseSignalController(controllerNode);
+                    SignalController controller = parseSignalController(controllerNode);
                     controllers.add(controller);
                 }
             }
@@ -401,28 +401,28 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     }
 
     @Override
-    public SignalControler getSignalControllerById(String signalControllerId) throws BusinessException {
+    public SignalController getSignalControllerById(String signalControllerId) throws BusinessException {
         if (signalControllerId == null || signalControllerId.trim().isEmpty()) {
             throw new BusinessException("INVALID_PARAMETER", "信号机ID不能为空");
         }
 
-        List<SignalControler> controllers = getAllSignalControllers();
+        List<SignalController> controllers = getAllSignalControllers();
         return controllers.stream()
-                .filter(controller -> signalControllerId.equals(controller.getSignalControllerId()))
+                .filter(controller -> signalControllerId.equals(controller.getSignalControllerID()))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException("未找到信号机ID: " + signalControllerId));
     }
 
     @Override
-    public List<SignalControler> getSignalControllersByCrossId(String crossId) throws BusinessException {
+    public List<SignalController> getSignalControllersByCrossId(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
         }
 
-        List<SignalControler> allControllers = getAllSignalControllers();
+        List<SignalController> allControllers = getAllSignalControllers();
         return allControllers.stream()
-                .filter(controller -> controller.getCrossIdList() != null &&
-                        controller.getCrossIdList().contains(crossId))
+                .filter(controller -> controller.getCrossIDList() != null &&
+                        controller.getCrossIDList().contains(crossId))
                 .collect(Collectors.toList());
     }
 
@@ -1423,31 +1423,77 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
     private CrossParam parseCrossParam(JsonNode crossNode) {
         CrossParam cross = new CrossParam();
+
+        // 基本信息
         cross.setCrossId(crossNode.path("CrossID").asText());
         cross.setCrossName(crossNode.path("CrossName").asText());
-        cross.setFeature(CrossFeature.fromCode(crossNode.path("Feature").asText()));
-        cross.setGrade(CrossGrade.fromCode(crossNode.path("Grade").asText()));
+
+        // 路口形状和等级
+        String featureCode = crossNode.path("Feature").asText();
+        if (!featureCode.isEmpty()) {
+            try {
+                cross.setFeature(CrossFeature.fromCode(featureCode));
+            } catch (IllegalArgumentException e) {
+                logger.warn("未知的路口形状代码: {}, 使用默认值", featureCode);
+                cross.setFeature(CrossFeature.OTHER);
+            }
+        }
+
+        String gradeCode = crossNode.path("Grade").asText();
+        if (!gradeCode.isEmpty()) {
+            try {
+                cross.setGrade(CrossGrade.fromCode(gradeCode));
+            } catch (IllegalArgumentException e) {
+                logger.warn("未知的路口等级代码: {}, 使用默认值", gradeCode);
+                cross.setGrade(CrossGrade.OTHER);
+            }
+        }
+
+        // 各种列表字段
         cross.setDetNoList(parseIntList(crossNode, "DetNoList"));
         cross.setLaneNoList(parseIntList(crossNode, "LaneNoList"));
+        cross.setPedestrianNoList(parseIntList(crossNode, "PedestrianNoList")); // 新增
         cross.setLampGroupNoList(parseIntList(crossNode, "LampGroupNoList"));
-        cross.setSignalGroupNoList(parseIntList(crossNode, "SignalGroupNoList"));
+
+        // 信号组序号列表 - 注意这里改为String类型
+        cross.setSignalGroupNoList(parseStringList(crossNode, "SignalGroupNoList"));
+
+        // 绿冲突矩阵 - 新增
+        cross.setGreenConflictMatrix(crossNode.path("GreenConflictMatrix").asText());
+
+        // 其他序号列表
         cross.setStageNoList(parseIntList(crossNode, "StageNoList"));
         cross.setPlanNoList(parseIntList(crossNode, "PlanNoList"));
         cross.setDayPlanNoList(parseIntList(crossNode, "DayPlanNoList"));
         cross.setScheduleNoList(parseIntList(crossNode, "ScheduleNoList"));
-//        cross.setLongitude(crossNode.path("Longitude").asDouble());
-//        cross.setLatitude(crossNode.path("Latitude").asDouble());
-//        cross.setAltitude(crossNode.path("Altitude").asDouble());
+
+        // 坐标信息 - 新增
+        if (crossNode.has("Longitude") && !crossNode.path("Longitude").isNull()) {
+            cross.setLongitude(crossNode.path("Longitude").asDouble());
+        }
+        if (crossNode.has("Latitude") && !crossNode.path("Latitude").isNull()) {
+            cross.setLatitude(crossNode.path("Latitude").asDouble());
+        }
+        if (crossNode.has("Altitude") && !crossNode.path("Altitude").isNull()) {
+            cross.setAltitude(crossNode.path("Altitude").asInt());
+        }
+
+        // 如果绿冲突矩阵为空，生成默认矩阵
+        if ((cross.getGreenConflictMatrix() == null || cross.getGreenConflictMatrix().isEmpty())
+                && cross.getSignalGroupNoList() != null && !cross.getSignalGroupNoList().isEmpty()) {
+            cross.generateDefaultGreenConflictMatrix();
+        }
+
         return cross;
     }
 
-    private SignalControler parseSignalController(JsonNode controllerNode) {
-        SignalControler controller = new SignalControler();
-        controller.setSignalControllerId(controllerNode.path("SignalControlerID").asText());
+    private SignalController parseSignalController(JsonNode controllerNode) {
+        SignalController controller = new SignalController();
+        controller.setSignalControllerID(controllerNode.path("SignalControlerID").asText());
         controller.setSupplier(controllerNode.path("Supplier").asText());
         controller.setType(controllerNode.path("Type").asText());
         controller.setCommMode(CommMode.fromCode(controllerNode.path("CommMode").asText()));
-        controller.setCrossIdList(parseStringList(controllerNode, "CrossIDList"));
+        controller.setCrossIDList(parseStringList(controllerNode, "CrossIDList"));
         return controller;
     }
 
@@ -1501,7 +1547,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         signalGroup.setCrossId(signalGroupNode.path("CrossID").asText());
         signalGroup.setSignalGroupNo(signalGroupNode.path("SignalGroupNo").asInt());
         signalGroup.setName(signalGroupNode.path("Name").asText());
-        signalGroup.setGreenFlushLen(signalGroupNode.path("GreenFlushLen").asInt());
+        signalGroup.setGreenFlashLen(signalGroupNode.path("GreenFlushLen").asInt());
         signalGroup.setLampGroupNoList(parseIntList(signalGroupNode, "LampGroupNoList"));
         return signalGroup;
     }
@@ -1556,11 +1602,11 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         String lampStatusCode = statusNode.path("LampStatus").asText();
         if (lampStatusCode != null && !lampStatusCode.trim().isEmpty()) {
             try {
-                status.setLampStatus(LampStatus.fromCode(lampStatusCode));
+                status.setLampStatus(lampStatusCode);
             } catch (IllegalArgumentException e) {
                 // 记录日志并设置默认值或抛出更友好的异常
                 logger.warn("未知的灯态代码: {}, 使用默认值OFF", lampStatusCode);
-                status.setLampStatus(LampStatus.OFF);
+                status.setLampStatus("111");
             }
         }
 
@@ -1720,10 +1766,10 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         String startTimeStr = periodNode.path("StartTime").asText();
         if (startTimeStr != null && !startTimeStr.isEmpty() && !"null".equals(startTimeStr)) {
             // 使用Period类的标准化方法处理时间格式
-            period.setStartTime(Period.normalizeTimeFormat2(startTimeStr));
+            period.setStartTime(Period.normalizeTimeFormat(startTimeStr));
         } else {
             // 设置默认时间
-            period.setStartTime("00:00:00");
+            period.setStartTime("00:00");
         }
 
         // 解析配时方案号 - 根据testdata.json，PlanNo可能是字符串形式的数字（如"001"）

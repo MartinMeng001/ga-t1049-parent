@@ -99,4 +99,14 @@ public interface ServiceFactory {
      * 获取干线控制服务
      */
     RouteControlService getRouteControlService();
+
+    /**
+     * 获取干线控制服务
+     */
+    RunInfoRetransService getRunInfoRetransService();
+    // 新增：获取机柜门状态服务
+    /**
+     * 获取机柜门状态服务
+     */
+    DoorStatusService getDoorStatusService();
 }

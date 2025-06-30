@@ -75,60 +75,78 @@
   ],
   "CrossParam": [
     {
-      "CrossID": "11010110000001",
-      "CrossName": "长安街与王府井大街",
-      "Feature": "11",
+      "CrossID": "11010180000001",
+      "CrossName": "长安街与建国门内大街交叉口",
+      "Feature": "24",
       "Grade": "11",
       "DetNoList": [
-        "001",
-        "002",
-        "003",
-        "004"
+        1, 2, 3, 4
       ],
       "LaneNoList": [
-        "01",
-        "02",
-        "03",
-        "04",
-        "05",
-        "06",
-        "07",
-        "08"
+        1, 2, 3, 4, 5, 6, 7, 8
+      ],
+      "PedestrianNoList": [
+        1, 2, 3, 4
       ],
       "LampGroupNoList": [
-        "01",
-        "02",
-        "03",
-        "04"
+        1, 2, 3, 4
       ],
       "SignalGroupNoList": [
-        "01",
-        "02",
-        "03",
-        "04"
+        "01", "02", "03", "04"
       ],
+      "GreenConflictMatrix": "0110100101100110",
       "StageNoList": [
-        "01",
-        "02",
-        "03",
-        "04"
+        1, 2, 3, 4
       ],
       "PlanNoList": [
-        "001",
-        "002",
-        "003"
+        1, 2, 3
       ],
       "DayPlanNoList": [
-        "00001",
-        "00002"
+        1, 2
       ],
       "ScheduleNoList": [
-        "001",
-        "002"
+        1, 2
       ],
       "Longitude": 116.4074,
       "Latitude": 39.9042,
-      "Altitude": 45.5
+      "Altitude": 45
+    },
+    {
+      "CrossID": "11010180000002",
+      "CrossName": "长安街与王府井大街交叉口",
+      "Feature": "24",
+      "Grade": "12",
+      "DetNoList": [
+        1, 2
+      ],
+      "LaneNoList": [
+        1, 2, 3, 4
+      ],
+      "PedestrianNoList": [
+        1, 2
+      ],
+      "LampGroupNoList": [
+        1, 2
+      ],
+      "SignalGroupNoList": [
+        "01", "02"
+      ],
+      "GreenConflictMatrix": "0110",
+      "StageNoList": [
+        1, 2
+      ],
+      "PlanNoList": [
+        1, 2
+      ],
+      "DayPlanNoList": [
+        1
+      ],
+      "ScheduleNoList": [
+        1
+      ],
+      "Longitude": 116.4055,
+      "Latitude": 39.9082,
+      "Altitude": 44
     }
   ],
   "SignalParam": [
@@ -371,22 +389,27 @@
     "CrossSignalGroupStatus": [
       {
         "CrossID": "11010110000001",
+        "LampStatusTime": "2025-06-27 14:30:25.123",
         "SignalGroupStatusList": [
           {
             "SignalGroupNo": "01",
-            "LampStatus": "21"
+            "LampStatus": "112",
+            "RemainTime": 45
           },
           {
             "SignalGroupNo": "02",
-            "LampStatus": "23"
+            "LampStatus": "112",
+            "RemainTime": 45
           },
           {
             "SignalGroupNo": "03",
-            "LampStatus": "21"
+            "LampStatus": "211",
+            "RemainTime": 65
           },
           {
             "SignalGroupNo": "04",
-            "LampStatus": "23"
+            "LampStatus": "211",
+            "RemainTime": 65
           }
         ]
       }

@@ -134,7 +134,7 @@ public class VariableLaneHandler extends AbstractProtocolHandler {
         serviceFactory.getLaneService().updateVarLaneStatus(varLaneStatus);
 
         // 如果是自适应模式，可能需要触发相关的自适应控制逻辑
-        if (VarLaneMode.ADAPTIVE.equals(mode)) {
+        if (VarLaneMode.CONTROLLER_ADAPTIVE.equals(mode)) {
             logger.info("Variable lane {} at cross {} switched to adaptive mode", laneNo, crossId);
             // TODO: 触发自适应控制逻辑
         }

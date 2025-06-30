@@ -148,6 +148,8 @@ public final class GatConstants {
         public static final String VAR_LANE_STATUS = "VarLaneStatus";
         public static final String ROUTE_CONTROL_MODE = "RouteControlMode";
         public static final String ROUTE_SPEED = "RouteSpeed";
+        // 新增：信号机柜门状态常量
+        public static final String SC_DOOR_STATUS = "SCDoorStatus";
     }
 
     /**

@@ -146,6 +146,55 @@ public class PlanServiceImpl implements PlanService {
     }
 
     @Override
+    public Integer setCenterPlan(ControlMode controlMode, Integer maxRunTime, PlanParam planParam)
+            throws BusinessException {
+
+        // 参数验证
+        if (controlMode == null) {
+            throw new ValidationException("controlMode", "控制模式不能为空");
+        }
+        if (maxRunTime == null || maxRunTime < 1 || maxRunTime > 1440) {
+            throw new ValidationException("maxRunTime", "预案最大运行时长必须在1-1440分钟范围内");
+        }
+        if (planParam == null) {
+            throw new ValidationException("planParam", "配时方案参数不能为空");
+        }
+
+        validatePlan(planParam);
+
+        String crossId = planParam.getCrossId();
+        Integer planNo = planParam.getPlanNo();
+
+        // 如果方案号为0或null，自动分配新的方案号
+        if (planNo == null || planNo == 0) {
+            planNo = planNoGenerator.getAndIncrement();
+            planParam.setPlanNo(planNo);
+        }
+
+        // 保存配时方案
+        addPlan(crossId, planParam);
+
+        // 设置当前控制模式
+        CrossModePlan crossModePlan = new CrossModePlan();
+        crossModePlan.setCrossId(crossId);
+        crossModePlan.setControlMode(controlMode);
+        crossModePlan.setPlanNo(planNo);
+
+        currentModeStorage.put(crossId, crossModePlan);
+
+        // 保存预案运行时间信息
+//        String planKey = generatePlanKey(crossId, planNo);
+//        PlanRunTimeInfo runTimeInfo = new PlanRunTimeInfo(
+//                crossId, planNo, maxRunTime, LocalDateTime.now());
+//        planRunTimeStorage.put(planKey, runTimeInfo);
+
+        logger.info("设置中心控制方案成功: crossId={}, controlMode={}, planNo={}, maxRunTime={}分钟",
+                crossId, controlMode.getDescription(), planNo, maxRunTime);
+
+        return planNo;
+    }
+
+    @Override
     public CrossModePlan getCurrentControlMode(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");

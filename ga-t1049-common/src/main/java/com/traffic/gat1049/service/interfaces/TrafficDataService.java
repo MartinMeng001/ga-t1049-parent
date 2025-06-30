@@ -4,8 +4,7 @@ import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.model.dto.TrafficDataQueryDto;
 import com.traffic.gat1049.protocol.model.traffic.CrossTrafficData;
 import com.traffic.gat1049.protocol.model.traffic.StageTrafficData;
-import com.traffic.gat1049.protocol.model.runtime.CrossCycle;
-import com.traffic.gat1049.protocol.model.runtime.CrossStage;
+import com.traffic.gat1049.protocol.model.runtime.*;
 import com.traffic.gat1049.model.vo.TrafficStatisticsVo;
 
 import java.time.LocalDateTime;
@@ -40,7 +39,6 @@ public interface TrafficDataService {
      * 获取阶段交通流数据
      *
      * @param crossId 路口编号
-     * @param stageNo 阶段号
      * @param startTime 开始时间
      * @param endTime 结束时间
      * @return 阶段交通流数据
@@ -141,4 +139,269 @@ public interface TrafficDataService {
      * @throws BusinessException 业务异常
      */
     void cleanHistoryData(LocalDateTime beforeDate) throws BusinessException;
+
+    // ==================== 为重传功能新增的历史数据查询方法 ====================
+
+    /**
+     * 查询指定时间段内的信号机故障信息
+     *
+     * @param crossId   路口编号
+     * @param startTime 开始时间 (格式: yyyyMMddHHmmss)
+     * @param endTime   结束时间 (格式: yyyyMMddHHmmss)
+     * @return 故障信息列表
+     * @throws BusinessException 业务异常
+     */
+    List<SignalControllerError> getSignalControllerErrors(String crossId, String startTime, String endTime)
+            throws BusinessException;
+
+    /**
+     * 查询指定时间段内的路口控制方式方案
+     *
+     * @param crossId   路口编号
+     * @param startTime 开始时间 (格式: yyyyMMddHHmmss)
+     * @param endTime   结束时间 (格式: yyyyMMddHHmmss)
+     * @return 控制方式方案列表
+     * @throws BusinessException 业务异常
+     */
+    List<CrossModePlan> getCrossModePlans(String crossId, String startTime, String endTime)
+            throws BusinessException;
+
+    /**
+     * 查询指定时间段内的路口交通流数据
+     *
+     * @param crossId   路口编号
+     * @param startTime 开始时间 (格式: yyyyMMddHHmmss)
+     * @param endTime   结束时间 (格式: yyyyMMddHHmmss)
+     * @return 交通流数据列表
+     * @throws BusinessException 业务异常
+     */
+    List<CrossTrafficData> getCrossTrafficData(String crossId, String startTime, String endTime)
+            throws BusinessException;
+
+    /**
+     * 查询指定时间段内的路口周期数据
+     *
+     * @param crossId   路口编号
+     * @param startTime 开始时间 (格式: yyyyMMddHHmmss)
+     * @param endTime   结束时间 (格式: yyyyMMddHHmmss)
+     * @return 周期数据列表
+     * @throws BusinessException 业务异常
+     */
+    List<CrossCycle> getCrossCycles(String crossId, String startTime, String endTime)
+            throws BusinessException;
+
+    /**
+     * 查询指定时间段内的路口阶段数据
+     *
+     * @param crossId   路口编号
+     * @param startTime 开始时间 (格式: yyyyMMddHHmmss)
+     * @param endTime   结束时间 (格式: yyyyMMddHHmmss)
+     * @return 阶段数据列表
+     * @throws BusinessException 业务异常
+     */
+    List<CrossStage> getCrossStages(String crossId, String startTime, String endTime)
+            throws BusinessException;
+
+    /**
+     * 查询指定时间段内的信号组灯态数据
+     *
+     * @param crossId   路口编号
+     * @param startTime 开始时间 (格式: yyyyMMddHHmmss)
+     * @param endTime   结束时间 (格式: yyyyMMddHHmmss)
+     * @return 信号组灯态数据列表
+     * @throws BusinessException 业务异常
+     */
+    List<CrossSignalGroupStatus> getSignalGroupStatus(String crossId, String startTime, String endTime)
+            throws BusinessException;
+
+    /**
+     * 查询指定时间段内的阶段交通流数据
+     *
+     * @param crossId   路口编号
+     * @param startTime 开始时间 (格式: yyyyMMddHHmmss)
+     * @param endTime   结束时间 (格式: yyyyMMddHHmmss)
+     * @return 阶段交通流数据列表
+     * @throws BusinessException 业务异常
+     */
+    List<StageTrafficData> getStageTrafficData(String crossId, String startTime, String endTime)
+            throws BusinessException;
+
+    // ==================== 批量查询方法（可选实现） ====================
+
+    /**
+     * 批量查询多个路口的历史数据
+     *
+     * @param crossIds  路口编号列表
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @param dataType  数据类型
+     * @return 数据列表
+     * @throws BusinessException 业务异常
+     */
+    List<Object> getBatchHistoryData(List<String> crossIds, String startTime, String endTime, String dataType)
+            throws BusinessException;
+
+    /**
+     * 统计指定时间段内的数据记录数
+     *
+     * @param crossId   路口编号
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @param dataType  数据类型
+     * @return 记录数
+     * @throws BusinessException 业务异常
+     */
+    long countHistoryData(String crossId, String startTime, String endTime, String dataType)
+            throws BusinessException;
+
+    /**
+     * 分页查询历史数据（用于大数据量场景）
+     *
+     * @param crossId   路口编号
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @param dataType  数据类型
+     * @param pageNum   页码（从1开始）
+     * @param pageSize  每页大小
+     * @return 分页结果
+     * @throws BusinessException 业务异常
+     */
+    PageResult<Object> getHistoryDataByPage(String crossId, String startTime, String endTime,
+                                            String dataType, int pageNum, int pageSize)
+            throws BusinessException;
+
+    // ==================== 数据验证和清理方法 ====================
+
+    /**
+     * 验证历史数据完整性
+     *
+     * @param crossId   路口编号
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @param dataType  数据类型
+     * @return 验证结果
+     * @throws BusinessException 业务异常
+     */
+    DataIntegrityResult validateDataIntegrity(String crossId, String startTime, String endTime, String dataType)
+            throws BusinessException;
+
+    /**
+     * 清理过期的历史数据
+     *
+     * @param beforeTime 清理此时间之前的数据
+     * @param dataType   数据类型
+     * @return 清理的记录数
+     * @throws BusinessException 业务异常
+     */
+    long cleanupExpiredData(String beforeTime, String dataType) throws BusinessException;
+
+    // ==================== 辅助类定义 ====================
+
+    /**
+     * 分页结果类
+     */
+    class PageResult<T> {
+        private List<T> data;
+        private long totalCount;
+        private int pageNum;
+        private int pageSize;
+        private int totalPages;
+
+        public PageResult() {}
+
+        public PageResult(List<T> data, long totalCount, int pageNum, int pageSize) {
+            this.data = data;
+            this.totalCount = totalCount;
+            this.pageNum = pageNum;
+            this.pageSize = pageSize;
+            this.totalPages = (int) Math.ceil((double) totalCount / pageSize);
+        }
+
+        // Getters and Setters
+        public List<T> getData() { return data; }
+        public void setData(List<T> data) { this.data = data; }
+
+        public long getTotalCount() { return totalCount; }
+        public void setTotalCount(long totalCount) { this.totalCount = totalCount; }
+
+        public int getPageNum() { return pageNum; }
+        public void setPageNum(int pageNum) { this.pageNum = pageNum; }
+
+        public int getPageSize() { return pageSize; }
+        public void setPageSize(int pageSize) { this.pageSize = pageSize; }
+
+        public int getTotalPages() { return totalPages; }
+        public void setTotalPages(int totalPages) { this.totalPages = totalPages; }
+
+        public boolean hasNext() {
+            return pageNum < totalPages;
+        }
+
+        public boolean hasPrevious() {
+            return pageNum > 1;
+        }
+
+        @Override
+        public String toString() {
+            return "PageResult{" +
+                    "dataSize=" + (data != null ? data.size() : 0) +
+                    ", totalCount=" + totalCount +
+                    ", pageNum=" + pageNum +
+                    ", pageSize=" + pageSize +
+                    ", totalPages=" + totalPages +
+                    '}';
+        }
+    }
+
+    /**
+     * 数据完整性验证结果
+     */
+    class DataIntegrityResult {
+        private boolean isValid;
+        private long expectedCount;
+        private long actualCount;
+        private List<String> missingTimeRanges;
+        private String message;
+
+        public DataIntegrityResult() {}
+
+        public DataIntegrityResult(boolean isValid, long expectedCount, long actualCount, String message) {
+            this.isValid = isValid;
+            this.expectedCount = expectedCount;
+            this.actualCount = actualCount;
+            this.message = message;
+        }
+
+        // Getters and Setters
+        public boolean isValid() { return isValid; }
+        public void setValid(boolean valid) { isValid = valid; }
+
+        public long getExpectedCount() { return expectedCount; }
+        public void setExpectedCount(long expectedCount) { this.expectedCount = expectedCount; }
+
+        public long getActualCount() { return actualCount; }
+        public void setActualCount(long actualCount) { this.actualCount = actualCount; }
+
+        public List<String> getMissingTimeRanges() { return missingTimeRanges; }
+        public void setMissingTimeRanges(List<String> missingTimeRanges) { this.missingTimeRanges = missingTimeRanges; }
+
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+
+        public double getCompleteness() {
+            if (expectedCount == 0) return 100.0;
+            return (double) actualCount / expectedCount * 100.0;
+        }
+
+        @Override
+        public String toString() {
+            return "DataIntegrityResult{" +
+                    "isValid=" + isValid +
+                    ", expectedCount=" + expectedCount +
+                    ", actualCount=" + actualCount +
+                    ", completeness=" + String.format("%.2f%%", getCompleteness()) +
+                    ", message='" + message + '\'' +
+                    '}';
+        }
+    }
 }

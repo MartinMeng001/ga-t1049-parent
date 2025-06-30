@@ -19,8 +19,8 @@ public interface ControlService {
      * @param duration 锁定持续时间（秒）
      * @throws BusinessException 业务异常
      */
-    void lockFlowDirection(String crossId, FlowType flowType, Direction entrance, Direction exit,
-                           LockType lockType, Integer duration) throws BusinessException;
+    public void lockFlowDirection(String crossId, FlowType flowType, Direction entrance, Direction exit,
+                                  LockType lockType, Integer lockStageNo, Integer duration) throws BusinessException;
 
     /**
      * 解锁交通流向

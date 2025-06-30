@@ -27,6 +27,9 @@ public class DefaultServiceFactory implements ServiceFactory {
     private PedestrianServiceImpl pedestrianService;
     private StageServiceImpl stageService;
     private ControlModeService controlModeService;
+    private RunInfoRetransService runInfoRetransService;
+    // 新增：机柜门状态服务
+    private DoorStatusService doorStatusService;
 
     // 构造函数注入
     public DefaultServiceFactory(
@@ -48,6 +51,8 @@ public class DefaultServiceFactory implements ServiceFactory {
             LampGroupServiceImpl lampGroupService,
             PedestrianServiceImpl pedestrianService,
             ControlModeService controlModeService,
+            RunInfoRetransService runInfoRetransService,
+            DoorStatusService doorStatusService,
             StageServiceImpl stageService) {
 
         this.systemService = systemService;
@@ -69,6 +74,8 @@ public class DefaultServiceFactory implements ServiceFactory {
         this.pedestrianService = pedestrianService;
         this.controlModeService = controlModeService;
         this.stageService = stageService;
+        this.runInfoRetransService = runInfoRetransService;
+        this.doorStatusService = doorStatusService;
     }
 
     // 默认构造函数，创建默认实现
@@ -92,6 +99,9 @@ public class DefaultServiceFactory implements ServiceFactory {
         this.pedestrianService = new PedestrianServiceImpl();
         this.controlModeService = new ControlModeServiceImpl();
         this.stageService = new StageServiceImpl();
+        this.runInfoRetransService = new RunInfoRetransServiceImpl();
+        // 新增：初始化机柜门状态服务（需要依赖信号机服务）
+        this.doorStatusService = new DoorStatusServiceImpl(this.signalControllerService);
     }
 
     @Override
@@ -211,5 +221,16 @@ public class DefaultServiceFactory implements ServiceFactory {
     @Override
     public RouteControlService getRouteControlService() {
         return routeControlService;
+    }
+
+    @Override
+    public RunInfoRetransService getRunInfoRetransService() {
+        return runInfoRetransService;
+    }
+
+    // 新增：获取机柜门状态服务
+    @Override
+    public DoorStatusService getDoorStatusService() {
+        return doorStatusService;
     }
 }
