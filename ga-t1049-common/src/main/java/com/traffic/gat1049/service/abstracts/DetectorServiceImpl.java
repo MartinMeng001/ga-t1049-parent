@@ -35,6 +35,12 @@ public class DetectorServiceImpl implements DetectorService {
     }
 
     @Override
+    public List<DetectorParam> findAll() throws BusinessException {
+
+        return dataPrider.getAllDetectors();
+    }
+
+    @Override
     public List<DetectorParam> findByCrossId(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");

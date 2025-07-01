@@ -14,7 +14,6 @@ import com.traffic.gat1049.protocol.util.ResultHandlingUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * GA/T 1049.1消息构建器

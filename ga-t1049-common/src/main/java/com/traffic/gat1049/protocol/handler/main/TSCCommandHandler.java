@@ -183,23 +183,11 @@ public class TSCCommandHandler extends TokenRequiredHandler {
 
 
             case GatConstants.ObjectName.CROSS_PARAM:
-                if (id != null) {
-                    result = serviceFactory.getCrossService().findById(id);
-                } else {
-                    result = serviceFactory.getCrossService().findAll();
-                }
+                result = handleCrossParam(id);
                 break;
 
             case GatConstants.ObjectName.PLAN_PARAM:
-                if (id != null) {
-                    if (no != null && no > 0) {
-                        result = serviceFactory.getPlanService().findByCrossIdAndPlanNo(id, no);
-                    } else {
-                        result = serviceFactory.getPlanService().findByCrossId(id);
-                    }
-                } else {
-                    throw new ValidationException("INVALID_PARAMETER", "查询配时方案必须指定路口ID");
-                }
+                result = handlePlanParam(id, no);
                 break;
 
             case GatConstants.ObjectName.CROSS_STATE:
@@ -229,36 +217,36 @@ public class TSCCommandHandler extends TokenRequiredHandler {
     }
 
     private Object handleSubRegionParam(String subRegionId) throws BusinessException {
-        if (subRegionId == null) {
+        if (subRegionId == null || "".equals(subRegionId)) {
             return serviceFactory.getSubRegionService().findAll();
         }
         return serviceFactory.getSubRegionService().findById(subRegionId);
     }
 
     private Object handleRouteParam(String routeId) throws BusinessException {
-        if (routeId == null) {
+        if (routeId == null || "".equals(routeId)) {
             return serviceFactory.getRouteService().findAll();
         }
         return serviceFactory.getRouteService().findById(routeId);
     }
 
     private Object handleCrossParam(String crossId) throws BusinessException {
-        if (crossId == null) {
+        if (crossId == null || "".equals(crossId)) {
             return serviceFactory.getCrossService().findAll();
         }
         return serviceFactory.getCrossService().findById(crossId);
     }
 
     private Object handleSignalController(String signalControllerId) throws BusinessException {
-        if (signalControllerId == null) {
+        if (signalControllerId == null || "".equals(signalControllerId)) {
             return serviceFactory.getSignalControllerService().findAll();
         }
-        return serviceFactory.getSignalControllerService().findById(signalControllerId);
+        return serviceFactory.getSignalControllerService().findBySignalControllerId(signalControllerId);
     }
 
     private Object handleLampGroup(String crossId, Integer lampGroupNo) throws BusinessException {
-        if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for LampGroup query");
+        if (crossId == null || "".equals(crossId)) {
+            return serviceFactory.getLampGroupService().findAll();
         }
         if(lampGroupNo == null || lampGroupNo==0){
             return serviceFactory.getLampGroupService().findByCrossId(crossId);
@@ -267,8 +255,8 @@ public class TSCCommandHandler extends TokenRequiredHandler {
     }
 
     private Object handleDetectorParam(String crossId, Integer detectorNo) throws BusinessException {
-        if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for DetectorParam query");
+        if (crossId == null || "".equals(crossId)) {
+            return serviceFactory.getDetectorService().findAll();
         }
         if (detectorNo == null || detectorNo == 0) {
             return serviceFactory.getDetectorService().findByCrossId(crossId);
@@ -277,8 +265,8 @@ public class TSCCommandHandler extends TokenRequiredHandler {
     }
 
     private Object handleLaneParam(String crossId, Integer laneNo) throws BusinessException {
-        if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for LaneParam query");
+        if (crossId == null || "".equals(crossId)) {
+            return serviceFactory.getLaneService().findAll();
         }
         if (laneNo == null || laneNo==0) {
             return serviceFactory.getLaneService().findByCrossId(crossId);
@@ -287,8 +275,8 @@ public class TSCCommandHandler extends TokenRequiredHandler {
     }
 
     private Object handlePedestrianParam(String crossId, Integer pedestrianNo) throws BusinessException {
-        if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for PedestrianParam query");
+        if (crossId == null || "".equals(crossId)) {
+            return serviceFactory.getPedestrianService().findAll();
         }
         if(pedestrianNo == null || pedestrianNo==0){
             return serviceFactory.getPedestrianService().findByCrossId(crossId);
@@ -297,8 +285,8 @@ public class TSCCommandHandler extends TokenRequiredHandler {
     }
 
     private Object handleSignalGroupParam(String crossId, Integer signalGroupNo) throws BusinessException {
-        if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for SignalGroupParam query");
+        if (crossId == null || "".equals(crossId)) {
+            return serviceFactory.getSignalGroupService().findAll();
         }
         if (signalGroupNo == null || signalGroupNo == 0) {
             return serviceFactory.getSignalGroupService().findByCrossId(crossId);
@@ -307,8 +295,8 @@ public class TSCCommandHandler extends TokenRequiredHandler {
     }
 
     private Object handleStageParam(String crossId, Integer stageNo) throws BusinessException {
-        if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for StageParam query");
+        if (crossId == null || "".equals(crossId)) {
+            return serviceFactory.getStageService().findAll();
         }
         if(stageNo == null || stageNo==0){
             return serviceFactory.getStageService().findByCrossId(crossId);
@@ -317,8 +305,8 @@ public class TSCCommandHandler extends TokenRequiredHandler {
     }
 
     private Object handlePlanParam(String crossId, Integer planNo) throws BusinessException {
-        if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for PlanParam query");
+        if (crossId == null || "".equals(crossId)) {
+            return serviceFactory.getPlanService().findAllPlans();
         }
         if (planNo == null || planNo<=0) {
             return serviceFactory.getPlanService().findByCrossId(crossId);
@@ -327,8 +315,8 @@ public class TSCCommandHandler extends TokenRequiredHandler {
     }
 
     private Object handleDayPlanParam(String crossId, Integer dayPlanNo) throws BusinessException {
-        if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for DayPlanParam query");
+        if (crossId == null || "".equals(crossId)) {
+            return serviceFactory.getDayPlanService().findAllDayPlans();
         }
         if (dayPlanNo == null || dayPlanNo<=0) {
             return serviceFactory.getDayPlanService().findByCrossId(crossId);
@@ -337,8 +325,8 @@ public class TSCCommandHandler extends TokenRequiredHandler {
     }
 
     private Object handleScheduleParam(String crossId, Integer scheduleNo) throws BusinessException {
-        if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for ScheduleParam query");
+        if (crossId == null || "".equals(crossId)) {
+            return serviceFactory.getScheduleService().findAllSchedules();
         }
         if (scheduleNo == null || scheduleNo<=0) {
             return serviceFactory.getScheduleService().findByCrossId(crossId);
@@ -349,14 +337,14 @@ public class TSCCommandHandler extends TokenRequiredHandler {
     // ==================== 运行信息处理方法 ====================
 
     private Object handleCrossState(String crossId) throws BusinessException {
-        if (crossId == null) {  // 返回所有CrossState
+        if (crossId == null || "".equals(crossId)) {  // 返回所有CrossState
             //throw new ValidationException("crossId", "Cross ID is required for CrossState query");
             return serviceFactory.getCrossService().getAllCrossState();
         }
         return serviceFactory.getCrossService().getCrossState(crossId);
     }
     private Object handleSignalControllerError(String signalControllerId) throws BusinessException {
-        if (signalControllerId == null) {  // 返回所有信号机故障
+        if (signalControllerId == null || "".equals(signalControllerId)) {  // 返回所有信号机故障
             return serviceFactory.getSignalControllerService().getAllErrors();
         }
         return serviceFactory.getSignalControllerService().getErrors(signalControllerId);
@@ -364,45 +352,49 @@ public class TSCCommandHandler extends TokenRequiredHandler {
 
 
     private Object handleCrossModePlan(String crossId) throws BusinessException {
-        if (crossId == null) {
-            serviceFactory.getControlModeService().getAllControlModes();
+        if (crossId == null || "".equals(crossId)) {
+            return serviceFactory.getControlModeService().getAllControlModes();
         }
         return serviceFactory.getControlModeService().getCurrentModePlan(crossId);
     }
 
     private Object handleCrossCycle(String crossId) throws BusinessException {
-        if (crossId == null) {
+        if (crossId == null || "".equals(crossId)) {
             return serviceFactory.getTrafficDataService().getAllCrossCycle();
         }
         return serviceFactory.getTrafficDataService().getCrossCycle(crossId);
     }
 
     private Object handleCrossStage(String crossId) throws BusinessException {
-        if (crossId == null) {
+        if (crossId == null || "".equals(crossId)) {
             return serviceFactory.getTrafficDataService().getAllCrossStage();
         }
         return serviceFactory.getTrafficDataService().getCrossStage(crossId);
     }
 
     private Object handleCrossSignalGroupStatus(String crossId) throws BusinessException {
-        if (crossId == null) {
+        if (crossId == null  || "".equals(crossId)) {
             return serviceFactory.getSignalGroupService().getAllCrossSignalGroupStatus();
         }
         return serviceFactory.getSignalGroupService().getCrossSignalGroupStatus(crossId);
     }
 
     private Object handleCrossTrafficData(String crossId) throws BusinessException {
-        if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for CrossTrafficData query");
+        if (crossId == null || "".equals(crossId)) {
+            return serviceFactory.getTrafficDataService().findAll();
         }
+        return serviceFactory.getTrafficDataService().findById(crossId);
         // 获取最新的交通流数据，使用当前时间和默认间隔
-        return serviceFactory.getTrafficDataService().getCrossTrafficData(
-                crossId, java.time.LocalDateTime.now(), 300);
+//        return serviceFactory.getTrafficDataService().getCrossTrafficData(
+//                crossId, java.time.LocalDateTime.now(), 300);
     }
 
     private Object handleStageTrafficData(String crossId, Integer stageNo) throws BusinessException {
-        if (crossId == null) {
-            throw new ValidationException("crossId", "Cross ID is required for StageTrafficData query");
+        if (crossId == null || "".equals(crossId)) {
+            return serviceFactory.getTrafficDataService().findAll();
+        }
+        if(stageNo==null || stageNo<=0){
+            return serviceFactory.getTrafficDataService().getStageTrafficDataByCrossId(crossId);
         }
 
         // 获取当前阶段的交通流数据
@@ -412,21 +404,24 @@ public class TSCCommandHandler extends TokenRequiredHandler {
     }
 
     private Object handleVarLaneStatus(String crossId, Integer laneNo) throws BusinessException {
-        if (crossId == null) {
+        if (crossId == null || "".equals(crossId)) {
             return serviceFactory.getLaneService().getVarLanes();
+        }
+        if(laneNo==null || laneNo==0){
+            return serviceFactory.getLaneService().getVarLaneStatus(crossId);
         }
         return serviceFactory.getLaneService().getVarLaneStatus(crossId, laneNo);
     }
 
     private Object handleRouteControlMode(String routeId) throws BusinessException {
-        if (routeId == null) {
+        if (routeId == null||"".equals(routeId)) {
             return serviceFactory.getRouteControlService().getAllRouteControlMode();
         }
         return serviceFactory.getRouteControlService().getRouteControlMode(routeId);
     }
 
     private Object handleRouteSpeed(String routeId) throws BusinessException {
-        if (routeId == null) {
+        if (routeId == null || "".equals(routeId)) {
             return serviceFactory.getRouteControlService().getAllRouteSpeed();
         }
         return serviceFactory.getRouteControlService().getRouteSpeed(routeId);

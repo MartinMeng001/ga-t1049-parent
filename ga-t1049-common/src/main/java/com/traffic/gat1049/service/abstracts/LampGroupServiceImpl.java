@@ -5,14 +5,13 @@ import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.model.dto.PageRequestDto;
-import com.traffic.gat1049.protocol.model.intersection.LampGroup;
 import com.traffic.gat1049.model.enums.Direction;
 import com.traffic.gat1049.model.enums.LampGroupType;
+import com.traffic.gat1049.protocol.model.intersection.LampGroupParam;
 import com.traffic.gat1049.service.interfaces.LampGroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -25,7 +24,7 @@ public class LampGroupServiceImpl implements LampGroupService {
     private static final Logger logger = LoggerFactory.getLogger(LampGroupServiceImpl.class);
     private ComprehensiveTestDataProviderImpl dataPrider = ComprehensiveTestDataProviderImpl.getInstance();
     // 信号灯组存储 - 使用复合键：crossId + "-" + lampGroupNo
-    private final Map<String, LampGroup> lampGroupStorage = new ConcurrentHashMap<>();
+    private final Map<String, LampGroupParam> lampGroupStorage = new ConcurrentHashMap<>();
 
     public LampGroupServiceImpl() throws BusinessException {
         // 初始化一些示例数据
@@ -33,27 +32,27 @@ public class LampGroupServiceImpl implements LampGroupService {
     }
 
     @Override
-    public LampGroup findById(String id) throws BusinessException {
+    public LampGroupParam findById(String id) throws BusinessException {
         if (id == null || id.trim().isEmpty()) {
             throw new ValidationException("id", "信号灯组ID不能为空");
         }
 
-        LampGroup lampGroup = lampGroupStorage.get(id);
+        LampGroupParam lampGroup = lampGroupStorage.get(id);
         if (lampGroup == null) {
-            throw new DataNotFoundException("LampGroup", id);
+            throw new DataNotFoundException("LampGroupParam", id);
         }
 
         return lampGroup;
     }
 
     @Override
-    public List<LampGroup> findAll() throws BusinessException {
+    public List<LampGroupParam> findAll() throws BusinessException {
         return new ArrayList<>(lampGroupStorage.values());
     }
 
     @Override
-    public List<LampGroup> findPage(PageRequestDto pageRequest) throws BusinessException {
-        List<LampGroup> allLampGroups = findAll();
+    public List<LampGroupParam> findPage(PageRequestDto pageRequest) throws BusinessException {
+        List<LampGroupParam> allLampGroups = findAll();
 
         int pageSize = pageRequest.getPageSize() != null ? pageRequest.getPageSize() : 10;
         int pageNum = pageRequest.getPageNum() != null ? pageRequest.getPageNum() : 1;
@@ -69,7 +68,7 @@ public class LampGroupServiceImpl implements LampGroupService {
     }
 
     @Override
-    public LampGroup save(LampGroup lampGroup) throws BusinessException {
+    public LampGroupParam save(LampGroupParam lampGroup) throws BusinessException {
         if (lampGroup == null) {
             throw new ValidationException("lampGroup", "信号灯组参数不能为空");
         }
@@ -98,7 +97,7 @@ public class LampGroupServiceImpl implements LampGroupService {
     }
 
     @Override
-    public LampGroup update(LampGroup lampGroup) throws BusinessException {
+    public LampGroupParam update(LampGroupParam lampGroup) throws BusinessException {
         if (lampGroup == null) {
             throw new ValidationException("lampGroup", "信号灯组参数不能为空");
         }
@@ -127,9 +126,9 @@ public class LampGroupServiceImpl implements LampGroupService {
             throw new ValidationException("id", "信号灯组ID不能为空");
         }
 
-        LampGroup removed = lampGroupStorage.remove(id);
+        LampGroupParam removed = lampGroupStorage.remove(id);
         if (removed == null) {
-            throw new DataNotFoundException("LampGroup", id);
+            throw new DataNotFoundException("LampGroupParam", id);
         }
 
         logger.info("删除信号灯组: id={}", id);
@@ -149,7 +148,7 @@ public class LampGroupServiceImpl implements LampGroupService {
     }
 
     @Override
-    public List<LampGroup> findByCrossId(String crossId) throws BusinessException {
+    public List<LampGroupParam> findByCrossId(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
@@ -161,7 +160,7 @@ public class LampGroupServiceImpl implements LampGroupService {
     }
 
     @Override
-    public LampGroup findByCrossIdAndLampGroupNo(String crossId, Integer lampGroupNo) throws BusinessException {
+    public LampGroupParam findByCrossIdAndLampGroupNo(String crossId, Integer lampGroupNo) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
@@ -170,7 +169,7 @@ public class LampGroupServiceImpl implements LampGroupService {
         }
 
         String key = generateKey(crossId, lampGroupNo);
-        LampGroup lampGroup = dataPrider.getLampGroupByCrossIdAndNo(crossId, lampGroupNo.toString());//lampGroupStorage.get(key);
+        LampGroupParam lampGroup = dataPrider.getLampGroupByCrossIdAndNo(crossId, lampGroupNo.toString());//lampGroupStorage.get(key);
 
         if (lampGroup == null) {
             throw new DataNotFoundException("LampGroup",
@@ -181,7 +180,7 @@ public class LampGroupServiceImpl implements LampGroupService {
     }
 
     @Override
-    public List<LampGroup> findByDirection(Direction direction) throws BusinessException {
+    public List<LampGroupParam> findByDirection(Direction direction) throws BusinessException {
         if (direction == null) {
             throw new ValidationException("direction", "进口方向不能为空");
         }
@@ -192,7 +191,7 @@ public class LampGroupServiceImpl implements LampGroupService {
     }
 
     @Override
-    public List<LampGroup> findByType(LampGroupType type) throws BusinessException {
+    public List<LampGroupParam> findByType(LampGroupType type) throws BusinessException {
         if (type == null) {
             throw new ValidationException("type", "信号灯组类型不能为空");
         }
@@ -203,7 +202,7 @@ public class LampGroupServiceImpl implements LampGroupService {
     }
 
     @Override
-    public List<LampGroup> findByCrossIdAndDirection(String crossId, Direction direction) throws BusinessException {
+    public List<LampGroupParam> findByCrossIdAndDirection(String crossId, Direction direction) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
@@ -214,12 +213,12 @@ public class LampGroupServiceImpl implements LampGroupService {
         return lampGroupStorage.values().stream()
                 .filter(lampGroup -> crossId.equals(lampGroup.getCrossId()) &&
                         direction.equals(lampGroup.getDirection()))
-                .sorted(Comparator.comparing(LampGroup::getLampGroupNo))
+                .sorted(Comparator.comparing(LampGroupParam::getLampGroupNo))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<LampGroup> findByCrossIdAndType(String crossId, LampGroupType type) throws BusinessException {
+    public List<LampGroupParam> findByCrossIdAndType(String crossId, LampGroupType type) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
@@ -230,7 +229,7 @@ public class LampGroupServiceImpl implements LampGroupService {
         return lampGroupStorage.values().stream()
                 .filter(lampGroup -> crossId.equals(lampGroup.getCrossId()) &&
                         type.equals(lampGroup.getType()))
-                .sorted(Comparator.comparing(LampGroup::getLampGroupNo))
+                .sorted(Comparator.comparing(LampGroupParam::getLampGroupNo))
                 .collect(Collectors.toList());
     }
 
@@ -260,10 +259,10 @@ public class LampGroupServiceImpl implements LampGroupService {
         }
 
         String key = generateKey(crossId, lampGroupNo);
-        LampGroup removed = lampGroupStorage.remove(key);
+        LampGroupParam removed = lampGroupStorage.remove(key);
 
         if (removed == null) {
-            throw new DataNotFoundException("LampGroup",
+            throw new DataNotFoundException("LampGroupParam",
                     String.format("crossId=%s, lampGroupNo=%d", crossId, lampGroupNo));
         }
 
@@ -278,7 +277,7 @@ public class LampGroupServiceImpl implements LampGroupService {
 
         return lampGroupStorage.values().stream()
                 .filter(lampGroup -> crossId.equals(lampGroup.getCrossId()))
-                .map(LampGroup::getLampGroupNo)
+                .map(LampGroupParam::getLampGroupNo)
                 .sorted()
                 .collect(Collectors.toList());
     }
@@ -286,7 +285,7 @@ public class LampGroupServiceImpl implements LampGroupService {
     /**
      * 验证信号灯组参数
      */
-    private void validateLampGroup(LampGroup lampGroup) throws BusinessException {
+    private void validateLampGroup(LampGroupParam lampGroup) throws BusinessException {
         if (lampGroup.getCrossId() == null || lampGroup.getCrossId().trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
@@ -324,43 +323,43 @@ public class LampGroupServiceImpl implements LampGroupService {
 
         try {
             // 东进口信号灯组
-            LampGroup eastMotor = new LampGroup(crossId1, 1, Direction.EAST, LampGroupType.MOTOR_VEHICLE);
+            LampGroupParam eastMotor = new LampGroupParam(crossId1, 1, Direction.EAST, LampGroupType.MOTOR_VEHICLE);
             save(eastMotor);
 
-            LampGroup eastLeft = new LampGroup(crossId1, 2, Direction.EAST, LampGroupType.MOTOR_LEFT);
+            LampGroupParam eastLeft = new LampGroupParam(crossId1, 2, Direction.EAST, LampGroupType.MOTOR_LEFT);
             save(eastLeft);
 
             // 西进口信号灯组
-            LampGroup westMotor = new LampGroup(crossId1, 3, Direction.WEST, LampGroupType.MOTOR_VEHICLE);
+            LampGroupParam westMotor = new LampGroupParam(crossId1, 3, Direction.WEST, LampGroupType.MOTOR_VEHICLE);
             save(westMotor);
 
-            LampGroup westLeft = new LampGroup(crossId1, 4, Direction.WEST, LampGroupType.MOTOR_LEFT);
+            LampGroupParam westLeft = new LampGroupParam(crossId1, 4, Direction.WEST, LampGroupType.MOTOR_LEFT);
             save(westLeft);
 
             // 南进口信号灯组
-            LampGroup southMotor = new LampGroup(crossId1, 5, Direction.SOUTH, LampGroupType.MOTOR_VEHICLE);
+            LampGroupParam southMotor = new LampGroupParam(crossId1, 5, Direction.SOUTH, LampGroupType.MOTOR_VEHICLE);
             save(southMotor);
 
-            LampGroup southLeft = new LampGroup(crossId1, 6, Direction.SOUTH, LampGroupType.MOTOR_LEFT);
+            LampGroupParam southLeft = new LampGroupParam(crossId1, 6, Direction.SOUTH, LampGroupType.MOTOR_LEFT);
             save(southLeft);
 
             // 北进口信号灯组
-            LampGroup northMotor = new LampGroup(crossId1, 7, Direction.NORTH, LampGroupType.MOTOR_VEHICLE);
+            LampGroupParam northMotor = new LampGroupParam(crossId1, 7, Direction.NORTH, LampGroupType.MOTOR_VEHICLE);
             save(northMotor);
 
-            LampGroup northLeft = new LampGroup(crossId1, 8, Direction.NORTH, LampGroupType.MOTOR_LEFT);
+            LampGroupParam northLeft = new LampGroupParam(crossId1, 8, Direction.NORTH, LampGroupType.MOTOR_LEFT);
             save(northLeft);
 
             // 为示例路口2创建信号灯组
             String crossId2 = "11010000100002";
 
-            LampGroup east2Motor = new LampGroup(crossId2, 1, Direction.EAST, LampGroupType.MOTOR_VEHICLE);
+            LampGroupParam east2Motor = new LampGroupParam(crossId2, 1, Direction.EAST, LampGroupType.MOTOR_VEHICLE);
             save(east2Motor);
 
-            LampGroup west2Motor = new LampGroup(crossId2, 2, Direction.WEST, LampGroupType.MOTOR_VEHICLE);
+            LampGroupParam west2Motor = new LampGroupParam(crossId2, 2, Direction.WEST, LampGroupType.MOTOR_VEHICLE);
             save(west2Motor);
 
-            LampGroup south2Motor = new LampGroup(crossId2, 3, Direction.SOUTH, LampGroupType.MOTOR_VEHICLE);
+            LampGroupParam south2Motor = new LampGroupParam(crossId2, 3, Direction.SOUTH, LampGroupType.MOTOR_VEHICLE);
             save(south2Motor);
 
             logger.info("示例信号灯组数据初始化完成");

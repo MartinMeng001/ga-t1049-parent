@@ -1,5 +1,6 @@
 package com.traffic.gat1049.protocol.model.command;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.traffic.gat1049.protocol.adapters.XmlAdapter.ControlModeAdapter;
@@ -146,6 +147,7 @@ public class CrossCtrlInfo {
     /**
      * 验证控制方式方案的有效性
      */
+    @JsonIgnore
     public boolean isValid() {
         if (crossId == null || crossId.trim().isEmpty()) {
             return false;

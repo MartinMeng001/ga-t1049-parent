@@ -174,12 +174,12 @@ public class MessageValidator {
      * 验证ID格式
      */
     public void validateId(String objName, String id) throws MessageValidationException {
-        if (id == null || id.trim().isEmpty()) {// 为空表示查询所有,大多数情况的ID是不允许为空的，只有特定查询允许为空
+        if (id == null || id.trim().isEmpty()) {// 为空表示查询所有,大多数情况的ID是允许为空的
             // 系统信息和区域信息ID允许为空
-            if (!GatConstants.ObjectName.SYS_INFO.equals(objName) ||
-                    !GatConstants.ObjectName.REGION_PARAM.equals(objName)) {
-                throw new MessageValidationException("ID cannot be null or empty for object: " + objName);
-            }
+//            if (!GatConstants.ObjectName.SYS_INFO.equals(objName) ||
+//                    !GatConstants.ObjectName.REGION_PARAM.equals(objName)) {
+//                throw new MessageValidationException("ID cannot be null or empty for object: " + objName);
+//            }
             return;
         }
 

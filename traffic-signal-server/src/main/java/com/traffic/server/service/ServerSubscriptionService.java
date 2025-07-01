@@ -22,7 +22,7 @@ import java.util.Arrays;
  * 服务端订阅服务（反向订阅）
  * 服务端向客户端发送订阅请求，然后接收客户端推送的数据
  */
-@Service
+//@Service
 public class ServerSubscriptionService {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerSubscriptionService.class);

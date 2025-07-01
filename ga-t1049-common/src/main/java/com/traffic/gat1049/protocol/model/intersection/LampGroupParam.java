@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.traffic.gat1049.protocol.adapters.XmlAdapter.DirectionAdapter;
 import com.traffic.gat1049.protocol.adapters.XmlAdapter.LampGroupTypeAdapter;
-import com.traffic.gat1049.protocol.model.base.BaseParam;
 import com.traffic.gat1049.model.enums.Direction;
 import com.traffic.gat1049.model.enums.LampGroupType;
 
@@ -16,7 +15,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
@@ -24,9 +22,9 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  * 对应文档中的 LampGroup
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@XmlRootElement(name = "LampGroup")
+@XmlRootElement(name = "LampGroupParam")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class LampGroup {//extends BaseParam
+public class LampGroupParam {//extends BaseParam
 
     /**
      * 路口编号
@@ -63,11 +61,11 @@ public class LampGroup {//extends BaseParam
     private LampGroupType type;
 
     // 构造函数
-    public LampGroup() {
+    public LampGroupParam() {
         //super();
     }
 
-    public LampGroup(String crossId, Integer lampGroupNo, Direction direction, LampGroupType type) {
+    public LampGroupParam(String crossId, Integer lampGroupNo, Direction direction, LampGroupType type) {
         //super();
         this.crossId = crossId;
         this.lampGroupNo = lampGroupNo;

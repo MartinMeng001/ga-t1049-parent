@@ -1,5 +1,6 @@
 package com.traffic.gat1049.protocol.model.runtime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.traffic.gat1049.protocol.model.base.BaseState;
@@ -124,6 +125,7 @@ public class CrossCycle {//extends BaseState
      * 设置开始时间（从LocalDateTime转换）
      * @param startTime LocalDateTime对象
      */
+    @JsonIgnore
     public void setStartTime(LocalDateTime startTime) {
         if (startTime != null) {
             this.startTime = startTime.format(DATE_TIME_FORMATTER);
@@ -134,6 +136,7 @@ public class CrossCycle {//extends BaseState
      * 获取开始时间的LocalDateTime对象
      * @return LocalDateTime对象，如果字符串格式错误则返回null
      */
+    @JsonIgnore
     public LocalDateTime getStartTimeAsLocalDateTime() {
         try {
             return startTime != null ? LocalDateTime.parse(startTime, DATE_TIME_FORMATTER) : null;

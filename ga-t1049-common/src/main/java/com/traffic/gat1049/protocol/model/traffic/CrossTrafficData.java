@@ -125,6 +125,6 @@ public class CrossTrafficData  {//extends BaseState
                 ", endTime='" + endTime + '\'' +
                 ", interval=" + interval +
                 ", dataList=" + dataList +
-                "} " + super.toString();
+                "} ";// + super.toString()
     }
 }

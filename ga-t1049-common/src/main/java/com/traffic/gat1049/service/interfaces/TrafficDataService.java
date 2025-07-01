@@ -16,6 +16,23 @@ import java.util.List;
 public interface TrafficDataService {
 
     /**
+     * 获取所有交通流数据
+     *
+     * @return 路口交通流数据
+     * @throws BusinessException 业务异常
+     */
+    List<CrossTrafficData> findAll() throws BusinessException;
+
+    /**
+     * 根据Crossid获取交通流数据
+     *
+     * @param id 路口编号
+     * @return 路口交通流数据
+     * @throws BusinessException 业务异常
+     */
+    List<CrossTrafficData> findById(String id) throws BusinessException;
+
+    /**
      * 获取路口交通流数据
      *
      * @param crossId 路口编号
@@ -45,6 +62,15 @@ public interface TrafficDataService {
      * @throws BusinessException 业务异常
      */
     StageTrafficData getStageTrafficData(String crossId, LocalDateTime startTime, LocalDateTime endTime) throws BusinessException;
+
+    /**
+     * 获取阶段交通流数据
+     *
+     * @param crossId 路口编号
+     * @return 阶段交通流数据
+     * @throws BusinessException 业务异常
+     */
+    List<StageTrafficData> getStageTrafficDataByCrossId(String crossId) throws BusinessException;
 
     /**
      * 获取阶段交通流数据列表

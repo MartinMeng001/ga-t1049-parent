@@ -99,6 +99,14 @@ public class LaneTrafficData {
     private BigDecimal queueLength;
 
     /**
+     * 统计周期内最大排队长度（米）
+     */
+    @DecimalMin(value = "0.0", message = "平均排队长度不能为负数")
+    @XmlElement(name = "MaxQueueLength")
+    @JsonProperty("MaxQueueLength")
+    private BigDecimal maxQueueLength;
+
+    /**
      * 占有率（百分率，0~100）
      */
     @Min(value = 0, message = "占有率不能为负数")
@@ -196,6 +204,9 @@ public class LaneTrafficData {
     public void setQueueLength(BigDecimal queueLength) {
         this.queueLength = queueLength;
     }
+
+    public BigDecimal getMaxQueueLength() { return maxQueueLength; }
+    public void setMaxQueueLength(BigDecimal maxQueueLength) { this.maxQueueLength = maxQueueLength; }
 
     public Integer getOccupancy() {
         return occupancy;

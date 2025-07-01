@@ -127,7 +127,7 @@ public final class GatConstants {
         public static final String ROUTE_PARAM = "RouteParam";
         public static final String CROSS_PARAM = "CrossParam";
         public static final String SIGNAL_CONTROLLER = "SignalController";
-        public static final String LAMP_GROUP = "LampGroup";
+        public static final String LAMP_GROUP = "LampGroupParam";
         public static final String DETECTOR_PARAM = "DetectorParam";
         public static final String LANE_PARAM = "LaneParam";
         public static final String PEDESTRIAN_PARAM = "PedestrianParam";
@@ -139,14 +139,14 @@ public final class GatConstants {
         public static final String SYS_STATE = "SysState";
         public static final String CROSS_STATE = "CrossState";
         public static final String SIGNAL_CONTROLLER_ERROR = "SignalControllerError";
-        public static final String CROSS_MODE_PLAN = "CrossModePlan";
+        public static final String CROSS_MODE_PLAN = "CrossCtrlInfo";
         public static final String CROSS_CYCLE = "CrossCycle";
         public static final String CROSS_STAGE = "CrossStage";
         public static final String CROSS_SIGNAL_GROUP_STATUS = "CrossSignalGroupStatus";
         public static final String CROSS_TRAFFIC_DATA = "CrossTrafficData";
         public static final String STAGE_TRAFFIC_DATA = "StageTrafficData";
         public static final String VAR_LANE_STATUS = "VarLaneStatus";
-        public static final String ROUTE_CONTROL_MODE = "RouteControlMode";
+        public static final String ROUTE_CONTROL_MODE = "RouteCtrlInfo";
         public static final String ROUTE_SPEED = "RouteSpeed";
         // 新增：信号机柜门状态常量
         public static final String SC_DOOR_STATUS = "SCDoorStatus";

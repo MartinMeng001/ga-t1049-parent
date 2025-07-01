@@ -14,7 +14,6 @@ import com.traffic.gat1049.service.interfaces.PlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,10 +28,10 @@ public class ControlModeServiceImpl implements ControlModeService {
 
     private ComprehensiveTestDataProviderImpl dataProvider = ComprehensiveTestDataProviderImpl.getInstance();
     // 当前控制模式存储：crossId -> CrossModePlan
-    private final Map<String, CrossModePlan> currentModeStorage = new ConcurrentHashMap<>();
+    private final Map<String, CrossCtrlInfo> currentModeStorage = new ConcurrentHashMap<>();
 
     // 控制模式历史记录存储：crossId -> List<CrossModePlan>
-    private final Map<String, LinkedList<CrossModePlan>> modeHistoryStorage = new ConcurrentHashMap<>();
+    private final Map<String, LinkedList<CrossCtrlInfo>> modeHistoryStorage = new ConcurrentHashMap<>();
 
     // 临时方案存储：crossId -> planNo -> PlanParam（用于中心预案）
     private final Map<String, Map<Integer, PlanParam>> temporaryPlanStorage = new ConcurrentHashMap<>();
@@ -58,15 +57,15 @@ public class ControlModeServiceImpl implements ControlModeService {
     }
 
     @Override
-    public CrossModePlan getCurrentModePlan(String crossId) throws BusinessException {
+    public CrossCtrlInfo getCurrentModePlan(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
 
-        Object obj = dataProvider.getCrossModePlanById(crossId);
-        CrossModePlan currentMode = OBJECT_MAPPER.convertValue(obj, CrossModePlan.class);
+        Object obj = dataProvider.getCrossCtrlInfoById(crossId);
+        CrossCtrlInfo currentMode = OBJECT_MAPPER.convertValue(obj, CrossCtrlInfo.class);
         if (currentMode == null) {
-            throw new DataNotFoundException("CrossModePlan", crossId);
+            throw new DataNotFoundException("CrossCtrlInfo", crossId);
         }
 
         return currentMode;
@@ -81,12 +80,12 @@ public class ControlModeServiceImpl implements ControlModeService {
             throw new ValidationException("controlMode", "控制模式不能为空");
         }
 
-        CrossModePlan modePlan = new CrossModePlan(crossId, controlMode, planNo);
+        CrossCtrlInfo modePlan = new CrossCtrlInfo(crossId, controlMode, planNo);
         setControlMode(modePlan);
     }
 
     @Override
-    public void setControlMode(CrossModePlan modePlan) throws BusinessException {
+    public void setControlMode(CrossCtrlInfo modePlan) throws BusinessException {
         validateControlMode(modePlan);
 
         String crossId = modePlan.getCrossId();
@@ -100,7 +99,7 @@ public class ControlModeServiceImpl implements ControlModeService {
         }
 
         // 保存当前模式到历史记录
-        CrossModePlan currentMode = currentModeStorage.get(crossId);
+        CrossCtrlInfo currentMode = currentModeStorage.get(crossId);
         if (currentMode != null) {
             addToHistory(crossId, currentMode);
         }
@@ -117,15 +116,15 @@ public class ControlModeServiceImpl implements ControlModeService {
     }
 
     @Override
-    public List<CrossModePlan> getAllControlModes() throws BusinessException {
-        List<Object> objs = dataProvider.getAllCrossModePlans();
+    public List<CrossCtrlInfo> getAllControlModes() throws BusinessException {
+        List<CrossCtrlInfo> objs = dataProvider.getAllCrossCtrlInfos();
 
         return objs.stream()
                 .map(obj -> {
                     try {
-                        return OBJECT_MAPPER.convertValue(obj, CrossModePlan.class);
+                        return OBJECT_MAPPER.convertValue(obj, CrossCtrlInfo.class);
                     } catch (IllegalArgumentException e) {
-                        logger.warn("转换 ControlModePlan 失败: {}", obj, e);
+                        logger.warn("转换 CrossCtrlInfo 失败: {}", obj, e);
                         return null;
                     }
                 })
@@ -134,7 +133,7 @@ public class ControlModeServiceImpl implements ControlModeService {
     }
 
     @Override
-    public List<CrossModePlan> findByControlMode(ControlMode controlMode) throws BusinessException {
+    public List<CrossCtrlInfo> findByControlMode(ControlMode controlMode) throws BusinessException {
         if (controlMode == null) {
             throw new ValidationException("controlMode", "控制模式不能为空");
         }
@@ -182,7 +181,7 @@ public class ControlModeServiceImpl implements ControlModeService {
     }
 
     @Override
-    public void validateControlMode(CrossModePlan modePlan) throws BusinessException {
+    public void validateControlMode(CrossCtrlInfo modePlan) throws BusinessException {
         if (modePlan == null) {
             throw new ValidationException("modePlan", "控制模式方案不能为空");
         }
@@ -236,7 +235,7 @@ public class ControlModeServiceImpl implements ControlModeService {
     }
 
     @Override
-    public List<CrossModePlan> getControlModeHistory(String crossId, int limit) throws BusinessException {
+    public List<CrossCtrlInfo> getControlModeHistory(String crossId, int limit) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
@@ -244,7 +243,7 @@ public class ControlModeServiceImpl implements ControlModeService {
             throw new ValidationException("limit", "记录数量限制必须大于0");
         }
 
-        LinkedList<CrossModePlan> history = modeHistoryStorage.get(crossId);
+        LinkedList<CrossCtrlInfo> history = modeHistoryStorage.get(crossId);
         if (history == null || history.isEmpty()) {
             return new ArrayList<>();
         }
@@ -264,7 +263,7 @@ public class ControlModeServiceImpl implements ControlModeService {
         }
 
         // 获取当前控制模式
-        CrossModePlan currentMode = getCurrentModePlan(crossId);
+        CrossCtrlInfo currentMode = getCurrentModePlan(crossId);
         ControlMode currentControlMode = currentMode.getControlMode();
 
         // 如果目标模式与当前模式相同，可以切换（实际是刷新）
@@ -309,8 +308,8 @@ public class ControlModeServiceImpl implements ControlModeService {
     /**
      * 添加控制模式到历史记录
      */
-    private void addToHistory(String crossId, CrossModePlan modePlan) {
-        LinkedList<CrossModePlan> history = modeHistoryStorage.computeIfAbsent(crossId, k -> new LinkedList<>());
+    private void addToHistory(String crossId, CrossCtrlInfo modePlan) {
+        LinkedList<CrossCtrlInfo> history = modeHistoryStorage.computeIfAbsent(crossId, k -> new LinkedList<>());
 
         // 添加到历史记录头部
         history.addFirst(modePlan);
@@ -324,7 +323,7 @@ public class ControlModeServiceImpl implements ControlModeService {
     /**
      * 执行特定控制模式的逻辑
      */
-    private void executeControlModeLogic(CrossModePlan modePlan) {
+    private void executeControlModeLogic(CrossCtrlInfo modePlan) {
         String crossId = modePlan.getCrossId();
         ControlMode mode = modePlan.getControlMode();
 

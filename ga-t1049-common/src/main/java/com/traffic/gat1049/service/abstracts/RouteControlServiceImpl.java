@@ -7,13 +7,12 @@ import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.model.enums.RouteControlMode;
 import com.traffic.gat1049.protocol.model.runtime.RoadSectionSpeed;
-import com.traffic.gat1049.protocol.model.runtime.RouteControlModeStatus;
+import com.traffic.gat1049.protocol.model.runtime.RouteCtrlInfo;
 import com.traffic.gat1049.protocol.model.runtime.RouteSpeed;
 import com.traffic.gat1049.service.interfaces.RouteControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -27,7 +26,7 @@ public class RouteControlServiceImpl implements RouteControlService {
     private static final Logger logger = LoggerFactory.getLogger(RouteControlServiceImpl.class);
     private ComprehensiveTestDataProviderImpl dataPrider = ComprehensiveTestDataProviderImpl.getInstance();
     // 干线控制方式存储
-    private final Map<String, RouteControlModeStatus> routeControlModeStorage = new ConcurrentHashMap<>();
+    private final Map<String, RouteCtrlInfo> routeControlModeStorage = new ConcurrentHashMap<>();
 
     // 干线路段推荐车速存储
     private final Map<String, RouteSpeed> routeSpeedStorage = new ConcurrentHashMap<>();
@@ -45,24 +44,25 @@ public class RouteControlServiceImpl implements RouteControlService {
     }
 
     @Override
-    public RouteControlModeStatus getRouteControlMode(String routeId) throws BusinessException {
+    public RouteCtrlInfo getRouteControlMode(String routeId) throws BusinessException {
         if (routeId == null || routeId.trim().isEmpty()) {
             throw new ValidationException("routeId", "线路编号不能为空");
         }
 
-        Object obj = dataPrider.getRouteControlModeById(routeId);
-        return OBJECT_MAPPER.convertValue(obj, RouteControlModeStatus.class);
+        Object obj = dataPrider.getRouteCtrlInfoById(routeId);
+        return OBJECT_MAPPER.convertValue(obj, RouteCtrlInfo.class);
     }
 
     @Override
-    public List<RouteControlModeStatus> getAllRouteControlMode() throws BusinessException {
-        List<Object> objs = dataPrider.getAllRouteControlModes();
+    public List<RouteCtrlInfo> getAllRouteControlMode() throws BusinessException {
+        List<Object> objs = new ArrayList<>();
+        objs.add(dataPrider.getRouteCtrlInfo());
         return objs.stream()
                 .map(obj -> {
                     try{
-                        return OBJECT_MAPPER.convertValue(obj, RouteControlModeStatus.class);
+                        return OBJECT_MAPPER.convertValue(obj, RouteCtrlInfo.class);
                     }catch(IllegalArgumentException e){
-                        logger.error("转换 RouteControlModeStatus 失败: {}", obj, e);
+                        logger.error("转换 RouteCtrlInfo 失败: {}", obj, e);
                         return null;
                     }
                 })
@@ -85,7 +85,7 @@ public class RouteControlServiceImpl implements RouteControlService {
             throw new ValidationException("routeId", "线路编号格式不正确: " + routeId);
         }
 
-        RouteControlModeStatus status = new RouteControlModeStatus(routeId, controlMode);
+        RouteCtrlInfo status = new RouteCtrlInfo(routeId, controlMode);
 //        status.setCreateTime(LocalDateTime.now());
 //        status.setUpdateTime(LocalDateTime.now());
 
@@ -105,7 +105,8 @@ public class RouteControlServiceImpl implements RouteControlService {
 
     @Override
     public List<RouteSpeed> getAllRouteSpeed() throws BusinessException {
-        List<Object> objs = dataPrider.getAllRouteSpeeds();
+        List<Object> objs = new ArrayList<>();
+        objs.add(dataPrider.getRouteSpeed());
         return objs.stream()
                 .map(obj -> {
                     try{
@@ -216,7 +217,7 @@ public class RouteControlServiceImpl implements RouteControlService {
         }
 
         // 检查线路控制方式是否支持协调控制
-        RouteControlModeStatus controlMode = getRouteControlMode(routeId);
+        RouteCtrlInfo controlMode = getRouteControlMode(routeId);
         if (!isCoordinationSupportedMode(controlMode.getValue())) {
             throw new BusinessException("当前控制方式不支持协调控制: " + controlMode.getValue().getDescription());
         }

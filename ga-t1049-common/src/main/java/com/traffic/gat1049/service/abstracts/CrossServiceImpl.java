@@ -234,7 +234,7 @@ public class CrossServiceImpl implements CrossService {
 
     @Override
     public List<CrossState> getAllCrossState() throws BusinessException {
-        List<Object> objs = dataPrider.getAllCrossStates();
+        List<CrossState> objs = dataPrider.getAllCrossStates();
 //        List<CrossState> allCrossState = new ArrayList<>();
 //        for(Object obj : objs) {
 //            CrossState crossState = OBJECT_MAPPER.convertValue(obj, CrossState.class);

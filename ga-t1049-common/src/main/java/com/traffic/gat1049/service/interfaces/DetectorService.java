@@ -13,6 +13,13 @@ import java.util.List;
 public interface DetectorService {
 
     /**
+     * 获取所有检测器列表
+     *
+     * @return 检测器参数列表
+     * @throws BusinessException 业务异常
+     */
+    List<DetectorParam> findAll() throws BusinessException;
+    /**
      * 根据路口编号获取检测器列表
      *
      * @param crossId 路口编号

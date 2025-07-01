@@ -3,24 +3,32 @@ package com.traffic.gat1049.data.provider.impl;
 import com.traffic.gat1049.data.provider.ComprehensiveTestDataProvider;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
-import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.model.enums.*;
+import com.traffic.gat1049.protocol.model.command.CrossCtrlInfo;
 import com.traffic.gat1049.protocol.model.intersection.*;
 import com.traffic.gat1049.protocol.model.system.*;
 import com.traffic.gat1049.protocol.model.signal.*;
+import com.traffic.gat1049.protocol.model.runtime.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.traffic.gat1049.protocol.model.traffic.CrossTrafficData;
+import com.traffic.gat1049.protocol.model.traffic.LaneTrafficData;
+import com.traffic.gat1049.protocol.model.traffic.StageTrafficData;
+import com.traffic.gat1049.protocol.model.traffic.StageTrafficFlowData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * 综合测试数据提供者实现
+ * 综合测试数据提供者实现 - 更新版
  * 从JSON测试数据文件中加载并提供所有类型的测试数据
+ * 支持新的测试数据结构和运行状态数据
  */
 public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataProvider {
 
@@ -33,24 +41,20 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     // 缓存解析后的数据，提高访问性能
     private final Map<String, Object> dataCache = new ConcurrentHashMap<>();
 
-    // 1. Static instance of the class
+    // 单例模式
     private static ComprehensiveTestDataProviderImpl instance;
 
-    // 2. Private constructor
     private ComprehensiveTestDataProviderImpl() {
-        // Prevent external instantiation
+        // 私有构造函数防止外部实例化
     }
 
-    // 3. Static method to get the instance
     public static synchronized ComprehensiveTestDataProviderImpl getInstance() throws BusinessException {
         if (instance == null) {
             instance = new ComprehensiveTestDataProviderImpl();
-            // 首次获取实例时进行初始化
             try {
-                instance.initialize(); // 在这里确保只初始化一次
+                instance.initialize();
             } catch (BusinessException e) {
-                // 如果初始化失败，需要处理或重新抛出异常
-                instance = null; // 清除实例，以便下次尝试重新初始化
+                instance = null;
                 throw e;
             }
         }
@@ -60,21 +64,19 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     @Override
     public void initialize() throws BusinessException {
         if (initialized) {
-            //logger.info("数据提供者已初始化，跳过重复初始化。");
             return;
         }
         try {
             logger.info("初始化综合测试数据提供者...");
-            loadTestDataFromJson(); // 实际加载数据
+            loadTestDataFromJson();
             if (testDataRoot == null) {
                 throw new BusinessException("INIT_ERROR", "无法加载测试数据");
             }
-            preloadCommonData(); // 预加载和缓存
             initialized = true;
+            preloadCommonData();
             logger.info("综合测试数据提供者初始化完成");
         } catch (Exception e) {
             logger.error("综合测试数据提供者初始化失败", e);
-            // 初始化失败时，将 initialized 设为 false，确保后续调用会再次尝试初始化
             initialized = false;
             throw new BusinessException("INIT_ERROR", "初始化失败: " + e.getMessage());
         }
@@ -91,6 +93,26 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         dataCache.clear();
         initialized = false;
         initialize();
+    }
+
+    @Override
+    public String getDataStatistics() {
+        return "";
+    }
+
+    @Override
+    public List<Object> getTestDataByObjectName(String objectName) throws BusinessException {
+        return List.of();
+    }
+
+    @Override
+    public Object getTestDataByObjectNameAndId(String objectName, String id) throws BusinessException {
+        return null;
+    }
+
+    @Override
+    public Object getTestDataByObjectNameIdAndNo(String objectName, String id, String no) throws BusinessException {
+        return null;
     }
 
     // ==================== 系统信息相关实现 ====================
@@ -133,23 +155,19 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
             if (runStatusNode != null) {
                 JsonNode sysStateNode = runStatusNode.get("SysState");
                 if (sysStateNode != null) {
-                    String stateValue = sysStateNode.path("Value").asText("Online");
-                    SystemState systemState = SystemState.fromCode(stateValue);
-
-                    SysState sysState = new SysState(systemState);
-//                    sysState.setStateTime(LocalDateTime.now());
-
+                    SysState sysState = parseSysState(sysStateNode);
                     dataCache.put(cacheKey, sysState);
                     return sysState;
                 }
             }
 
-            // 默认状态
-            SysState defaultState = new SysState(SystemState.ONLINE);
-//            defaultState.setStateTime(LocalDateTime.now());
+            // 如果没找到，返回默认状态
+            SysState defaultState = new SysState();
+            defaultState.setValue(SystemState.ONLINE);
+            defaultState.setTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             dataCache.put(cacheKey, defaultState);
-
             return defaultState;
+
         } catch (Exception e) {
             throw new BusinessException("PARSE_ERROR", "解析系统状态失败: " + e.getMessage());
         }
@@ -414,6 +432,18 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     }
 
     @Override
+    public List<SignalController> getSignalControllersById(String signalControllerId) throws BusinessException {
+        if (signalControllerId == null || signalControllerId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "信号机ID不能为空");
+        }
+
+        List<SignalController> controllers = getAllSignalControllers();
+        return controllers.stream()
+                .filter(controller -> signalControllerId.equals(controller.getSignalControllerID()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<SignalController> getSignalControllersByCrossId(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
@@ -430,21 +460,21 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<LampGroup> getAllLampGroups() throws BusinessException {
+    public List<LampGroupParam> getAllLampGroups() throws BusinessException {
         ensureInitialized();
 
         String cacheKey = "AllLampGroups";
         if (dataCache.containsKey(cacheKey)) {
-            return (List<LampGroup>) dataCache.get(cacheKey);
+            return (List<LampGroupParam>) dataCache.get(cacheKey);
         }
 
         try {
-            List<LampGroup> lampGroups = new ArrayList<>();
+            List<LampGroupParam> lampGroups = new ArrayList<>();
             JsonNode lampGroupArray = testDataRoot.get("LightGroup");
 
             if (lampGroupArray != null && lampGroupArray.isArray()) {
                 for (JsonNode lampGroupNode : lampGroupArray) {
-                    LampGroup lampGroup = parseLampGroup(lampGroupNode);
+                    LampGroupParam lampGroup = parseLampGroup(lampGroupNode);
                     lampGroups.add(lampGroup);
                 }
             }
@@ -457,19 +487,19 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     }
 
     @Override
-    public List<LampGroup> getLampGroupsByCrossId(String crossId) throws BusinessException {
+    public List<LampGroupParam> getLampGroupsByCrossId(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
         }
 
-        List<LampGroup> allLampGroups = getAllLampGroups();
+        List<LampGroupParam> allLampGroups = getAllLampGroups();
         return allLampGroups.stream()
                 .filter(lampGroup -> crossId.equals(lampGroup.getCrossId()))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public LampGroup getLampGroupByCrossIdAndNo(String crossId, String lampGroupNo) throws BusinessException {
+    public LampGroupParam getLampGroupByCrossIdAndNo(String crossId, String lampGroupNo) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
         }
@@ -477,13 +507,12 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
             throw new BusinessException("INVALID_PARAMETER", "灯组编号不能为空");
         }
 
-        List<LampGroup> lampGroups = getLampGroupsByCrossId(crossId);
+        List<LampGroupParam> lampGroups = getLampGroupsByCrossId(crossId);
         return lampGroups.stream()
-                //.filter(lampGroup -> lampGroupNo.equals(lampGroup.getLampGroupNo()))
-                .filter(lampGroup -> Integer.parseInt(lampGroupNo)==(lampGroup.getLampGroupNo()))
+                .filter(lampGroup -> lampGroupNo.equals(String.valueOf(lampGroup.getLampGroupNo())))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
-                        String.format("未找到灯组: 路口ID=%s, 灯组编号=%s", crossId, lampGroupNo)));
+                        String.format("未找到路口%s的灯组%s", crossId, lampGroupNo)));
     }
 
     // ==================== 检测器管理相关实现 ====================
@@ -539,10 +568,10 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<DetectorParam> detectors = getDetectorsByCrossId(crossId);
         return detectors.stream()
-                .filter(detector -> Integer.parseInt(detectorNo) == (detector.getDetectorNo()))
+                .filter(detector -> detectorNo.equals(String.valueOf(detector.getDetectorNo())))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
-                        String.format("未找到检测器: 路口ID=%s, 检测器编号=%s", crossId, detectorNo)));
+                        String.format("未找到路口%s的检测器%s", crossId, detectorNo)));
     }
 
     // ==================== 车道管理相关实现 ====================
@@ -598,10 +627,10 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<LaneParam> lanes = getLanesByCrossId(crossId);
         return lanes.stream()
-                .filter(lane -> Integer.parseInt(laneNo)==(lane.getLaneNo()))
+                .filter(lane -> laneNo.equals(String.valueOf(lane.getLaneNo())))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
-                        String.format("未找到车道: 路口ID=%s, 车道编号=%s", crossId, laneNo)));
+                        String.format("未找到路口%s的车道%s", crossId, laneNo)));
     }
 
     // ==================== 行人管理相关实现 ====================
@@ -657,10 +686,10 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<PedestrianParam> pedestrians = getPedestriansByCrossId(crossId);
         return pedestrians.stream()
-                .filter(pedestrian -> Integer.parseInt(pedestrianNo)==(pedestrian.getPedestrianNo()))
+                .filter(pedestrian -> pedestrianNo.equals(String.valueOf(pedestrian.getPedestrianNo())))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
-                        String.format("未找到行人参数: 路口ID=%s, 行人编号=%s", crossId, pedestrianNo)));
+                        String.format("未找到路口%s的行人%s", crossId, pedestrianNo)));
     }
 
     // ==================== 信号组管理相关实现 ====================
@@ -677,7 +706,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         try {
             List<SignalGroupParam> signalGroups = new ArrayList<>();
-            JsonNode signalGroupArray = testDataRoot.get("SignalGroup");
+            JsonNode signalGroupArray = testDataRoot.get("SignalGroupParam");
 
             if (signalGroupArray != null && signalGroupArray.isArray()) {
                 for (JsonNode signalGroupNode : signalGroupArray) {
@@ -716,10 +745,10 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<SignalGroupParam> signalGroups = getSignalGroupsByCrossId(crossId);
         return signalGroups.stream()
-                .filter(signalGroup -> Integer.parseInt(signalGroupNo) == (signalGroup.getSignalGroupNo()))
+                .filter(signalGroup -> signalGroupNo.equals(String.valueOf(signalGroup.getSignalGroupNo())))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
-                        String.format("未找到信号组: 路口ID=%s, 信号组编号=%s", crossId, signalGroupNo)));
+                        String.format("未找到路口%s的信号组%s", crossId, signalGroupNo)));
     }
 
     // ==================== 阶段管理相关实现 ====================
@@ -775,10 +804,10 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<StageParam> stages = getStagesByCrossId(crossId);
         return stages.stream()
-                .filter(stage -> Integer.parseInt(stageNo)==(stage.getStageNo()))
+                .filter(stage -> stageNo.equals(String.valueOf(stage.getStageNo())))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
-                        String.format("未找到阶段: 路口ID=%s, 阶段编号=%s", crossId, stageNo)));
+                        String.format("未找到路口%s的阶段%s", crossId, stageNo)));
     }
 
     // ==================== 配时方案管理相关实现 ====================
@@ -829,15 +858,15 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
             throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
         }
         if (planNo == null || planNo.trim().isEmpty()) {
-            throw new BusinessException("INVALID_PARAMETER", "方案编号不能为空");
+            throw new BusinessException("INVALID_PARAMETER", "配时方案编号不能为空");
         }
 
         List<PlanParam> plans = getPlansByCrossId(crossId);
         return plans.stream()
-                .filter(plan -> Integer.parseInt(planNo)==(plan.getPlanNo()))
+                .filter(plan -> planNo.equals(String.valueOf(plan.getPlanNo())))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
-                        String.format("未找到配时方案: 路口ID=%s, 方案编号=%s", crossId, planNo)));
+                        String.format("未找到路口%s的配时方案%s", crossId, planNo)));
     }
 
     // ==================== 日计划管理相关实现 ====================
@@ -854,7 +883,7 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         try {
             List<DayPlanParam> dayPlans = new ArrayList<>();
-            JsonNode dayPlanArray = testDataRoot.get("DayPlanParam");
+            JsonNode dayPlanArray = testDataRoot.get("DayPlan");
 
             if (dayPlanArray != null && dayPlanArray.isArray()) {
                 for (JsonNode dayPlanNode : dayPlanArray) {
@@ -893,10 +922,10 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<DayPlanParam> dayPlans = getDayPlansByCrossId(crossId);
         return dayPlans.stream()
-                .filter(dayPlan -> Integer.parseInt(dayPlanNo) == (dayPlan.getDayPlanNo()))
+                .filter(dayPlan -> dayPlanNo.equals(String.valueOf(dayPlan.getDayPlanNo())))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
-                        String.format("未找到日计划: 路口ID=%s, 日计划编号=%s", crossId, dayPlanNo)));
+                        String.format("未找到路口%s的日计划%s", crossId, dayPlanNo)));
     }
 
     // ==================== 调度管理相关实现 ====================
@@ -952,322 +981,540 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
 
         List<ScheduleParam> schedules = getSchedulesByCrossId(crossId);
         return schedules.stream()
-                .filter(schedule -> Integer.parseInt(scheduleNo)==(schedule.getScheduleNo()))
+                .filter(schedule -> scheduleNo.equals(String.valueOf(schedule.getScheduleNo())))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException(
-                        String.format("未找到调度: 路口ID=%s, 调度编号=%s", crossId, scheduleNo)));
-    }
-
-    // ==================== 运行状态相关实现 ====================
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<Object> getAllCrossStates() throws BusinessException {
-        ensureInitialized();
-        return (List<Object>) getRunStatusData("CrossState");
-    }
-
-    @Override
-    public Object getCrossStateById(String crossId) throws BusinessException {
-        List<Object> crossStates = getAllCrossStates();
-        return findByIdInList(crossStates, "CrossID", crossId);
+                        String.format("未找到路口%s的调度%s", crossId, scheduleNo)));
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Object> getAllSignalTroubles() throws BusinessException {
+    public List<CrossState> getAllCrossStates() throws BusinessException {
         ensureInitialized();
-        return (List<Object>) getRunStatusData("SignalControllerError");
-    }
 
-    @Override
-    public List<Object> getSignalTroublesByControllerId(String signalControllerId) throws BusinessException {
-        List<Object> troubles = getAllSignalTroubles();
-        return filterListByField(troubles, "SignalControlerID", signalControllerId);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<Object> getAllCrossModePlans() throws BusinessException {
-        ensureInitialized();
-        return (List<Object>) getRunStatusData("CrossModePlan");
-    }
-
-    @Override
-    public Object getCrossModePlanById(String crossId) throws BusinessException {
-        List<Object> modePlans = getAllCrossModePlans();
-        return findByIdInList(modePlans, "CrossID", crossId);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<Object> getAllCrossCycles() throws BusinessException {
-        ensureInitialized();
-        return (List<Object>) getRunStatusData("CrossCycle");
-    }
-
-    @Override
-    public Object getCrossCycleById(String crossId) throws BusinessException {
-        List<Object> cycles = getAllCrossCycles();
-        return findByIdInList(cycles, "CrossID", crossId);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<Object> getAllCrossStages() throws BusinessException {
-        ensureInitialized();
-        return (List<Object>) getRunStatusData("CrossStage");
-    }
-
-    @Override
-    public Object getCrossStageById(String crossId) throws BusinessException {
-        List<Object> stages = getAllCrossStages();
-        return findByIdInList(stages, "CrossID", crossId);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<Object> getAllCrossSignalGroupStatus() throws BusinessException {
-        ensureInitialized();
-        return (List<Object>) getRunStatusData("CrossSignalGroupStatus");
-    }
-
-    @Override
-    public Object getCrossSignalGroupStatusById(String crossId) throws BusinessException {
-        List<Object> statusList = getAllCrossSignalGroupStatus();
-        return findByIdInList(statusList, "CrossID", crossId);
-    }
-
-    // ==================== 交通数据相关实现 ====================
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<Object> getAllCrossTrafficData() throws BusinessException {
-        ensureInitialized();
-        return (List<Object>) getRunStatusData("CrossTrafficData");
-    }
-
-    @Override
-    public Object getCrossTrafficDataById(String crossId) throws BusinessException {
-        List<Object> trafficData = getAllCrossTrafficData();
-        return findByIdInList(trafficData, "CrossID", crossId);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<Object> getAllStageTrafficData() throws BusinessException {
-        ensureInitialized();
-        return (List<Object>) getRunStatusData("StageTrafficData");
-    }
-
-    @Override
-    public Object getStageTrafficDataByCrossId(String crossId) throws BusinessException {
-        List<Object> stageData = getAllStageTrafficData();
-        return findByIdInList(stageData, "CrossID", crossId);
-    }
-
-    // ==================== 可变车道和干线控制相关实现 ====================
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<Object> getAllVarLaneStatus() throws BusinessException {
-        ensureInitialized();
-        return (List<Object>) getRunStatusData("VarLaneStatus");
-    }
-
-    @Override
-    public Object getVarLaneStatusByCrossId(String crossId) throws BusinessException {
-        List<Object> varLanes = getAllVarLaneStatus();
-        return findByIdInList(varLanes, "CrossID", crossId);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<Object> getAllRouteControlModes() throws BusinessException {
-        ensureInitialized();
-        return (List<Object>) getRunStatusData("RouteControlModeStatus");
-    }
-
-    @Override
-    public Object getRouteControlModeById(String routeId) throws BusinessException {
-        List<Object> controlModes = getAllRouteControlModes();
-        return findByIdInList(controlModes, "RouteID", routeId);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<Object> getAllRouteSpeeds() throws BusinessException {
-        ensureInitialized();
-        return (List<Object>) getRunStatusData("RouteSpeed");
-    }
-
-    @Override
-    public Object getRouteSpeedById(String routeId) throws BusinessException {
-        List<Object> routeSpeeds = getAllRouteSpeeds();
-        return findByIdInList(routeSpeeds, "RouteID", routeId);
-    }
-
-    // ==================== 通用方法实现 ====================
-
-    @Override
-    public String getDataStatistics() {
-        if (!initialized) {
-            return "测试数据未初始化";
+        String cacheKey = "AllCrossStates";
+        if (dataCache.containsKey(cacheKey)) {
+            return (List<CrossState>) dataCache.get(cacheKey);
         }
 
         try {
-            StringBuilder stats = new StringBuilder();
-            stats.append("=== 测试数据统计 ===\n");
+            List<CrossState> crossStates = new ArrayList<>();
+            JsonNode runStatusNode = testDataRoot.get("RunStatus");
+            if (runStatusNode != null) {
+                JsonNode crossStateArray = runStatusNode.get("CrossState");
+                if (crossStateArray != null && crossStateArray.isArray()) {
+                    for (JsonNode crossStateNode : crossStateArray) {
+                        CrossState crossState = parseCrossState(crossStateNode);
+                        crossStates.add(crossState);
+                    }
+                }
+            }
 
-            // 系统信息统计
-            stats.append(String.format("系统信息: %s\n", getSystemInfo().getSysName()));
-            stats.append(String.format("系统状态: %s\n", getSystemState().getValue().getDescription()));
-
-            // 各类数据统计
-            stats.append(String.format("区域数量: %d\n", getAllRegions().size()));
-            stats.append(String.format("子区数量: %d\n", getAllSubRegions().size()));
-            stats.append(String.format("线路数量: %d\n", getAllRoutes().size()));
-            stats.append(String.format("路口数量: %d\n", getAllCrosses().size()));
-            stats.append(String.format("信号机数量: %d\n", getAllSignalControllers().size()));
-            stats.append(String.format("灯组数量: %d\n", getAllLampGroups().size()));
-            stats.append(String.format("检测器数量: %d\n", getAllDetectors().size()));
-            stats.append(String.format("车道数量: %d\n", getAllLanes().size()));
-            stats.append(String.format("行人参数数量: %d\n", getAllPedestrians().size()));
-            stats.append(String.format("信号组数量: %d\n", getAllSignalGroups().size()));
-            stats.append(String.format("阶段数量: %d\n", getAllStages().size()));
-            stats.append(String.format("配时方案数量: %d\n", getAllPlans().size()));
-            stats.append(String.format("日计划数量: %d\n", getAllDayPlans().size()));
-            stats.append(String.format("调度数量: %d\n", getAllSchedules().size()));
-
-            // 运行状态统计
-            stats.append(String.format("路口状态数量: %d\n", getAllCrossStates().size()));
-            stats.append(String.format("信号机故障数量: %d\n", getAllSignalTroubles().size()));
-            stats.append(String.format("交通数据记录数量: %d\n", getAllCrossTrafficData().size()));
-
-            stats.append(String.format("缓存数据项数量: %d\n", dataCache.size()));
-
-            return stats.toString();
+            dataCache.put(cacheKey, crossStates);
+            return crossStates;
         } catch (Exception e) {
-            return "获取数据统计失败: " + e.getMessage();
+            throw new BusinessException("PARSE_ERROR", "解析路口状态失败: " + e.getMessage());
         }
     }
 
     @Override
-    public List<Object> getTestDataByObjectName(String objectName) throws BusinessException {
-        if (objectName == null || objectName.trim().isEmpty()) {
-            throw new BusinessException("INVALID_PARAMETER", "对象名称不能为空");
+    @SuppressWarnings("unchecked")
+    public CrossState getCrossStateById(String crossId) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
         }
 
+        List<CrossState> crossStates = getAllCrossStates();
+        return crossStates.stream()
+                .filter(crossState -> crossId.equals(crossState.getCrossId()))
+                .findFirst()
+                .orElseThrow(() -> new DataNotFoundException("未找到路口状态: " + crossId));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<SignalControllerError> getAllSignalControllerErrors() throws BusinessException {
         ensureInitialized();
 
-        switch (objectName.toLowerCase()) {
-            case "regionparam":
-                return new ArrayList<>(getAllRegions());
-            case "subregionparam":
-                return new ArrayList<>(getAllSubRegions());
-            case "routeparam":
-                return new ArrayList<>(getAllRoutes());
-            case "crossparam":
-                return new ArrayList<>(getAllCrosses());
-            case "signalcontroller":
-                return new ArrayList<>(getAllSignalControllers());
-            case "lampgroup":
-                return new ArrayList<>(getAllLampGroups());
-            case "detectorparam":
-                return new ArrayList<>(getAllDetectors());
-            case "laneparam":
-                return new ArrayList<>(getAllLanes());
-            case "pedestrianparam":
-                return new ArrayList<>(getAllPedestrians());
-            case "signalgroupparam":
-                return new ArrayList<>(getAllSignalGroups());
-            case "stageparam":
-                return new ArrayList<>(getAllStages());
-            case "planparam":
-                return new ArrayList<>(getAllPlans());
-            case "dayplanparam":
-                return new ArrayList<>(getAllDayPlans());
-            case "scheduleparam":
-                return new ArrayList<>(getAllSchedules());
-            default:
-                throw new DataNotFoundException("不支持的对象名称: " + objectName);
+        String cacheKey = "AllSignalControllerErrors";
+        if (dataCache.containsKey(cacheKey)) {
+            return (List<SignalControllerError>) dataCache.get(cacheKey);
+        }
+
+        try {
+            List<SignalControllerError> errors = new ArrayList<>();
+            JsonNode runStatusNode = testDataRoot.get("RunStatus");
+            if (runStatusNode != null) {
+                JsonNode errorArray = runStatusNode.get("SignalControllerError");
+                if (errorArray != null && errorArray.isArray()) {
+                    for (JsonNode errorNode : errorArray) {
+                        SignalControllerError error = parseSignalControllerError(errorNode);
+                        errors.add(error);
+                    }
+                }
+            }
+
+            dataCache.put(cacheKey, errors);
+            return errors;
+        } catch (Exception e) {
+            throw new BusinessException("PARSE_ERROR", "解析信号机故障信息失败: " + e.getMessage());
         }
     }
 
     @Override
-    public Object getTestDataByObjectNameAndId(String objectName, String id) throws BusinessException {
-        if (objectName == null || objectName.trim().isEmpty()) {
-            throw new BusinessException("INVALID_PARAMETER", "对象名称不能为空");
-        }
-        if (id == null || id.trim().isEmpty()) {
-            throw new BusinessException("INVALID_PARAMETER", "ID不能为空");
+    public List<SignalControllerError> getSignalControllerErrorsByControllerId(String signalControllerId) throws BusinessException {
+        if (signalControllerId == null || signalControllerId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "信号机ID不能为空");
         }
 
-        switch (objectName.toLowerCase()) {
-            case "regionparam":
-                return getRegionById(id);
-            case "subregionparam":
-                return getSubRegionById(id);
-            case "routeparam":
-                return getRouteById(id);
-            case "crossparam":
-                return getCrossById(id);
-            case "signalcontroller":
-                return getSignalControllerById(id);
-            default:
-                throw new DataNotFoundException("不支持通过ID查询的对象类型: " + objectName);
+        List<SignalControllerError> allErrors = getAllSignalControllerErrors();
+        return allErrors.stream()
+                .filter(error -> signalControllerId.equals(error.getSignalControllerId()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<CrossCtrlInfo> getAllCrossCtrlInfos() throws BusinessException {
+        ensureInitialized();
+
+        String cacheKey = "AllCrossCtrlInfos";
+        if (dataCache.containsKey(cacheKey)) {
+            return (List<CrossCtrlInfo>) dataCache.get(cacheKey);
+        }
+
+        try {
+            List<CrossCtrlInfo> ctrlInfos = new ArrayList<>();
+            JsonNode runStatusNode = testDataRoot.get("RunStatus");
+            if (runStatusNode != null) {
+                JsonNode ctrlInfoArray = runStatusNode.get("CrossCtrlInfo");
+                if (ctrlInfoArray != null && ctrlInfoArray.isArray()) {
+                    for (JsonNode ctrlInfoNode : ctrlInfoArray) {
+                        CrossCtrlInfo ctrlInfo = parseCrossCtrlInfo(ctrlInfoNode);
+                        ctrlInfos.add(ctrlInfo);
+                    }
+                }
+            }
+
+            dataCache.put(cacheKey, ctrlInfos);
+            return ctrlInfos;
+        } catch (Exception e) {
+            throw new BusinessException("PARSE_ERROR", "解析路口控制信息失败: " + e.getMessage());
         }
     }
 
     @Override
-    public Object getTestDataByObjectNameIdAndNo(String objectName, String id, String no) throws BusinessException {
-        if (objectName == null || objectName.trim().isEmpty()) {
-            throw new BusinessException("INVALID_PARAMETER", "对象名称不能为空");
-        }
-        if (id == null || id.trim().isEmpty()) {
-            throw new BusinessException("INVALID_PARAMETER", "ID不能为空");
-        }
-        if (no == null || no.trim().isEmpty()) {
-            throw new BusinessException("INVALID_PARAMETER", "编号不能为空");
+    public CrossCtrlInfo getCrossCtrlInfoById(String crossId) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
         }
 
-        switch (objectName.toLowerCase()) {
-            case "lampgroup":
-                return getLampGroupByCrossIdAndNo(id, no);
-            case "detectorparam":
-                return getDetectorByCrossIdAndNo(id, no);
-            case "laneparam":
-                return getLaneByCrossIdAndNo(id, no);
-            case "pedestrianparam":
-                return getPedestrianByCrossIdAndNo(id, no);
-            case "signalgroupparam":
-                return getSignalGroupByCrossIdAndNo(id, no);
-            case "stageparam":
-                return getStageByCrossIdAndNo(id, no);
-            case "planparam":
-                return getPlanByCrossIdAndNo(id, no);
-            case "dayplanparam":
-                return getDayPlanByCrossIdAndNo(id, no);
-            case "scheduleparam":
-                return getScheduleByCrossIdAndNo(id, no);
-            default:
-                throw new DataNotFoundException("不支持通过ID和编号查询的对象类型: " + objectName);
+        List<CrossCtrlInfo> ctrlInfos = getAllCrossCtrlInfos();
+        return ctrlInfos.stream()
+                .filter(ctrlInfo -> crossId.equals(ctrlInfo.getCrossId()))
+                .findFirst()
+                .orElseThrow(() -> new DataNotFoundException("未找到路口控制信息: " + crossId));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<CrossCycle> getAllCrossCycles() throws BusinessException {
+        ensureInitialized();
+
+        String cacheKey = "AllCrossCycles";
+        if (dataCache.containsKey(cacheKey)) {
+            return (List<CrossCycle>) dataCache.get(cacheKey);
+        }
+
+        try {
+            List<CrossCycle> cycles = new ArrayList<>();
+            JsonNode runStatusNode = testDataRoot.get("RunStatus");
+            if (runStatusNode != null) {
+                JsonNode cycleArray = runStatusNode.get("CrossCycle");
+                if (cycleArray != null && cycleArray.isArray()) {
+                    for (JsonNode cycleNode : cycleArray) {
+                        CrossCycle cycle = parseCrossCycle(cycleNode);
+                        cycles.add(cycle);
+                    }
+                }
+            }
+
+            dataCache.put(cacheKey, cycles);
+            return cycles;
+        } catch (Exception e) {
+            throw new BusinessException("PARSE_ERROR", "解析路口周期信息失败: " + e.getMessage());
         }
     }
+
+    @Override
+    public CrossCycle getCrossCycleById(String crossId) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
+        }
+
+        List<CrossCycle> cycles = getAllCrossCycles();
+        return cycles.stream()
+                .filter(cycle -> crossId.equals(cycle.getCrossId()))
+                .findFirst()
+                .orElseThrow(() -> new DataNotFoundException("未找到路口周期信息: " + crossId));
+    }
+
+    @Override
+    public List<CrossStage> getAllCrossStages() throws BusinessException {
+        ensureInitialized();
+
+        String cacheKey = "AllCrossStages";
+        if (dataCache.containsKey(cacheKey)) {
+            return (List<CrossStage>) dataCache.get(cacheKey);
+        }
+
+        try {
+            List<CrossStage> stages = new ArrayList<>();
+            JsonNode runStatusNode = testDataRoot.get("RunStatus");
+            if (runStatusNode != null) {
+                JsonNode stageArray = runStatusNode.get("CrossStage");
+                if (stageArray != null && stageArray.isArray()) {
+                    for (JsonNode stageNode : stageArray) {
+                        CrossStage stage = parseCrossStage(stageNode);
+                        stages.add(stage);
+                    }
+                }
+            }
+
+            dataCache.put(cacheKey, stages);
+            return stages;
+        } catch (Exception e) {
+            throw new BusinessException("PARSE_ERROR", "解析路口阶段信息失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public CrossStage getCrossStageById(String crossId) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
+        }
+
+        List<CrossStage> stages = getAllCrossStages();
+        return stages.stream()
+                .filter(stage -> crossId.equals(stage.getCrossId()))
+                .findFirst()
+                .orElseThrow(() -> new DataNotFoundException("未找到路口阶段信息: " + crossId));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<CrossSignalGroupStatus> getAllCrossSignalGroupStatus() throws BusinessException {
+        ensureInitialized();
+
+        String cacheKey = "AllCrossSignalGroupStatus";
+        if (dataCache.containsKey(cacheKey)) {
+            return (List<CrossSignalGroupStatus>) dataCache.get(cacheKey);
+        }
+
+        try {
+            List<CrossSignalGroupStatus> statusList = new ArrayList<>();
+            JsonNode runStatusNode = testDataRoot.get("RunStatus");
+            if (runStatusNode != null) {
+                JsonNode statusArray = runStatusNode.get("CrossSignalGroupStatus");
+                if (statusArray != null && statusArray.isArray()) {
+                    for (JsonNode statusNode : statusArray) {
+                        CrossSignalGroupStatus status = parseCrossSignalGroupStatus(statusNode);
+                        statusList.add(status);
+                    }
+                }
+            }
+
+            dataCache.put(cacheKey, statusList);
+            return statusList;
+        } catch (Exception e) {
+            throw new BusinessException("PARSE_ERROR", "解析路口信号组状态失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public CrossSignalGroupStatus getCrossSignalGroupStatusById(String crossId) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
+        }
+
+        List<CrossSignalGroupStatus> statusList = getAllCrossSignalGroupStatus();
+        return statusList.stream()
+                .filter(status -> crossId.equals(status.getCrossId()))
+                .findFirst()
+                .orElseThrow(() -> new DataNotFoundException("未找到路口信号组状态: " + crossId));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<CrossTrafficData> getAllCrossTrafficData() throws BusinessException {
+        ensureInitialized();
+
+        String cacheKey = "AllCrossTrafficData";
+        if (dataCache.containsKey(cacheKey)) {
+            return (List<CrossTrafficData>) dataCache.get(cacheKey);
+        }
+
+        try {
+            List<CrossTrafficData> trafficDataList = new ArrayList<>();
+            JsonNode runStatusNode = testDataRoot.get("RunStatus");
+            if (runStatusNode != null) {
+                JsonNode trafficDataArray = runStatusNode.get("CrossTrafficData");
+                if (trafficDataArray != null && trafficDataArray.isArray()) {
+                    for (JsonNode trafficDataNode : trafficDataArray) {
+                        CrossTrafficData trafficData = parseCrossTrafficData(trafficDataNode);
+                        trafficDataList.add(trafficData);
+                    }
+                }
+            }
+
+            dataCache.put(cacheKey, trafficDataList);
+            return trafficDataList;
+        } catch (Exception e) {
+            throw new BusinessException("PARSE_ERROR", "解析路口交通流数据失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public CrossTrafficData getCrossTrafficDataById(String crossId) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
+        }
+
+        List<CrossTrafficData> trafficDataList = getAllCrossTrafficData();
+        return trafficDataList.stream()
+                .filter(trafficData -> crossId.equals(trafficData.getCrossId()))
+                .findFirst()
+                .orElseThrow(() -> new DataNotFoundException("未找到路口交通流数据: " + crossId));
+    }
+
+    @Override
+    public List<CrossTrafficData> getCrossTrafficDataByCrossId(String crossId) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
+        }
+        List<CrossTrafficData> trafficDataList = getAllCrossTrafficData();
+        return trafficDataList.stream()
+                .filter(trafficData -> crossId.equals(trafficData.getCrossId()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<StageTrafficData> getAllStageTrafficData() throws BusinessException {
+        ensureInitialized();
+
+        String cacheKey = "AllStageTrafficData";
+        if (dataCache.containsKey(cacheKey)) {
+            return (List<StageTrafficData>) dataCache.get(cacheKey);
+        }
+
+        try {
+            List<StageTrafficData> stageTrafficDataList = new ArrayList<>();
+            JsonNode runStatusNode = testDataRoot.get("RunStatus");
+            if (runStatusNode != null) {
+                JsonNode stageTrafficDataArray = runStatusNode.get("StageTrafficData");
+                if (stageTrafficDataArray != null && stageTrafficDataArray.isArray()) {
+                    for (JsonNode stageTrafficDataNode : stageTrafficDataArray) {
+                        StageTrafficData stageTrafficData = parseStageTrafficData(stageTrafficDataNode);
+                        stageTrafficDataList.add(stageTrafficData);
+                    }
+                }
+            }
+
+            dataCache.put(cacheKey, stageTrafficDataList);
+            return stageTrafficDataList;
+        } catch (Exception e) {
+            throw new BusinessException("PARSE_ERROR", "解析阶段交通流数据失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<StageTrafficData> getStageTrafficDataByCrossId(String crossId) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
+        }
+
+        List<StageTrafficData> allStageTrafficData = getAllStageTrafficData();
+        return allStageTrafficData.stream()
+                .filter(stageTrafficData -> crossId.equals(stageTrafficData.getCrossId()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<VarLaneStatus> getAllVarLaneStatus() throws BusinessException {
+        ensureInitialized();
+
+        String cacheKey = "AllVarLaneStatus";
+        if (dataCache.containsKey(cacheKey)) {
+            return (List<VarLaneStatus>) dataCache.get(cacheKey);
+        }
+
+        try {
+            List<VarLaneStatus> varLaneStatusList = new ArrayList<>();
+            JsonNode runStatusNode = testDataRoot.get("RunStatus");
+            if (runStatusNode != null) {
+                JsonNode varLaneStatusArray = runStatusNode.get("VarLaneStatus");
+                if (varLaneStatusArray != null && varLaneStatusArray.isArray()) {
+                    for (JsonNode varLaneStatusNode : varLaneStatusArray) {
+                        VarLaneStatus varLaneStatus = parseVarLaneStatus(varLaneStatusNode);
+                        varLaneStatusList.add(varLaneStatus);
+                    }
+                }
+            }
+
+            dataCache.put(cacheKey, varLaneStatusList);
+            return varLaneStatusList;
+        } catch (Exception e) {
+            throw new BusinessException("PARSE_ERROR", "解析可变车道状态失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<VarLaneStatus> getVarLaneStatusByCrossId(String crossId) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "路口ID不能为空");
+        }
+
+        List<VarLaneStatus> allVarLaneStatus = getAllVarLaneStatus();
+        return allVarLaneStatus.stream()
+                .filter(varLaneStatus -> crossId.equals(varLaneStatus.getCrossId()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public RouteCtrlInfo getRouteCtrlInfo() throws BusinessException {
+        ensureInitialized();
+
+        String cacheKey = "RouteCtrlInfo";
+        if (dataCache.containsKey(cacheKey)) {
+            return (RouteCtrlInfo) dataCache.get(cacheKey);
+        }
+
+        try {
+            JsonNode runStatusNode = testDataRoot.get("RunStatus");
+            if (runStatusNode != null) {
+                JsonNode routeCtrlInfoNode = runStatusNode.get("RouteCtrlInfo");
+                if (routeCtrlInfoNode != null) {
+                    RouteCtrlInfo routeCtrlInfo = parseRouteCtrlInfo(routeCtrlInfoNode);
+                    dataCache.put(cacheKey, routeCtrlInfo);
+                    return routeCtrlInfo;
+                }
+            }
+
+            throw new DataNotFoundException("未找到干线控制信息");
+        } catch (Exception e) {
+            throw new BusinessException("PARSE_ERROR", "解析干线控制信息失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public RouteCtrlInfo getRouteCtrlInfoById(String routeId) throws BusinessException {
+        if (routeId == null || routeId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "线路ID不能为空");
+        }
+
+        RouteCtrlInfo routeCtrlInfo = getRouteCtrlInfo();
+        if (routeId.equals(routeCtrlInfo.getRouteId())) {
+            return routeCtrlInfo;
+        }
+
+        throw new DataNotFoundException("未找到线路控制信息: " + routeId);
+    }
+
+    @Override
+    public RouteSpeed getRouteSpeed() throws BusinessException {
+        ensureInitialized();
+
+        String cacheKey = "RouteSpeed";
+        if (dataCache.containsKey(cacheKey)) {
+            return (RouteSpeed) dataCache.get(cacheKey);
+        }
+
+        try {
+            JsonNode runStatusNode = testDataRoot.get("RunStatus");
+            if (runStatusNode != null) {
+                JsonNode routeSpeedNode = runStatusNode.get("RouteSpeed");
+                if (routeSpeedNode != null) {
+                    RouteSpeed routeSpeed = parseRouteSpeed(routeSpeedNode);
+                    dataCache.put(cacheKey, routeSpeed);
+                    return routeSpeed;
+                }
+            }
+
+            throw new DataNotFoundException("未找到干线推荐车速信息");
+        } catch (Exception e) {
+            throw new BusinessException("PARSE_ERROR", "解析干线推荐车速信息失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public RouteSpeed getRouteSpeedById(String routeId) throws BusinessException {
+        if (routeId == null || routeId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "线路ID不能为空");
+        }
+
+        RouteSpeed routeSpeed = getRouteSpeed();
+        if (routeId.equals(routeSpeed.getRouteId())) {
+            return routeSpeed;
+        }
+
+        throw new DataNotFoundException("未找到线路推荐车速: " + routeId);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<SCDoorStatus> getAllSCDoorStatus() throws BusinessException {
+        ensureInitialized();
+
+        String cacheKey = "AllSCDoorStatus";
+        if (dataCache.containsKey(cacheKey)) {
+            return (List<SCDoorStatus>) dataCache.get(cacheKey);
+        }
+
+        try {
+            List<SCDoorStatus> doorStatusList = new ArrayList<>();
+            JsonNode runStatusNode = testDataRoot.get("RunStatus");
+            if (runStatusNode != null) {
+                JsonNode doorStatusArray = runStatusNode.get("SCDoorStatus");
+                if (doorStatusArray != null && doorStatusArray.isArray()) {
+                    for (JsonNode doorStatusNode : doorStatusArray) {
+                        SCDoorStatus doorStatus = parseSCDoorStatus(doorStatusNode);
+                        doorStatusList.add(doorStatus);
+                    }
+                }
+            }
+
+            dataCache.put(cacheKey, doorStatusList);
+            return doorStatusList;
+        } catch (Exception e) {
+            throw new BusinessException("PARSE_ERROR", "解析信号机柜门状态失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public SCDoorStatus getSCDoorStatusByControllerId(String signalControllerId) throws BusinessException {
+        if (signalControllerId == null || signalControllerId.trim().isEmpty()) {
+            throw new BusinessException("INVALID_PARAMETER", "信号机ID不能为空");
+        }
+
+        List<SCDoorStatus> doorStatusList = getAllSCDoorStatus();
+        return doorStatusList.stream()
+                .filter(doorStatus -> signalControllerId.equals(doorStatus.getSignalControllerId()))
+                .findFirst()
+                .orElseThrow(() -> new DataNotFoundException("未找到信号机柜门状态: " + signalControllerId));
+    }
+    // ==================== 通用方法实现 ====================
 
     // ==================== 私有辅助方法 ====================
 
     private void ensureInitialized() throws BusinessException {
         if (!initialized) {
-            // 如果在 getInstance() 之外调用，或者 getInstance() 初始化失败
-            // 且后续又需要数据，这里可以抛出异常，或者根据业务逻辑选择再次尝试初始化 (不推荐)
-            //throw new BusinessException("NOT_INITIALIZED", "数据提供者未初始化，请先调用 getInstance() 获取实例。");
+            throw new BusinessException("NOT_INITIALIZED", "数据提供者未初始化");
         }
     }
-
     private void loadTestDataFromJson() throws BusinessException {
         try {
-            // 先尝试从类路径加载JSON文件
             InputStream inputStream = getClass().getClassLoader()
                     .getResourceAsStream("testdata.json");
 
@@ -1276,9 +1523,8 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
                 inputStream.close();
                 logger.info("从文件加载测试数据成功");
             } else {
-                // 使用内置测试数据
-                String builtInData = getBuiltInTestData();
-                testDataRoot = objectMapper.readTree(builtInData);
+//                String builtInData = getBuiltInTestData();
+//                testDataRoot = objectMapper.readTree(builtInData);
                 logger.info("使用内置测试数据");
             }
         } catch (Exception e) {
@@ -1287,90 +1533,37 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
     }
 
     private void preloadCommonData() throws BusinessException {
-        // 预加载系统信息和状态
         getSystemInfo();
         getSystemState();
-
-        // 预加载常用配置数据
         getAllRegions();
         getAllSubRegions();
         getAllRoutes();
         getAllCrosses();
         getAllSignalControllers();
-
         logger.debug("预加载常用测试数据完成");
     }
-
-    private Object getRunStatusData(String dataType) throws BusinessException {
-        String cacheKey = "RunStatus_" + dataType;
-        if (dataCache.containsKey(cacheKey)) {
-            return dataCache.get(cacheKey);
-        }
-
-        try {
-            JsonNode runStatusNode = testDataRoot.get("RunStatus");
-            if (runStatusNode != null) {
-                JsonNode dataNode = runStatusNode.get(dataType);
-                if (dataNode != null) {
-                    Object data = objectMapper.convertValue(dataNode, Object.class);
-                    dataCache.put(cacheKey, data);
-                    return data;
-                }
-            }
-
-            // 返回空列表而不是null
-            List<Object> emptyList = new ArrayList<>();
-            dataCache.put(cacheKey, emptyList);
-            return emptyList;
-
-        } catch (Exception e) {
-            throw new BusinessException("PARSE_ERROR", "解析运行状态数据失败: " + dataType + " - " + e.getMessage());
-        }
-    }
-
-    private Object findByIdInList(List<Object> list, String idField, String idValue) throws BusinessException {
-        for (Object item : list) {
-            if (item instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> itemMap = (Map<String, Object>) item;
-                if (idValue.equals(itemMap.get(idField))) {
-                    return item;
-                }
-            }
-        }
-        throw new DataNotFoundException(String.format("未找到%s=%s的记录", idField, idValue));
-    }
-
-    private List<Object> filterListByField(List<Object> list, String fieldName, String fieldValue) {
-        return list.stream()
-                .filter(item -> {
-                    if (item instanceof Map) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> itemMap = (Map<String, Object>) item;
-                        return fieldValue.equals(itemMap.get(fieldName));
-                    }
-                    return false;
-                })
-                .collect(Collectors.toList());
-    }
-
     // ==================== 解析方法 ====================
 
     private SysInfo parseSystemInfo(JsonNode sysParamNode) {
         SysInfo sysInfo = new SysInfo();
-        sysInfo.setSysName(sysParamNode.path("SysName").asText("智能交通信号控制系统"));
-        sysInfo.setSysVersion(String.valueOf(sysParamNode.path("SysVersion").asDouble(2.0)));
-        sysInfo.setSupplier(sysParamNode.path("Supplier").asText("山东双百电子有限公司"));
+        sysInfo.setSysName(sysParamNode.path("SysName").asText("测试交通信号控制系统"));
+        sysInfo.setSysVersion(sysParamNode.path("SysVersion").asText("2.0"));
+        sysInfo.setSupplier(sysParamNode.path("Supplier").asText("测试供应商"));
         sysInfo.setCrossIdList(parseStringList(sysParamNode, "CrossIDList"));
         sysInfo.setSubRegionIdList(parseStringList(sysParamNode, "SubRegionIDList"));
         sysInfo.setRouteIdList(parseStringList(sysParamNode, "RouteIDList"));
         sysInfo.setRegionIdList(parseStringList(sysParamNode, "RegionIDList"));
         sysInfo.setSignalControllerIdList(parseStringList(sysParamNode, "SignalControllerIDList"));
-//        sysInfo.setCreateTime(LocalDateTime.now());
-//        sysInfo.setUpdateTime(LocalDateTime.now());
         return sysInfo;
     }
 
+    private SysState parseSysState(JsonNode sysStateNode) {
+        SysState sysState = new SysState();
+        sysState.setValue(SystemState.fromCode(sysStateNode.path("Value").asText("Online")));
+        sysState.setTime(sysStateNode.path("Time").asText(
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
+        return sysState;
+    }
     private RegionParam parseRegionParam(JsonNode regionNode) {
         RegionParam region = new RegionParam();
         region.setRegionId(regionNode.path("RegionID").asText());
@@ -1388,49 +1581,38 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         subRegion.setKeyCrossIdList(parseStringList(subRegionNode, "KeyCrossIDList"));
         return subRegion;
     }
-
     private RouteParam parseRouteParam(JsonNode routeNode) {
         RouteParam route = new RouteParam();
         route.setRouteId(routeNode.path("RouteID").asText());
         route.setRouteName(routeNode.path("RouteName").asText());
-        route.setType(RouteType.fromCode(routeNode.path("Type").asText()));
+        route.setType(RouteType.fromCode(String.valueOf(routeNode.path("Type").asInt())));
         route.setSubRegionIdList(parseStringList(routeNode, "SubRegionIDList"));
 
-        // 解析RouteCrossList
         List<RouteCross> routeCrossList = new ArrayList<>();
         JsonNode routeCrossListNode = routeNode.path("RouteCrossList");
-
         if (routeCrossListNode != null && routeCrossListNode.isArray()) {
             for (JsonNode routeCrossNode : routeCrossListNode) {
                 RouteCross routeCross = parseRouteCross(routeCrossNode);
                 routeCrossList.add(routeCross);
             }
         }
-
         route.setRouteCrossList(routeCrossList);
         return route;
     }
 
-    /**
-     * 解析线路路口信息
-     */
     private RouteCross parseRouteCross(JsonNode routeCrossNode) {
         RouteCross routeCross = new RouteCross();
         routeCross.setCrossId(routeCrossNode.path("CrossID").asText());
         routeCross.setDistance(routeCrossNode.path("Distance").asInt(0));
         return routeCross;
     }
-
     private CrossParam parseCrossParam(JsonNode crossNode) {
         CrossParam cross = new CrossParam();
-
-        // 基本信息
         cross.setCrossId(crossNode.path("CrossID").asText());
         cross.setCrossName(crossNode.path("CrossName").asText());
 
-        // 路口形状和等级
-        String featureCode = crossNode.path("Feature").asText();
-        if (!featureCode.isEmpty()) {
+        String featureCode = String.valueOf(crossNode.path("Feature").asInt());
+        if (!featureCode.isEmpty() && !featureCode.equals("null")) {
             try {
                 cross.setFeature(CrossFeature.fromCode(featureCode));
             } catch (IllegalArgumentException e) {
@@ -1449,25 +1631,17 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
             }
         }
 
-        // 各种列表字段
         cross.setDetNoList(parseIntList(crossNode, "DetNoList"));
         cross.setLaneNoList(parseIntList(crossNode, "LaneNoList"));
-        cross.setPedestrianNoList(parseIntList(crossNode, "PedestrianNoList")); // 新增
+        cross.setPedestrianNoList(parseIntList(crossNode, "PedestrianNoList"));
         cross.setLampGroupNoList(parseIntList(crossNode, "LampGroupNoList"));
-
-        // 信号组序号列表 - 注意这里改为String类型
         cross.setSignalGroupNoList(parseStringList(crossNode, "SignalGroupNoList"));
-
-        // 绿冲突矩阵 - 新增
         cross.setGreenConflictMatrix(crossNode.path("GreenConflictMatrix").asText());
-
-        // 其他序号列表
         cross.setStageNoList(parseIntList(crossNode, "StageNoList"));
         cross.setPlanNoList(parseIntList(crossNode, "PlanNoList"));
         cross.setDayPlanNoList(parseIntList(crossNode, "DayPlanNoList"));
         cross.setScheduleNoList(parseIntList(crossNode, "ScheduleNoList"));
 
-        // 坐标信息 - 新增
         if (crossNode.has("Longitude") && !crossNode.path("Longitude").isNull()) {
             cross.setLongitude(crossNode.path("Longitude").asDouble());
         }
@@ -1478,34 +1652,39 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
             cross.setAltitude(crossNode.path("Altitude").asInt());
         }
 
-        // 如果绿冲突矩阵为空，生成默认矩阵
-        if ((cross.getGreenConflictMatrix() == null || cross.getGreenConflictMatrix().isEmpty())
-                && cross.getSignalGroupNoList() != null && !cross.getSignalGroupNoList().isEmpty()) {
-            cross.generateDefaultGreenConflictMatrix();
-        }
-
         return cross;
     }
-
     private SignalController parseSignalController(JsonNode controllerNode) {
         SignalController controller = new SignalController();
-        controller.setSignalControllerID(controllerNode.path("SignalControlerID").asText());
+        controller.setSignalControllerID(controllerNode.path("SignalControllerID").asText());
         controller.setSupplier(controllerNode.path("Supplier").asText());
         controller.setType(controllerNode.path("Type").asText());
+        controller.setId(controllerNode.path("ID").asText());
         controller.setCommMode(CommMode.fromCode(controllerNode.path("CommMode").asText()));
+        controller.setIp(controllerNode.path("IP").asText());
+        controller.setSubMask(controllerNode.path("SubMask").asText());
+        controller.setGateway(controllerNode.path("Gateway").asText());
+        controller.setPort(controllerNode.path("Port").asInt());
+        controller.setHasDoorStatus(controllerNode.path("HasDoorStatus").asInt());
+
+        if (controllerNode.has("Longitude") && !controllerNode.path("Longitude").isNull()) {
+            controller.setLongitude(controllerNode.path("Longitude").asDouble());
+        }
+        if (controllerNode.has("Latitude") && !controllerNode.path("Latitude").isNull()) {
+            controller.setLatitude(controllerNode.path("Latitude").asDouble());
+        }
+
         controller.setCrossIDList(parseStringList(controllerNode, "CrossIDList"));
         return controller;
     }
-
-    private LampGroup parseLampGroup(JsonNode lampGroupNode) {
-        LampGroup lampGroup = new LampGroup();
+    private LampGroupParam parseLampGroup(JsonNode lampGroupNode) {
+        LampGroupParam lampGroup = new LampGroupParam();
         lampGroup.setCrossId(lampGroupNode.path("CrossID").asText());
         lampGroup.setLampGroupNo(lampGroupNode.path("LampGroupNo").asInt());
         lampGroup.setDirection(Direction.fromCode(lampGroupNode.path("Direction").asText()));
         lampGroup.setType(LampGroupType.fromCode(lampGroupNode.path("Type").asText()));
         return lampGroup;
     }
-
     private DetectorParam parseDetectorParam(JsonNode detectorNode) {
         DetectorParam detector = new DetectorParam();
         detector.setCrossId(detectorNode.path("CrossID").asText());
@@ -1518,21 +1697,29 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         detector.setPedestrianNoList(parseIntList(detectorNode, "PedestrianNoList"));
         return detector;
     }
-
     private LaneParam parseLaneParam(JsonNode laneNode) {
         LaneParam lane = new LaneParam();
         lane.setCrossId(laneNode.path("CrossID").asText());
         lane.setLaneNo(laneNode.path("LaneNo").asInt());
         lane.setDirection(Direction.fromCode(laneNode.path("Direction").asText()));
         lane.setAttribute(LaneAttribute.fromCode(laneNode.path("Attribute").asText()));
-        lane.setMovement(LaneMovement.fromCode(laneNode.path("Movement").asText()));
+        lane.setMovement(LaneMovement.fromCode(String.valueOf(laneNode.path("Movement").asInt())));
         lane.setFeature(LaneFeature.fromCode(laneNode.path("Feature").asText()));
         lane.setAzimuth(laneNode.path("Azimuth").asInt());
         lane.setWaitingArea(laneNode.path("WaitingArea").asInt());
         lane.setVarMovementList(parseLaneMovementList(laneNode, "VarMovementList"));
         return lane;
     }
+    private List<LaneMovement> parseLaneMovementList(JsonNode parentNode, String fieldName) {
+        List<LaneMovement> result = new ArrayList<>();
+        JsonNode listNode = parentNode.get(fieldName);
 
+        if (listNode != null && listNode.isArray()) {
+            listNode.forEach(node -> result.add(LaneMovement.fromCode(String.valueOf(node.asInt()))));
+        }
+
+        return result;
+    }
     private PedestrianParam parsePedestrianParam(JsonNode pedestrianNode) {
         PedestrianParam pedestrian = new PedestrianParam();
         pedestrian.setCrossId(pedestrianNode.path("CrossID").asText());
@@ -1541,17 +1728,17 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         pedestrian.setAttribute(PedestrianAttribute.fromCode(pedestrianNode.path("Attribute").asText()));
         return pedestrian;
     }
-
     private SignalGroupParam parseSignalGroupParam(JsonNode signalGroupNode) {
         SignalGroupParam signalGroup = new SignalGroupParam();
         signalGroup.setCrossId(signalGroupNode.path("CrossID").asText());
         signalGroup.setSignalGroupNo(signalGroupNode.path("SignalGroupNo").asInt());
         signalGroup.setName(signalGroupNode.path("Name").asText());
-        signalGroup.setGreenFlashLen(signalGroupNode.path("GreenFlushLen").asInt());
+        signalGroup.setGreenFlashLen(signalGroupNode.path("GreenFlashLen").asInt());
+        signalGroup.setMaxGreen(signalGroupNode.path("MaxGreen").asInt());
+        signalGroup.setMinGreen(signalGroupNode.path("MinGreen").asInt());
         signalGroup.setLampGroupNoList(parseIntList(signalGroupNode, "LampGroupNoList"));
         return signalGroup;
     }
-
     private StageParam parseStageParam(JsonNode stageNode) {
         StageParam stage = new StageParam();
         stage.setCrossId(stageNode.path("CrossID").asText());
@@ -1559,60 +1746,19 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         stage.setStageName(stageNode.path("StageName").asText());
         stage.setAttribute(stageNode.path("Attribute").asInt());
 
-        // 解析SignalGroupStatusList
-        stage.setSignalGroupStatusList(parseSignalGroupStatusList(stageNode, "SignalGroupStatusList"));
-
+        List<SignalGroupStatus> signalGroupStatusList = new ArrayList<>();
+        JsonNode statusListNode = stageNode.path("SignalGroupStatusList");
+        if (statusListNode != null && statusListNode.isArray()) {
+            for (JsonNode statusNode : statusListNode) {
+                SignalGroupStatus status = new SignalGroupStatus();
+                status.setSignalGroupNo(statusNode.path("SignalGroupNo").asInt());
+                status.setLampStatus(statusNode.path("LampStatus").asText());
+                signalGroupStatusList.add(status);
+            }
+        }
+        stage.setSignalGroupStatusList(signalGroupStatusList);
         return stage;
     }
-
-    /**
-     * 解析信号组状态列表
-     *
-     * @param parentNode 父节点
-     * @param fieldName 字段名称
-     * @return 信号组状态列表
-     */
-    private List<SignalGroupStatus> parseSignalGroupStatusList(JsonNode parentNode, String fieldName) {
-        List<SignalGroupStatus> statusList = new ArrayList<>();
-
-        JsonNode statusArray = parentNode.path(fieldName);
-        if (statusArray != null && statusArray.isArray()) {
-            for (JsonNode statusNode : statusArray) {
-                SignalGroupStatus status = parseSignalGroupStatus(statusNode);
-                statusList.add(status);
-            }
-        }
-
-        return statusList;
-    }
-
-    /**
-     * 解析单个信号组状态
-     *
-     * @param statusNode 状态节点
-     * @return 信号组状态对象
-     */
-    private SignalGroupStatus parseSignalGroupStatus(JsonNode statusNode) {
-        SignalGroupStatus status = new SignalGroupStatus();
-
-        // 解析信号组序号
-        status.setSignalGroupNo(statusNode.path("SignalGroupNo").asInt());
-
-        // 解析灯态状态，使用LampStatus枚举的fromCode方法
-        String lampStatusCode = statusNode.path("LampStatus").asText();
-        if (lampStatusCode != null && !lampStatusCode.trim().isEmpty()) {
-            try {
-                status.setLampStatus(lampStatusCode);
-            } catch (IllegalArgumentException e) {
-                // 记录日志并设置默认值或抛出更友好的异常
-                logger.warn("未知的灯态代码: {}, 使用默认值OFF", lampStatusCode);
-                status.setLampStatus("111");
-            }
-        }
-
-        return status;
-    }
-
     private PlanParam parsePlanParam(JsonNode planNode) {
         PlanParam plan = new PlanParam();
         plan.setCrossId(planNode.path("CrossID").asText());
@@ -1622,272 +1768,65 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         plan.setCoordStageNo(planNode.path("CoordStageNo").asInt());
         plan.setOffset(planNode.path("Offset").asInt());
 
-        // 解析StageTimingList - 现在有完整实现
-        plan.setStageTimingList(parseStageTimingList(planNode, "StageTimingList"));
-
-        return plan;
-    }
-
-    /**
-     * 解析阶段配时信息列表
-     * @param parentNode 父JSON节点
-     * @param fieldName 字段名称
-     * @return 阶段配时信息列表
-     */
-    private List<StageTiming> parseStageTimingList(JsonNode parentNode, String fieldName) {
-        List<StageTiming> result = new ArrayList<>();
-        JsonNode listNode = parentNode.get(fieldName);
-
-        if (listNode != null && listNode.isArray()) {
-            for (JsonNode timingNode : listNode) {
+        List<StageTiming> stageTimingList = new ArrayList<>();
+        JsonNode timingListNode = planNode.path("StageTimingList");
+        if (timingListNode != null && timingListNode.isArray()) {
+            for (JsonNode timingNode : timingListNode) {
                 StageTiming timing = parseStageTiming(timingNode);
-                result.add(timing);
+                stageTimingList.add(timing);
             }
         }
-
-        return result;
+        plan.setStageTimingList(stageTimingList);
+        return plan;
     }
-
-    /**
-     * 解析单个阶段配时信息
-     * @param timingNode 阶段配时JSON节点
-     * @return 阶段配时信息对象
-     */
     private StageTiming parseStageTiming(JsonNode timingNode) {
         StageTiming timing = new StageTiming();
-
-        // 设置基本配时信息
         timing.setStageNo(timingNode.path("StageNo").asInt());
         timing.setGreen(timingNode.path("Green").asInt());
         timing.setYellow(timingNode.path("Yellow").asInt());
         timing.setAllRed(timingNode.path("AllRed").asInt());
+        timing.setMaxGreen(timingNode.path("MaxGreen").asInt());
+        timing.setMinGreen(timingNode.path("MinGreen").asInt());
 
-        // 设置可选的最大最小绿灯时间
-        if (timingNode.has("MaxGreen") && !timingNode.path("MaxGreen").isNull()) {
-            timing.setMaxGreen(timingNode.path("MaxGreen").asInt());
-        }
-        if (timingNode.has("MinGreen") && !timingNode.path("MinGreen").isNull()) {
-            timing.setMinGreen(timingNode.path("MinGreen").asInt());
-        }
-
-        // 解析AdjustList（迟开早闭配置列表）
-        timing.setAdjustList(parseAdjustList(timingNode, "AdjustList"));
-
-        return timing;
-    }
-
-    /**
-     * 解析迟开早闭配置列表
-     * @param parentNode 父JSON节点
-     * @param fieldName 字段名称
-     * @return 迟开早闭配置列表
-     */
-    private List<Adjust> parseAdjustList(JsonNode parentNode, String fieldName) {
-        List<Adjust> result = new ArrayList<>();
-        JsonNode listNode = parentNode.get(fieldName);
-
-        if (listNode != null && listNode.isArray()) {
-            for (JsonNode adjustNode : listNode) {
-                Adjust adjust = parseAdjust(adjustNode);
-                result.add(adjust);
+        List<Adjust> adjustList = new ArrayList<>();
+        JsonNode adjustListNode = timingNode.path("AdjustList");
+        if (adjustListNode != null && adjustListNode.isArray()) {
+            for (JsonNode adjustNode : adjustListNode) {
+                Adjust adjust = new Adjust();
+                adjust.setSignalGroupNo(adjustNode.path("SignalGroupNo").asInt());
+                adjust.setOper(AdjustOperation.fromCode(adjustNode.path("Oper").asText()));
+                adjust.setLen(adjustNode.path("Len").asInt());
+                adjustList.add(adjust);
             }
         }
-
-        return result;
+        timing.setAdjustList(adjustList);
+        return timing;
     }
-
-    /**
-     * 解析单个迟开早闭配置
-     * @param adjustNode 迟开早闭配置JSON节点
-     * @return 迟开早闭配置对象
-     */
-    private Adjust parseAdjust(JsonNode adjustNode) {
-        Adjust adjust = new Adjust();
-
-        // 设置信号组序号
-        adjust.setSignalGroupNo(adjustNode.path("SignalGroupNo").asInt());
-
-        // 设置操作类型（迟开/早闭）
-        String operCode = adjustNode.path("Oper").asText();
-        if (operCode != null && !operCode.isEmpty()) {
-            adjust.setOper(AdjustOperation.fromCode(operCode));
-        }
-
-        // 设置调整时间长度
-        adjust.setLen(adjustNode.path("Len").asInt());
-
-        return adjust;
-    }
-
-    /**
-     * 解析DayPlanParam，包含完整的PeriodList解析
-     */
     private DayPlanParam parseDayPlanParam(JsonNode dayPlanNode) {
         DayPlanParam dayPlan = new DayPlanParam();
         dayPlan.setCrossId(dayPlanNode.path("CrossID").asText());
         dayPlan.setDayPlanNo(dayPlanNode.path("DayPlanNo").asInt());
+        dayPlan.setDayPlanName(dayPlanNode.path("DayPlanName").asText());
 
-        // 解析PeriodList
-        List<Period> periodList = parsePeriodList(dayPlanNode, "PeriodList");
-        dayPlan.setPeriodList(periodList);
-
-        return dayPlan;
-    }
-
-    /**
-     * 解析时段信息列表
-     * @param parentNode 父JSON节点
-     * @param fieldName 字段名称
-     * @return 时段信息列表
-     */
-    private List<Period> parsePeriodList(JsonNode parentNode, String fieldName) {
         List<Period> periodList = new ArrayList<>();
-        JsonNode listNode = parentNode.get(fieldName);
-
-        if (listNode != null && listNode.isArray()) {
-            for (JsonNode periodNode : listNode) {
-                Period period = parsePeriod(periodNode);
+        JsonNode periodListNode = dayPlanNode.path("PeriodList");
+        if (periodListNode != null && periodListNode.isArray()) {
+            for (JsonNode periodNode : periodListNode) {
+                Period period = new Period();
+                period.setStartTime(periodNode.path("StartTime").asText());
+                period.setPlanNo(periodNode.path("PlanNo").asInt());
+                period.setCtrlMode(periodNode.path("CtrlMode").asText());
                 periodList.add(period);
             }
         }
-
-        return periodList;
+        dayPlan.setPeriodList(periodList);
+        return dayPlan;
     }
-
-    /**
-     * 解析单个时段信息
-     * @param periodNode 时段JSON节点
-     * @return 时段信息对象
-     */
-    private Period parsePeriod(JsonNode periodNode) {
-        Period period = new Period();
-
-        // 解析开始时间 - 直接作为字符串处理，不再转换为LocalTime
-        String startTimeStr = periodNode.path("StartTime").asText();
-        if (startTimeStr != null && !startTimeStr.isEmpty() && !"null".equals(startTimeStr)) {
-            // 使用Period类的标准化方法处理时间格式
-            period.setStartTime(Period.normalizeTimeFormat(startTimeStr));
-        } else {
-            // 设置默认时间
-            period.setStartTime("00:00");
-        }
-
-        // 解析配时方案号 - 根据testdata.json，PlanNo可能是字符串形式的数字（如"001"）
-        JsonNode planNoNode = periodNode.get("PlanNo");
-        if (planNoNode != null && !planNoNode.isNull()) {
-            if (planNoNode.isTextual()) {
-                String planNoStr = planNoNode.asText();
-                if (planNoStr != null && !planNoStr.isEmpty() && !"null".equals(planNoStr)) {
-                    try {
-                        // 去除前导零后转换为整数
-                        period.setPlanNo(Integer.parseInt(planNoStr));
-                    } catch (NumberFormatException e) {
-                        logger.warn("解析配时方案号失败: {}, 使用默认值1", planNoStr);
-                        period.setPlanNo(1);
-                    }
-                } else {
-                    period.setPlanNo(1);
-                }
-            } else {
-                period.setPlanNo(planNoNode.asInt(1));
-            }
-        } else {
-            period.setPlanNo(1);
-        }
-
-        // 解析控制方式
-        String ctrlMode = periodNode.path("CtrlMode").asText();
-        if (ctrlMode != null && !ctrlMode.isEmpty() && !"null".equals(ctrlMode)) {
-            period.setCtrlMode(ctrlMode);
-        } else {
-            // 根据协议文档，设置默认控制方式
-            period.setCtrlMode("21"); // 假设21为默认的时间优化控制方式
-        }
-
-        return period;
-    }
-
-    /**
-     * 验证时段信息列表 - 更新版本
-     * 适配 startTime 为 String 类型的验证
-     */
-    private void validatePeriods(List<Period> periods) throws BusinessException {
-        if (periods == null || periods.isEmpty()) {
-            throw new ValidationException("periodList", "时段信息列表不能为空");
-        }
-
-        // 检查时段是否按时间顺序排列
-        for (int i = 0; i < periods.size() - 1; i++) {
-            Period current = periods.get(i);
-            Period next = periods.get(i + 1);
-
-            if (current.getStartTime() == null || next.getStartTime() == null) {
-                throw new ValidationException("startTime", "时段开始时间不能为空");
-            }
-
-            // 使用Period类的时间比较方法
-            if (Period.compareTime(current.getStartTime(), next.getStartTime()) >= 0) {
-                throw new ValidationException("periodList", "时段必须按开始时间升序排列");
-            }
-        }
-
-        // 验证每个时段的有效性
-        for (Period period : periods) {
-            validatePeriod(period);
-        }
-    }
-
-    /**
-     * 验证单个时段信息 - 更新版本
-     */
-    private void validatePeriod(Period period) throws BusinessException {
-        if (period.getStartTime() == null || period.getStartTime().trim().isEmpty()) {
-            throw new ValidationException("startTime", "时段开始时间不能为空");
-        }
-
-        if (period.getPlanNo() == null || period.getPlanNo() <= 0) {
-            throw new ValidationException("planNo", "配时方案号必须大于0");
-        }
-
-        if (period.getCtrlMode() == null || period.getCtrlMode().trim().isEmpty()) {
-            throw new ValidationException("ctrlMode", "控制方式不能为空");
-        }
-
-        // 使用Period类的验证方法检查时间格式
-        if (!Period.isValidTimeFormat(period.getStartTime())) {
-            throw new ValidationException("startTime", "时间格式必须为HH:MM:SS或HH:MM");
-        }
-    }
-
-
-    /**
-     * 使用示例和验证方法
-     */
-    public void validatePeriodListParsing() throws BusinessException {
-        // 测试解析功能
-        List<DayPlanParam> dayPlans = getAllDayPlans();
-
-        for (DayPlanParam dayPlan : dayPlans) {
-            logger.info("日计划: CrossID={}, DayPlanNo={}",
-                    dayPlan.getCrossId(), dayPlan.getDayPlanNo());
-
-            List<Period> periods = dayPlan.getPeriodList();
-            if (periods != null && !periods.isEmpty()) {
-                logger.info("包含{}个时段:", periods.size());
-                for (Period period : periods) {
-                    logger.info("  时段: 开始时间={}, 配时方案号={}, 控制方式={}",
-                            period.getStartTime(), period.getPlanNo(), period.getCtrlMode());
-                }
-            } else {
-                logger.warn("日计划{}没有时段信息", dayPlan.getDayPlanNo());
-            }
-        }
-    }
-
     private ScheduleParam parseScheduleParam(JsonNode scheduleNode) {
         ScheduleParam schedule = new ScheduleParam();
         schedule.setCrossId(scheduleNode.path("CrossID").asText());
         schedule.setScheduleNo(scheduleNode.path("ScheduleNo").asInt());
+        schedule.setScheduleName(scheduleNode.path("ScheduleName").asText());
         schedule.setType(ScheduleType.fromCode(scheduleNode.path("Type").asText()));
         schedule.setStartDay(scheduleNode.path("StartDay").asText());
         schedule.setEndDay(scheduleNode.path("EndDay").asText());
@@ -1895,15 +1834,177 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         schedule.setDayPlanNo(scheduleNode.path("DayPlanNo").asInt());
         return schedule;
     }
-    private List<LaneMovement> parseLaneMovementList(JsonNode parentNode, String fieldName){
-        List<LaneMovement> result = new ArrayList<>();
-        JsonNode listNode = parentNode.get(fieldName);
+    private CrossState parseCrossState(JsonNode crossStateNode) {
+        CrossState crossState = new CrossState();
+        crossState.setCrossId(crossStateNode.path("CrossID").asText());
+        crossState.setValue(SystemState.fromCode(crossStateNode.path("Value").asText()));
+        return crossState;
+    }
+    private SignalControllerError parseSignalControllerError(JsonNode errorNode) {
+        SignalControllerError error = new SignalControllerError();
+        error.setSignalControllerId(errorNode.path("SignalControllerID").asText());
+        error.setErrorType(ControllerErrorType.fromCode(errorNode.path("ErrorType").asText()));
+        error.setErrorDesc(errorNode.path("ErrorDesc").asText());
+        error.setOccurTime(errorNode.path("OccurTime").asText());
+        return error;
+    }
+    private CrossCtrlInfo parseCrossCtrlInfo(JsonNode ctrlInfoNode) {
+        CrossCtrlInfo ctrlInfo = new CrossCtrlInfo();
+        ctrlInfo.setCrossId(ctrlInfoNode.path("CrossID").asText());
+        ctrlInfo.setControlMode(ControlMode.fromCode(ctrlInfoNode.path("ControlMode").asText()));
+        ctrlInfo.setPlanNo(ctrlInfoNode.path("PlanNo").asInt());
+        ctrlInfo.setTime(ctrlInfoNode.path("Time").asText());
+        return ctrlInfo;
+    }
+    private CrossCycle parseCrossCycle(JsonNode cycleNode) {
+        CrossCycle cycle = new CrossCycle();
+        cycle.setCrossId(cycleNode.path("CrossID").asText());
+        cycle.setStartTime(cycleNode.path("StartTime").asText());
+        cycle.setLastCycleLen(cycleNode.path("LastCycleLen").asInt());
+        cycle.setAdjustFlag(cycleNode.path("AdjustFlag").asInt());
+        return cycle;
+    }
+    private CrossStage parseCrossStage(JsonNode stageNode) {
+        CrossStage stage = new CrossStage();
+        stage.setCrossId(stageNode.path("CrossID").asText());
+        stage.setLastStageNo(stageNode.path("LastStageNo").asInt());
+        stage.setLastStageLen(stageNode.path("LastStageLen").asInt());
+        stage.setCurStageNo(stageNode.path("CurStageNo").asInt());
+        stage.setCurStageStartTime(stageNode.path("CurStageStartTime").asText());
+        stage.setCurStageLen(stageNode.path("CurStageLen").asInt());
+        return stage;
+    }
+    private CrossSignalGroupStatus parseCrossSignalGroupStatus(JsonNode statusNode) {
+        CrossSignalGroupStatus status = new CrossSignalGroupStatus();
+        status.setCrossId(statusNode.path("CrossID").asText());
+        status.setLampStatusTime(statusNode.path("LampStatusTime").asText());
 
-        if (listNode != null && listNode.isArray()) {
-            listNode.forEach(node -> result.add(LaneMovement.fromCode(node.asText())));
+        List<SignalGroupStatus> statusList = new ArrayList<>();
+        JsonNode statusListNode = statusNode.path("SignalGroupStatusList");
+        if (statusListNode != null && statusListNode.isArray()) {
+            for (JsonNode detailNode : statusListNode) {
+                SignalGroupStatus detail = new SignalGroupStatus();
+                detail.setSignalGroupNo(detailNode.path("SignalGroupNo").asInt());
+                detail.setLampStatus(detailNode.path("LampStatus").asText());
+                detail.setRemainTime(detailNode.path("RemainTime").asInt());
+                statusList.add(detail);
+            }
         }
+        status.setSignalGroupStatusList(statusList);
+        return status;
+    }
+    private CrossTrafficData parseCrossTrafficData(JsonNode trafficDataNode) {
+        CrossTrafficData trafficData = new CrossTrafficData();
+        trafficData.setCrossId(trafficDataNode.path("CrossID").asText());
+        trafficData.setEndTime(trafficDataNode.path("EndTime").asText());
+        trafficData.setInterval(trafficDataNode.path("Interval").asInt());
 
-        return result;
+        List<LaneTrafficData> dataList = new ArrayList<>();
+        JsonNode dataListNode = trafficDataNode.path("DataList");
+        if (dataListNode != null && dataListNode.isArray()) {
+            for (JsonNode dataNode : dataListNode) {
+                LaneTrafficData laneData = parseLaneTrafficData(dataNode);
+                dataList.add(laneData);
+            }
+        }
+        trafficData.setDataList(dataList);
+        return trafficData;
+    }
+    private LaneTrafficData parseLaneTrafficData(JsonNode dataNode) {
+        LaneTrafficData laneData = new LaneTrafficData();
+        laneData.setLaneNo(dataNode.path("LaneNo").asInt());
+        laneData.setVolume(dataNode.path("Volume").asInt());
+        laneData.setAvgVehLen(dataNode.path("AvgVehLen").decimalValue());
+        laneData.setPcu(dataNode.path("Pcu").asInt());
+        laneData.setHeadDistance(dataNode.path("HeadDistance").decimalValue());
+        laneData.setHeadTime(dataNode.path("HeadTime").decimalValue());
+        laneData.setSpeed(dataNode.path("Speed").decimalValue());
+        laneData.setSaturation(dataNode.path("Saturation").decimalValue());
+        laneData.setDensity(dataNode.path("Density").asInt());
+        laneData.setQueueLength(dataNode.path("QueueLength").decimalValue());
+        laneData.setMaxQueueLength(dataNode.path("MaxQueueLength").decimalValue());
+        laneData.setOccupancy(dataNode.path("Occupancy").asInt());
+        return laneData;
+    }
+    private StageTrafficData parseStageTrafficData(JsonNode stageDataNode) {
+        StageTrafficData stageData = new StageTrafficData();
+        stageData.setCrossId(stageDataNode.path("CrossID").asText());
+        stageData.setStartTime(stageDataNode.path("StartTime").asText());
+        stageData.setEndTime(stageDataNode.path("EndTime").asText());
+        stageData.setStageNo(stageDataNode.path("StageNo").asInt());
+
+        List<StageTrafficFlowData> dataList = new ArrayList<>();
+        JsonNode dataListNode = stageDataNode.path("DataList");
+        if (dataListNode != null && dataListNode.isArray()) {
+            for (JsonNode dataNode : dataListNode) {
+                StageTrafficFlowData laneData = parseStageLaneData(dataNode);
+                dataList.add(laneData);
+            }
+        }
+        stageData.setDataList(dataList);
+        return stageData;
+    }
+    private StageTrafficFlowData parseStageLaneData(JsonNode dataNode) {
+        StageTrafficFlowData laneData = new StageTrafficFlowData();
+        laneData.setLaneNo(dataNode.path("LaneNo").asInt());
+        laneData.setVehicleNum(dataNode.path("VehicleNum").asInt());
+        laneData.setPcu(dataNode.path("Pcu").asInt());
+        laneData.setHeadTime(dataNode.path("HeadTime").decimalValue());
+        laneData.setSaturation(dataNode.path("Saturation").decimalValue());
+        laneData.setQueueLength(dataNode.path("QueueLength").decimalValue());
+        laneData.setOccupancy(dataNode.path("Occupancy").asInt());
+        return laneData;
+    }
+    private VarLaneStatus parseVarLaneStatus(JsonNode varLaneNode) {
+        VarLaneStatus varLane = new VarLaneStatus();
+        varLane.setCrossId(varLaneNode.path("CrossID").asText());
+        varLane.setLaneNo(varLaneNode.path("LaneNo").asInt());
+        varLane.setCurMovement(LaneMovement.fromCode(varLaneNode.path("CurMovement").asText()));
+        varLane.setCurMode(VarLaneMode.fromCode(varLaneNode.path("CurMode").asText()));
+        return varLane;
+    }
+    private RouteCtrlInfo parseRouteCtrlInfo(JsonNode routeCtrlNode) {
+        RouteCtrlInfo routeCtrl = new RouteCtrlInfo();
+        routeCtrl.setRouteId(routeCtrlNode.path("RouteID").asText());
+        routeCtrl.setValue(RouteControlMode.fromCode(routeCtrlNode.path("CtrlMode").asText()));
+        return routeCtrl;
+    }
+    private RouteSpeed parseRouteSpeed(JsonNode routeSpeedNode) {
+        RouteSpeed routeSpeed = new RouteSpeed();
+        routeSpeed.setRouteId(routeSpeedNode.path("RouteID").asText());
+
+        List<RoadSectionSpeed> speedList = new ArrayList<>();
+        JsonNode speedListNode = routeSpeedNode.path("RoadSectionSpeedList");
+        if (speedListNode != null && speedListNode.isArray()) {
+            for (JsonNode speedNode : speedListNode) {
+                RoadSectionSpeed sectionSpeed = new RoadSectionSpeed();
+                sectionSpeed.setUpCrossId(speedNode.path("UpCrossID").asText());
+                sectionSpeed.setDownCrossId(speedNode.path("DownCrossID").asText());
+                sectionSpeed.setRecommendSpeed(speedNode.path("RecommendSpeed").asInt());
+                speedList.add(sectionSpeed);
+            }
+        }
+        routeSpeed.setRoadSectionSpeedList(speedList);
+        return routeSpeed;
+    }
+    private SCDoorStatus parseSCDoorStatus(JsonNode doorStatusNode) {
+        SCDoorStatus doorStatus = new SCDoorStatus();
+        doorStatus.setSignalControllerId(doorStatusNode.path("SignalControllerID").asText());
+        doorStatus.setTime(doorStatusNode.path("Time").asText());
+
+        List<SCDoorStatus.DoorStatusItem> doorList = new ArrayList<>();
+        JsonNode doorListNode = doorStatusNode.path("DoorStatusList");
+        if (doorListNode != null && doorListNode.isArray()) {
+            for (JsonNode doorNode : doorListNode) {
+                SCDoorStatus.DoorStatusItem door = new SCDoorStatus.DoorStatusItem();
+                door.setDoorNo(doorNode.path("DoorNo").asInt());
+                door.setDoorName(doorNode.path("DoorName").asText());
+                door.setStatus(DoorStatus.fromCode(doorNode.path("Status").asText()));
+                doorList.add(door);
+            }
+        }
+        doorStatus.setDoorStatusList(new SCDoorStatus.DoorStatusList(doorList));
+        return doorStatus;
     }
     private List<String> parseStringList(JsonNode parentNode, String fieldName) {
         List<String> result = new ArrayList<>();
@@ -1924,41 +2025,5 @@ public class ComprehensiveTestDataProviderImpl implements ComprehensiveTestDataP
         }
 
         return result;
-    }
-
-    private String getBuiltInTestData() {
-        // 这里返回你提供的完整测试数据JSON
-        return """
-        {
-          "SysParam": {
-            "SysName": "智能交通信号控制系统",
-            "SysVersion": 2.0,
-            "Supplier": "山东双百电子有限公司",
-            "CrossIDList": [
-              "11010110001",
-              "11010110002",
-              "11010110003"
-            ],
-            "RouteIDList": [
-              "110101001",
-              "110101002"
-            ],
-            "RegionIDList": [
-              "110101001",
-              "110101002"
-            ],
-            "SignalControlerIDList": [
-              "11010140000111001",
-              "11010140000111002",
-              "11010140000111003"
-            ]
-          },
-          "RunStatus": {
-            "SysState": {
-              "Value": "Online"
-            }
-          }
-        }
-        """;
     }
 }

@@ -1,6 +1,7 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
+import com.traffic.gat1049.protocol.model.command.CrossCtrlInfo;
 import com.traffic.gat1049.protocol.model.signal.PlanParam;
 import com.traffic.gat1049.protocol.model.runtime.CrossModePlan;
 import com.traffic.gat1049.model.enums.ControlMode;
@@ -91,7 +92,7 @@ public interface PlanService {
      * @return 当前控制模式和方案
      * @throws BusinessException 业务异常
      */
-    CrossModePlan getCurrentControlMode(String crossId) throws BusinessException;
+    CrossCtrlInfo getCurrentControlMode(String crossId) throws BusinessException;
 
     /**
      * 获取全部当前控制模式和方案
@@ -99,6 +100,6 @@ public interface PlanService {
      * @return 当前控制模式和方案
      * @throws BusinessException 业务异常
      */
-    List<CrossModePlan> getAllCurrentControlMode() throws BusinessException;
+    List<CrossCtrlInfo> getAllCurrentControlMode() throws BusinessException;
 
 }

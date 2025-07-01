@@ -13,6 +13,13 @@ import java.util.List;
 public interface SignalGroupService {
 
     /**
+     * 获取所有信号组
+     *
+     * @return 信号组参数列表
+     * @throws BusinessException 业务异常
+     */
+    List<SignalGroupParam> findAll() throws BusinessException;
+    /**
      * 根据路口编号获取信号组
      *
      * @param crossId 路口编号

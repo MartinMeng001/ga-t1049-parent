@@ -1,7 +1,7 @@
 package com.traffic.gat1049.service.interfaces;
 
 import com.traffic.gat1049.exception.BusinessException;
-import com.traffic.gat1049.protocol.model.runtime.RouteControlModeStatus;
+import com.traffic.gat1049.protocol.model.runtime.RouteCtrlInfo;
 import com.traffic.gat1049.protocol.model.runtime.RouteSpeed;
 import com.traffic.gat1049.protocol.model.runtime.RoadSectionSpeed;
 import com.traffic.gat1049.model.enums.RouteControlMode;
@@ -20,7 +20,7 @@ public interface RouteControlService {
      * @return 干线控制方式
      * @throws BusinessException 业务异常
      */
-    RouteControlModeStatus getRouteControlMode(String routeId) throws BusinessException;
+    RouteCtrlInfo getRouteControlMode(String routeId) throws BusinessException;
 
     /**
      * 获取干线控制方式列表
@@ -29,7 +29,7 @@ public interface RouteControlService {
      * @return 干线控制方式
      * @throws BusinessException 业务异常
      */
-    List<RouteControlModeStatus> getAllRouteControlMode() throws BusinessException;
+    List<RouteCtrlInfo> getAllRouteControlMode() throws BusinessException;
 
     /**
      * 设置干线控制方式

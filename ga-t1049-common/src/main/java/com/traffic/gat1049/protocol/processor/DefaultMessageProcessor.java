@@ -94,8 +94,8 @@ public class DefaultMessageProcessor implements MessageProcessor {
 
             // 处理消息
             Message response = handler.handleMessage(message);
-            tempToken = response.getToken();
             if (response != null) {
+                tempToken = response.getToken();
                 logger.debug("Message processed successfully by handler: {}", handler.getHandlerName());
             } else {
                 logger.debug("Handler {} processed message without response", handler.getHandlerName());
