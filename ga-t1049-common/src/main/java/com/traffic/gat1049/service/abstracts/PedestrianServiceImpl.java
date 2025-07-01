@@ -34,21 +34,12 @@ public class PedestrianServiceImpl implements PedestrianService {
 
     @Override
     public PedestrianParam findById(String id) throws BusinessException {
-        if (id == null || id.trim().isEmpty()) {
-            throw new ValidationException("id", "人行横道编号不能为空");
-        }
-
-        PedestrianParam pedestrianParam = pedestrianStorage.get(id);
-        if (pedestrianParam == null) {
-            throw new DataNotFoundException("PedestrianParam", id);
-        }
-
-        return pedestrianParam;
+        return null;
     }
 
     @Override
     public List<PedestrianParam> findAll() throws BusinessException {
-        return new ArrayList<>(pedestrianStorage.values());
+        return dataPrider.getAllPedestrians();
     }
 
     @Override

@@ -46,6 +46,11 @@ public class SignalGroupServiceImpl implements SignalGroupService {
     }
 
     @Override
+    public List<SignalGroupParam> findAll() throws BusinessException {
+        return dataPrider.getAllSignalGroups();
+    }
+
+    @Override
     public List<SignalGroupParam> findByCrossId(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
@@ -153,7 +158,7 @@ public class SignalGroupServiceImpl implements SignalGroupService {
 
     @Override
     public List<CrossSignalGroupStatus> getAllCrossSignalGroupStatus() throws BusinessException {
-        List<Object> objs = dataPrider.getAllCrossSignalGroupStatus();
+        List<CrossSignalGroupStatus> objs = dataPrider.getAllCrossSignalGroupStatus();
         return objs.stream()
                 .map(obj -> {
                     try {

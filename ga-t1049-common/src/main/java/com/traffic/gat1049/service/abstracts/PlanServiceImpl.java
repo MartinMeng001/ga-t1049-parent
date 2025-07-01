@@ -6,6 +6,7 @@ import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.model.constants.BusinessConstants;
+import com.traffic.gat1049.protocol.model.command.CrossCtrlInfo;
 import com.traffic.gat1049.protocol.model.runtime.CrossState;
 import com.traffic.gat1049.protocol.model.signal.PlanParam;
 import com.traffic.gat1049.protocol.model.signal.StageTiming;
@@ -195,30 +196,30 @@ public class PlanServiceImpl implements PlanService {
     }
 
     @Override
-    public CrossModePlan getCurrentControlMode(String crossId) throws BusinessException {
+    public CrossCtrlInfo getCurrentControlMode(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
 
-        Object obj = dataProvider.getCrossModePlanById(crossId);
-        CrossModePlan currentMode = OBJECT_MAPPER.convertValue(obj, CrossModePlan.class);
+        Object obj = dataProvider.getCrossCtrlInfoById(crossId);
+        CrossCtrlInfo currentMode = OBJECT_MAPPER.convertValue(obj, CrossCtrlInfo.class);
         if (currentMode == null) {
-            throw new DataNotFoundException("CrossModePlan", crossId);
+            throw new DataNotFoundException("CrossCtrlInfo", crossId);
         }
 
         return currentMode;
     }
 
     @Override
-    public List<CrossModePlan> getAllCurrentControlMode() throws BusinessException {
-        List<Object> objs = dataProvider.getAllCrossModePlans();
+    public List<CrossCtrlInfo> getAllCurrentControlMode() throws BusinessException {
+        List<CrossCtrlInfo> objs = dataProvider.getAllCrossCtrlInfos();
 
         return objs.stream()
                 .map(obj -> {
                     try {
-                        return OBJECT_MAPPER.convertValue(obj, CrossModePlan.class);
+                        return OBJECT_MAPPER.convertValue(obj, CrossCtrlInfo.class);
                     } catch (IllegalArgumentException e) {
-                        logger.warn("转换 ControlModePlan 失败: {}", obj, e);
+                        logger.warn("转换 CrossCtrlInfo 失败: {}", obj, e);
                         return null;
                     }
                 })

@@ -1,5 +1,6 @@
 package com.traffic.client.service;
 
+import com.traffic.client.network.client.GatTcpClient;
 import com.traffic.gat1049.model.enums.ControlMode;
 import com.traffic.gat1049.model.enums.ControllerErrorType;
 import com.traffic.gat1049.model.enums.LampStatus;

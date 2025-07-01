@@ -21,7 +21,7 @@ public interface ControlModeService {
      * @return 路口控制模式方案
      * @throws BusinessException 业务异常
      */
-    CrossModePlan getCurrentModePlan(String crossId) throws BusinessException;
+    CrossCtrlInfo getCurrentModePlan(String crossId) throws BusinessException;
 
     /**
      * 设置路口控制模式
@@ -39,7 +39,8 @@ public interface ControlModeService {
      * @param modePlan 控制模式方案
      * @throws BusinessException 业务异常
      */
-    void setControlMode(CrossModePlan modePlan) throws BusinessException;
+
+    void setControlMode(CrossCtrlInfo modePlan) throws BusinessException;
 
     /**
      * 获取所有路口的控制模式
@@ -47,7 +48,7 @@ public interface ControlModeService {
      * @return 所有路口控制模式列表
      * @throws BusinessException 业务异常
      */
-    List<CrossModePlan> getAllControlModes() throws BusinessException;
+    List<CrossCtrlInfo> getAllControlModes() throws BusinessException;
 
     /**
      * 根据控制模式类型查询路口列表
@@ -56,7 +57,7 @@ public interface ControlModeService {
      * @return 使用该控制模式的路口列表
      * @throws BusinessException 业务异常
      */
-    List<CrossModePlan> findByControlMode(ControlMode controlMode) throws BusinessException;
+    List<CrossCtrlInfo> findByControlMode(ControlMode controlMode) throws BusinessException;
 
     /**
      * 批量设置多个路口的控制模式
@@ -82,7 +83,8 @@ public interface ControlModeService {
      * @param modePlan 控制模式方案
      * @throws BusinessException 验证异常
      */
-    void validateControlMode(CrossModePlan modePlan) throws BusinessException;
+
+    void validateControlMode(CrossCtrlInfo modePlan) throws BusinessException;
 
     /**
      * 重置路口为默认控制模式
@@ -100,7 +102,7 @@ public interface ControlModeService {
      * @return 控制模式历史记录
      * @throws BusinessException 业务异常
      */
-    List<CrossModePlan> getControlModeHistory(String crossId, int limit) throws BusinessException;
+    List<CrossCtrlInfo> getControlModeHistory(String crossId, int limit) throws BusinessException;
 
     /**
      * 检查控制模式切换的前置条件

@@ -41,6 +41,11 @@ public class LaneServiceImpl implements LaneService {
     }
 
     @Override
+    public List<LaneParam> findAll() throws BusinessException {
+        return dataPrider.getAllLanes();
+    }
+
+    @Override
     public List<LaneParam> findByCrossId(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
@@ -219,8 +224,19 @@ public class LaneServiceImpl implements LaneService {
             throw new ValidationException("laneNo", "车道序号不能为空");
         }
 
-        Object obj = dataPrider.getVarLaneStatusByCrossId(crossId);
-        return OBJECT_MAPPER.convertValue(obj, VarLaneStatus.class);
+        List<VarLaneStatus> objs = dataPrider.getVarLaneStatusByCrossId(crossId);
+        return objs.stream()
+                .filter(obj -> laneNo.equals(obj.getLaneNo()))
+                .findFirst()
+                .orElseThrow(() -> new DataNotFoundException("未找到可变车道状态: " + laneNo));
+    }
+
+    @Override
+    public List<VarLaneStatus> getVarLaneStatus(String crossId) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new ValidationException("crossId", "路口编号不能为空");
+        }
+        return dataPrider.getVarLaneStatusByCrossId(crossId);
     }
 
     @Override
@@ -260,7 +276,7 @@ public class LaneServiceImpl implements LaneService {
 
     @Override
     public List<VarLaneStatus> getVarLanes() throws BusinessException {
-        List<Object> objs = dataPrider.getAllVarLaneStatus();
+        List<VarLaneStatus> objs = dataPrider.getAllVarLaneStatus();
 
         return objs.stream()
                 .map(obj ->{

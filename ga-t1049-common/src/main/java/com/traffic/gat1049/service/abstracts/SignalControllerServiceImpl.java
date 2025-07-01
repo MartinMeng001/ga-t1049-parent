@@ -83,8 +83,17 @@ public class SignalControllerServiceImpl implements SignalControllerService {
     }
 
     @Override
+    public List<SignalController> findBySignalControllerId(String signalControllerID) throws BusinessException {
+        if (signalControllerID == null || signalControllerID.trim().isEmpty()) {
+            throw new ValidationException("signalControllerID", "信号机编号不能为空");
+        }
+        return dataProvider.getSignalControllersById(signalControllerID);
+    }
+
+    @Override
     public List<SignalController> findAll() throws BusinessException {
-        return new ArrayList<>(signalControllerStorage.values());
+        return dataProvider.getAllSignalControllers();
+        //return new ArrayList<>(signalControllerStorage.values());
     }
 
     @Override
@@ -381,16 +390,18 @@ public class SignalControllerServiceImpl implements SignalControllerService {
     @Override
     public List<SignalControllerError> getErrors(String signalControllerID) throws BusinessException {
         // 确保信号机存在
-        findById(signalControllerID);
-
-        return errorStorage.getOrDefault(signalControllerID, new ArrayList<>());
+        return dataProvider.getSignalControllerErrorsByControllerId(signalControllerID);
+//        findById(signalControllerID);
+//
+//        return errorStorage.getOrDefault(signalControllerID, new ArrayList<>());
     }
 
     @Override
     public List<SignalControllerError> getAllErrors() throws BusinessException {
-        return errorStorage.values().stream()
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
+        return dataProvider.getAllSignalControllerErrors();
+//        return errorStorage.values().stream()
+//                .flatMap(List::stream)
+//                .collect(Collectors.toList());
     }
 
     @Override

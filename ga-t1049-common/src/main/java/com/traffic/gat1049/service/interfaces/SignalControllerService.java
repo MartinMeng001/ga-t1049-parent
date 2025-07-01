@@ -42,6 +42,15 @@ public interface SignalControllerService extends BaseService<SignalController, S
     SignalController findById(String id) throws BusinessException;
 
     /**
+     * 根据识别码查询信号机列表
+     *
+     * @param id 识别码
+     * @return 信号机列表
+     * @throws BusinessException 业务异常
+     */
+    List<SignalController> findBySignalControllerId(String id) throws BusinessException;
+
+    /**
      * 根据通信接口查询信号机
      *
      * @param commMode 通信接口

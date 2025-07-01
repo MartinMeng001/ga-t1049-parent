@@ -1,468 +1,1686 @@
 {
   "SysParam": {
-    "SysName": "智能交通信号控制系统",
-    "SysVersion": 2.0,
-    "Supplier": "山东双百电子有限公司",
+    "SysName": "山东双百电子交通信号控制系统",
+    "SysVersion": "2.0",
+    "Supplier": "山东双百电子",
     "CrossIDList": [
-      "11010110000001",
-      "11010110000002",
-      "11010110000003"
+      "11010180001001",
+      "11010180001002"
     ],
     "SubRegionIDList": [
-      "11010100103",
-      "11010100104"
+      "11010100001"
     ],
     "RouteIDList": [
-      "110101001",
-      "110101002"
+      "11010100001"
     ],
     "RegionIDList": [
-      "110101001",
-      "110101002"
+      "110101001"
     ],
     "SignalControllerIDList": [
-      "11010140000111001",
-      "11010140000111002",
-      "11010140000111003"
+      "110101990001",
+      "110101990002"
     ]
   },
   "Region": [
     {
       "RegionID": "110101001",
-      "RegionName": "东城区主城区",
+      "RegionName": "东城区测试区域",
       "SubRegionIDList": [
-        "11010100101",
-        "11010100102"
+        "11010100001"
       ],
       "CrossIDList": [
-        "11010110000001",
-        "11010110000002"
+        "11010180001001",
+        "11010180001002"
       ]
     }
   ],
   "Route": [
     {
-      "RouteID": "110101001",
-      "RouteName": "长安街东段",
+      "RouteID": "11010100001",
+      "RouteName": "测试干线路线",
       "Type": 1,
       "RouteCrossList": [
         {
-          "CrossID": "11010110000001",
+          "CrossID": "11010180001001",
           "Distance": 0
         },
         {
-          "CrossID": "11010110000002",
-          "Distance": 800
+          "CrossID": "11010180001002",
+          "Distance": 500
         }
       ],
       "SubRegionIDList": [
-        "11010100101"
+        "11010100001"
       ]
     }
   ],
   "SubRegion": [
     {
-      "SubRegionID": "11010100101",
-      "SubRegionName": "王府井商业区",
+      "SubRegionID": "11010100001",
+      "SubRegionName": "测试子区",
       "CrossIDList": [
-        "11010110000001",
-        "11010110000002"
+        "11010180001001",
+        "11010180001002"
       ],
       "KeyCrossIDList": [
-        "11010110000001"
+        "11010180001001"
       ]
     }
   ],
   "CrossParam": [
     {
-      "CrossID": "11010180000001",
-      "CrossName": "长安街与建国门内大街交叉口",
-      "Feature": "24",
+      "CrossID": "11010180001001",
+      "CrossName": "测试路口一",
+      "Feature": 24,
       "Grade": "11",
       "DetNoList": [
-        1, 2, 3, 4
+        1,
+        2,
+        3,
+        4
       ],
       "LaneNoList": [
-        1, 2, 3, 4, 5, 6, 7, 8
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
       ],
       "PedestrianNoList": [
-        1, 2, 3, 4
+        1,
+        2,
+        3,
+        4
       ],
       "LampGroupNoList": [
-        1, 2, 3, 4
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
       ],
       "SignalGroupNoList": [
-        "01", "02", "03", "04"
+        1,
+        2,
+        3,
+        4
       ],
       "GreenConflictMatrix": "0110100101100110",
       "StageNoList": [
-        1, 2, 3, 4
+        1,
+        2,
+        3,
+        4
       ],
       "PlanNoList": [
-        1, 2, 3
+        1,
+        2,
+        3
       ],
       "DayPlanNoList": [
-        1, 2
+        1,
+        2
       ],
       "ScheduleNoList": [
-        1, 2
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
       ],
-      "Longitude": 116.4074,
-      "Latitude": 39.9042,
-      "Altitude": 45
+      "Longitude": 116.404269,
+      "Latitude": 39.915119,
+      "Altitude": 50
     },
     {
-      "CrossID": "11010180000002",
-      "CrossName": "长安街与王府井大街交叉口",
-      "Feature": "24",
+      "CrossID": "11010180001002",
+      "CrossName": "测试路口二",
+      "Feature": 23,
       "Grade": "12",
       "DetNoList": [
-        1, 2
+        1,
+        2,
+        3
       ],
       "LaneNoList": [
-        1, 2, 3, 4
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
       ],
       "PedestrianNoList": [
-        1, 2
+        1,
+        2,
+        3
       ],
       "LampGroupNoList": [
-        1, 2
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
       ],
       "SignalGroupNoList": [
-        "01", "02"
+        1,
+        2,
+        3
       ],
-      "GreenConflictMatrix": "0110",
+      "GreenConflictMatrix": "010101010",
       "StageNoList": [
-        1, 2
+        1,
+        2,
+        3
       ],
       "PlanNoList": [
-        1, 2
+        1,
+        2
       ],
       "DayPlanNoList": [
         1
       ],
       "ScheduleNoList": [
-        1
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
       ],
-      "Longitude": 116.4055,
-      "Latitude": 39.9082,
-      "Altitude": 44
+      "Longitude": 116.408269,
+      "Latitude": 39.918119,
+      "Altitude": 52
     }
   ],
   "SignalParam": [
     {
-      "SignalControlerID": "11010140000111001",
-      "Supplier": "山东双百电子有限公司",
-      "Type": "GA-Utc365-5U",
-      "CommMode": "1",
+      "SignalControllerID": "110101990001",
+      "Supplier": "山东双百电子",
+      "Type": "HiSec-TSC300",
+      "ID": "TSC300-001",
+      "CommMode": "10",
+      "IP": "192.168.1.101",
+      "SubMask": "255.255.255.0",
+      "Gateway": "192.168.1.1",
+      "Port": 8080,
+      "HasDoorStatus": 1,
+      "Longitude": 116.404269,
+      "Latitude": 39.915119,
       "CrossIDList": [
-        "11010110000001"
+        "11010180001001"
+      ]
+    },
+    {
+      "SignalControllerID": "110101990002",
+      "Supplier": "山东双百电子",
+      "Type": "HiSec-TSC200",
+      "ID": "TSC200-002",
+      "CommMode": "11",
+      "IP": "192.168.1.102",
+      "SubMask": "255.255.255.0",
+      "Gateway": "192.168.1.1",
+      "Port": 8081,
+      "HasDoorStatus": 1,
+      "Longitude": 116.408269,
+      "Latitude": 39.918119,
+      "CrossIDList": [
+        "11010180001002"
       ]
     }
   ],
   "LightGroup": [
     {
-      "CrossID": "11010110000001",
-      "LampGroupNo": "01",
+      "CrossID": "11010180001001",
+      "LampGroupNo": 1,
       "Direction": "1",
-      "Type": "10"
+      "Type": "21"
     },
     {
-      "CrossID": "11010110000001",
-      "LampGroupNo": "02",
+      "CrossID": "11010180001001",
+      "LampGroupNo": 2,
+      "Direction": "1",
+      "Type": "22"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 3,
+      "Direction": "2",
+      "Type": "21"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 4,
+      "Direction": "2",
+      "Type": "22"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 5,
       "Direction": "3",
-      "Type": "10"
+      "Type": "21"
     },
     {
-      "CrossID": "11010110000001",
-      "LampGroupNo": "03",
-      "Direction": "5",
-      "Type": "10"
+      "CrossID": "11010180001001",
+      "LampGroupNo": 6,
+      "Direction": "3",
+      "Type": "22"
     },
     {
-      "CrossID": "11010110000001",
-      "LampGroupNo": "04",
-      "Direction": "7",
-      "Type": "10"
+      "CrossID": "11010180001001",
+      "LampGroupNo": 7,
+      "Direction": "4",
+      "Type": "21"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 8,
+      "Direction": "4",
+      "Type": "22"
+    },
+    {
+      "CrossID": "11010180001002",
+      "LampGroupNo": 1,
+      "Direction": "1",
+      "Type": "21"
+    },
+    {
+      "CrossID": "11010180001002",
+      "LampGroupNo": 2,
+      "Direction": "1",
+      "Type": "22"
+    },
+    {
+      "CrossID": "11010180001002",
+      "LampGroupNo": 3,
+      "Direction": "2",
+      "Type": "21"
+    },
+    {
+      "CrossID": "11010180001002",
+      "LampGroupNo": 4,
+      "Direction": "2",
+      "Type": "22"
+    },
+    {
+      "CrossID": "11010180001002",
+      "LampGroupNo": 5,
+      "Direction": "3",
+      "Type": "21"
+    },
+    {
+      "CrossID": "11010180001002",
+      "LampGroupNo": 6,
+      "Direction": "3",
+      "Type": "22"
     }
   ],
   "DetectorParam": [
     {
-      "CrossID": "11010110000001",
-      "DetectorNo": "001",
-      "Type": "2",
-      "Position": "1",
+      "CrossID": "11010180001001",
+      "DetectorNo": 1,
+      "Type": 2,
+      "Position": 1,
       "Target": "100",
-      "Distance": 150,
+      "Distance": 80,
       "LaneNoList": [
-        "01",
-        "02"
+        1,
+        2
+      ],
+      "PedestrianNoList": []
+    },
+    {
+      "CrossID": "11010180001001",
+      "DetectorNo": 2,
+      "Type": 2,
+      "Position": 1,
+      "Target": "100",
+      "Distance": 80,
+      "LaneNoList": [
+        3,
+        4
+      ],
+      "PedestrianNoList": []
+    },
+    {
+      "CrossID": "11010180001001",
+      "DetectorNo": 3,
+      "Type": 2,
+      "Position": 1,
+      "Target": "100",
+      "Distance": 80,
+      "LaneNoList": [
+        5,
+        6
+      ],
+      "PedestrianNoList": []
+    },
+    {
+      "CrossID": "11010180001001",
+      "DetectorNo": 4,
+      "Type": 2,
+      "Position": 1,
+      "Target": "100",
+      "Distance": 80,
+      "LaneNoList": [
+        7,
+        8
+      ],
+      "PedestrianNoList": []
+    },
+    {
+      "CrossID": "11010180001002",
+      "DetectorNo": 1,
+      "Type": 2,
+      "Position": 1,
+      "Target": "100",
+      "Distance": 60,
+      "LaneNoList": [
+        1,
+        2
+      ],
+      "PedestrianNoList": []
+    },
+    {
+      "CrossID": "11010180001002",
+      "DetectorNo": 2,
+      "Type": 2,
+      "Position": 1,
+      "Target": "100",
+      "Distance": 60,
+      "LaneNoList": [
+        3,
+        4
+      ],
+      "PedestrianNoList": []
+    },
+    {
+      "CrossID": "11010180001002",
+      "DetectorNo": 3,
+      "Type": 2,
+      "Position": 1,
+      "Target": "100",
+      "Distance": 60,
+      "LaneNoList": [
+        5,
+        6
       ],
       "PedestrianNoList": []
     }
   ],
   "LaneParam": [
     {
-      "CrossID": "11010110000001",
-      "LaneNo": "01",
+      "CrossID": "11010180001001",
+      "LaneNo": 1,
       "Direction": "1",
-      "Attribute": "0",
-      "Movement": "11",
-      "Feature": "1",
+      "Attribute": 0,
+      "Movement": 12,
+      "Feature": 1,
       "Azimuth": 0,
-      "WaitingArea": "0",
+      "WaitingArea": 0,
       "VarMovementList": []
     },
     {
-      "CrossID": "11010110000001",
-      "LaneNo": "02",
+      "CrossID": "11010180001001",
+      "LaneNo": 2,
       "Direction": "1",
-      "Attribute": "0",
-      "Movement": "12",
-      "Feature": "1",
+      "Attribute": 0,
+      "Movement": 11,
+      "Feature": 1,
       "Azimuth": 0,
-      "WaitingArea": "1",
+      "WaitingArea": 0,
+      "VarMovementList": []
+    },
+    {
+      "CrossID": "11010180001001",
+      "LaneNo": 3,
+      "Direction": "2",
+      "Attribute": 0,
+      "Movement": 12,
+      "Feature": 1,
+      "Azimuth": 90,
+      "WaitingArea": 0,
+      "VarMovementList": []
+    },
+    {
+      "CrossID": "11010180001001",
+      "LaneNo": 4,
+      "Direction": "2",
+      "Attribute": 0,
+      "Movement": 11,
+      "Feature": 1,
+      "Azimuth": 90,
+      "WaitingArea": 0,
+      "VarMovementList": []
+    },
+    {
+      "CrossID": "11010180001001",
+      "LaneNo": 5,
+      "Direction": "3",
+      "Attribute": 0,
+      "Movement": 12,
+      "Feature": 1,
+      "Azimuth": 180,
+      "WaitingArea": 0,
+      "VarMovementList": []
+    },
+    {
+      "CrossID": "11010180001001",
+      "LaneNo": 6,
+      "Direction": "3",
+      "Attribute": 0,
+      "Movement": 11,
+      "Feature": 1,
+      "Azimuth": 180,
+      "WaitingArea": 0,
+      "VarMovementList": []
+    },
+    {
+      "CrossID": "11010180001001",
+      "LaneNo": 7,
+      "Direction": "4",
+      "Attribute": 0,
+      "Movement": 12,
+      "Feature": 1,
+      "Azimuth": 270,
+      "WaitingArea": 0,
+      "VarMovementList": []
+    },
+    {
+      "CrossID": "11010180001001",
+      "LaneNo": 8,
+      "Direction": "4",
+      "Attribute": 0,
+      "Movement": 11,
+      "Feature": 1,
+      "Azimuth": 270,
+      "WaitingArea": 0,
+      "VarMovementList": []
+    },
+    {
+      "CrossID": "11010180001002",
+      "LaneNo": 1,
+      "Direction": "1",
+      "Attribute": 0,
+      "Movement": 21,
+      "Feature": 1,
+      "Azimuth": 0,
+      "WaitingArea": 0,
+      "VarMovementList": [
+        11,
+        12
+      ]
+    },
+    {
+      "CrossID": "11010180001002",
+      "LaneNo": 2,
+      "Direction": "1",
+      "Attribute": 0,
+      "Movement": 11,
+      "Feature": 1,
+      "Azimuth": 0,
+      "WaitingArea": 0,
+      "VarMovementList": []
+    },
+    {
+      "CrossID": "11010180001002",
+      "LaneNo": 3,
+      "Direction": "2",
+      "Attribute": 0,
+      "Movement": 21,
+      "Feature": 1,
+      "Azimuth": 90,
+      "WaitingArea": 0,
+      "VarMovementList": [
+        11,
+        12
+      ]
+    },
+    {
+      "CrossID": "11010180001002",
+      "LaneNo": 4,
+      "Direction": "2",
+      "Attribute": 0,
+      "Movement": 11,
+      "Feature": 1,
+      "Azimuth": 90,
+      "WaitingArea": 0,
+      "VarMovementList": []
+    },
+    {
+      "CrossID": "11010180001002",
+      "LaneNo": 5,
+      "Direction": "3",
+      "Attribute": 0,
+      "Movement": 21,
+      "Feature": 1,
+      "Azimuth": 180,
+      "WaitingArea": 0,
+      "VarMovementList": [
+        11,
+        12
+      ]
+    },
+    {
+      "CrossID": "11010180001002",
+      "LaneNo": 6,
+      "Direction": "3",
+      "Attribute": 0,
+      "Movement": 11,
+      "Feature": 1,
+      "Azimuth": 180,
+      "WaitingArea": 0,
       "VarMovementList": []
     }
   ],
   "PedestrianParam": [
     {
-      "CrossID": "11010110000001",
-      "PedestrianNo": "01",
+      "CrossID": "11010180001001",
+      "PedestrianNo": 1,
       "Direction": "1",
-      "Attribute": "1"
+      "Attribute": 1
+    },
+    {
+      "CrossID": "11010180001001",
+      "PedestrianNo": 2,
+      "Direction": "2",
+      "Attribute": 1
+    },
+    {
+      "CrossID": "11010180001001",
+      "PedestrianNo": 3,
+      "Direction": "3",
+      "Attribute": 1
+    },
+    {
+      "CrossID": "11010180001001",
+      "PedestrianNo": 4,
+      "Direction": "4",
+      "Attribute": 1
+    },
+    {
+      "CrossID": "11010180001002",
+      "PedestrianNo": 1,
+      "Direction": "1",
+      "Attribute": 1
+    },
+    {
+      "CrossID": "11010180001002",
+      "PedestrianNo": 2,
+      "Direction": "2",
+      "Attribute": 1
+    },
+    {
+      "CrossID": "11010180001002",
+      "PedestrianNo": 3,
+      "Direction": "3",
+      "Attribute": 1
     }
   ],
-  "SignalGroup": [
+  "SignalGroupParam": [
     {
-      "CrossID": "11010110000001",
-      "SignalGroupNo": "01",
-      "Name": "北进口直行",
-      "GreenFlushLen": 3,
+      "CrossID": "11010180001001",
+      "SignalGroupNo": 1,
+      "Name": "北向信号组",
+      "GreenFlashLen": 3,
+      "MaxGreen": 60,
+      "MinGreen": 7,
       "LampGroupNoList": [
-        "01"
+        1,
+        2
+      ]
+    },
+    {
+      "CrossID": "11010180001001",
+      "SignalGroupNo": 2,
+      "Name": "东向信号组",
+      "GreenFlashLen": 3,
+      "MaxGreen": 60,
+      "MinGreen": 7,
+      "LampGroupNoList": [
+        3,
+        4
+      ]
+    },
+    {
+      "CrossID": "11010180001001",
+      "SignalGroupNo": 3,
+      "Name": "南向信号组",
+      "GreenFlashLen": 3,
+      "MaxGreen": 60,
+      "MinGreen": 7,
+      "LampGroupNoList": [
+        5,
+        6
+      ]
+    },
+    {
+      "CrossID": "11010180001001",
+      "SignalGroupNo": 4,
+      "Name": "西向信号组",
+      "GreenFlashLen": 3,
+      "MaxGreen": 60,
+      "MinGreen": 7,
+      "LampGroupNoList": [
+        7,
+        8
+      ]
+    },
+    {
+      "CrossID": "11010180001002",
+      "SignalGroupNo": 1,
+      "Name": "北向信号组",
+      "GreenFlashLen": 3,
+      "MaxGreen": 45,
+      "MinGreen": 5,
+      "LampGroupNoList": [
+        1,
+        2
+      ]
+    },
+    {
+      "CrossID": "11010180001002",
+      "SignalGroupNo": 2,
+      "Name": "东向信号组",
+      "GreenFlashLen": 3,
+      "MaxGreen": 45,
+      "MinGreen": 5,
+      "LampGroupNoList": [
+        3,
+        4
+      ]
+    },
+    {
+      "CrossID": "11010180001002",
+      "SignalGroupNo": 3,
+      "Name": "南向信号组",
+      "GreenFlashLen": 3,
+      "MaxGreen": 45,
+      "MinGreen": 5,
+      "LampGroupNoList": [
+        5,
+        6
       ]
     }
   ],
   "StageParam": [
     {
-      "CrossID": "11010110000001",
-      "StageNo": "01",
-      "StageName": "东西直行",
-      "Attribute": "0",
+      "CrossID": "11010180001001",
+      "StageNo": 1,
+      "StageName": "南北直行阶段",
+      "Attribute": 0,
       "SignalGroupStatusList": [
         {
-          "SignalGroupNo": "01",
-          "LampStatus": "23"
+          "SignalGroupNo": 1,
+          "LampStatus": "212"
         },
         {
-          "SignalGroupNo": "02",
-          "LampStatus": "21"
+          "SignalGroupNo": 2,
+          "LampStatus": "211"
         },
         {
-          "SignalGroupNo": "03",
-          "LampStatus": "23"
+          "SignalGroupNo": 3,
+          "LampStatus": "212"
         },
         {
-          "SignalGroupNo": "04",
-          "LampStatus": "21"
+          "SignalGroupNo": 4,
+          "LampStatus": "211"
+        }
+      ]
+    },
+    {
+      "CrossID": "11010180001001",
+      "StageNo": 2,
+      "StageName": "南北左转阶段",
+      "Attribute": 1,
+      "SignalGroupStatusList": [
+        {
+          "SignalGroupNo": 1,
+          "LampStatus": "212"
+        },
+        {
+          "SignalGroupNo": 2,
+          "LampStatus": "211"
+        },
+        {
+          "SignalGroupNo": 3,
+          "LampStatus": "212"
+        },
+        {
+          "SignalGroupNo": 4,
+          "LampStatus": "211"
+        }
+      ]
+    },
+    {
+      "CrossID": "11010180001001",
+      "StageNo": 3,
+      "StageName": "东西直行阶段",
+      "Attribute": 0,
+      "SignalGroupStatusList": [
+        {
+          "SignalGroupNo": 1,
+          "LampStatus": "211"
+        },
+        {
+          "SignalGroupNo": 2,
+          "LampStatus": "212"
+        },
+        {
+          "SignalGroupNo": 3,
+          "LampStatus": "211"
+        },
+        {
+          "SignalGroupNo": 4,
+          "LampStatus": "212"
+        }
+      ]
+    },
+    {
+      "CrossID": "11010180001001",
+      "StageNo": 4,
+      "StageName": "东西左转阶段",
+      "Attribute": 1,
+      "SignalGroupStatusList": [
+        {
+          "SignalGroupNo": 1,
+          "LampStatus": "211"
+        },
+        {
+          "SignalGroupNo": 2,
+          "LampStatus": "212"
+        },
+        {
+          "SignalGroupNo": 3,
+          "LampStatus": "211"
+        },
+        {
+          "SignalGroupNo": 4,
+          "LampStatus": "212"
+        }
+      ]
+    },
+    {
+      "CrossID": "11010180001002",
+      "StageNo": 1,
+      "StageName": "主路直行阶段",
+      "Attribute": 0,
+      "SignalGroupStatusList": [
+        {
+          "SignalGroupNo": 1,
+          "LampStatus": "212"
+        },
+        {
+          "SignalGroupNo": 2,
+          "LampStatus": "211"
+        },
+        {
+          "SignalGroupNo": 3,
+          "LampStatus": "212"
+        }
+      ]
+    },
+    {
+      "CrossID": "11010180001002",
+      "StageNo": 2,
+      "StageName": "主路左转阶段",
+      "Attribute": 1,
+      "SignalGroupStatusList": [
+        {
+          "SignalGroupNo": 1,
+          "LampStatus": "212"
+        },
+        {
+          "SignalGroupNo": 2,
+          "LampStatus": "211"
+        },
+        {
+          "SignalGroupNo": 3,
+          "LampStatus": "212"
+        }
+      ]
+    },
+    {
+      "CrossID": "11010180001002",
+      "StageNo": 3,
+      "StageName": "支路放行阶段",
+      "Attribute": 0,
+      "SignalGroupStatusList": [
+        {
+          "SignalGroupNo": 1,
+          "LampStatus": "211"
+        },
+        {
+          "SignalGroupNo": 2,
+          "LampStatus": "212"
+        },
+        {
+          "SignalGroupNo": 3,
+          "LampStatus": "211"
         }
       ]
     }
   ],
   "PlanParam": [
     {
-      "CrossID": "11010110000001",
-      "PlanNo": "001",
-      "PlanName": "工作日白天方案",
+      "CrossID": "11010180001001",
+      "PlanNo": 1,
+      "PlanName": "早高峰方案",
       "CycleLen": 120,
-      "CoordStageNo": "01",
-      "Offset": 10,
+      "CoordStageNo": 1,
+      "Offset": 0,
       "StageTimingList": [
         {
-          "StageNo": "01",
+          "StageNo": 1,
           "Green": 35,
           "Yellow": 3,
           "AllRed": 2,
-          "MaxGreen": 45,
-          "MinGreen": 25,
+          "MaxGreen": 50,
+          "MinGreen": 10,
           "AdjustList": [
             {
-              "SignalGroupNo": "01",
-              "Oper": "1",
+              "SignalGroupNo": 1,
+              "Oper": 1,
               "Len": 2
             }
           ]
         },
         {
-          "StageNo": "02",
+          "StageNo": 2,
+          "Green": 15,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 25,
+          "MinGreen": 5,
+          "AdjustList": []
+        },
+        {
+          "StageNo": 3,
+          "Green": 30,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 45,
+          "MinGreen": 10,
+          "AdjustList": []
+        },
+        {
+          "StageNo": 4,
+          "Green": 15,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 25,
+          "MinGreen": 5,
+          "AdjustList": []
+        }
+      ]
+    },
+    {
+      "CrossID": "11010180001001",
+      "PlanNo": 2,
+      "PlanName": "平峰方案",
+      "CycleLen": 100,
+      "CoordStageNo": 1,
+      "Offset": 30,
+      "StageTimingList": [
+        {
+          "StageNo": 1,
+          "Green": 28,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 40,
+          "MinGreen": 8,
+          "AdjustList": []
+        },
+        {
+          "StageNo": 2,
+          "Green": 12,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 20,
+          "MinGreen": 5,
+          "AdjustList": []
+        },
+        {
+          "StageNo": 3,
           "Green": 25,
           "Yellow": 3,
           "AllRed": 2,
           "MaxGreen": 35,
+          "MinGreen": 8,
+          "AdjustList": []
+        },
+        {
+          "StageNo": 4,
+          "Green": 12,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 20,
+          "MinGreen": 5,
+          "AdjustList": []
+        }
+      ]
+    },
+    {
+      "CrossID": "11010180001001",
+      "PlanNo": 3,
+      "PlanName": "晚高峰方案",
+      "CycleLen": 130,
+      "CoordStageNo": 3,
+      "Offset": 60,
+      "StageTimingList": [
+        {
+          "StageNo": 1,
+          "Green": 30,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 45,
+          "MinGreen": 10,
+          "AdjustList": []
+        },
+        {
+          "StageNo": 2,
+          "Green": 15,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 25,
+          "MinGreen": 5,
+          "AdjustList": []
+        },
+        {
+          "StageNo": 3,
+          "Green": 40,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 55,
           "MinGreen": 15,
+          "AdjustList": []
+        },
+        {
+          "StageNo": 4,
+          "Green": 15,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 25,
+          "MinGreen": 5,
+          "AdjustList": []
+        }
+      ]
+    },
+    {
+      "CrossID": "11010180001002",
+      "PlanNo": 1,
+      "PlanName": "主路优先方案",
+      "CycleLen": 90,
+      "CoordStageNo": 1,
+      "Offset": 0,
+      "StageTimingList": [
+        {
+          "StageNo": 1,
+          "Green": 40,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 50,
+          "MinGreen": 15,
+          "AdjustList": []
+        },
+        {
+          "StageNo": 2,
+          "Green": 12,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 20,
+          "MinGreen": 5,
+          "AdjustList": []
+        },
+        {
+          "StageNo": 3,
+          "Green": 20,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 30,
+          "MinGreen": 8,
+          "AdjustList": []
+        }
+      ]
+    },
+    {
+      "CrossID": "11010180001002",
+      "PlanNo": 2,
+      "PlanName": "均衡方案",
+      "CycleLen": 80,
+      "CoordStageNo": 1,
+      "Offset": 20,
+      "StageTimingList": [
+        {
+          "StageNo": 1,
+          "Green": 30,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 40,
+          "MinGreen": 10,
+          "AdjustList": []
+        },
+        {
+          "StageNo": 2,
+          "Green": 10,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 18,
+          "MinGreen": 5,
+          "AdjustList": []
+        },
+        {
+          "StageNo": 3,
+          "Green": 22,
+          "Yellow": 3,
+          "AllRed": 2,
+          "MaxGreen": 30,
+          "MinGreen": 8,
           "AdjustList": []
         }
       ]
     }
   ],
-  "DayPlanParam": [
+  "DayPlan": [
     {
-      "CrossID": "11010110000001",
-      "DayPlanNo": "00001",
+      "CrossID": "11010180001001",
+      "DayPlanNo": 1,
+      "DayPlanName": "工作日计划",
       "PeriodList": [
         {
-          "StartTime": "06:00",
-          "PlanNo": "001",
+          "StartTime": "00:00",
+          "PlanNo": 2,
           "CtrlMode": "21"
         },
         {
-          "StartTime": "09:00",
-          "PlanNo": "002",
+          "StartTime": "06:30",
+          "PlanNo": 1,
           "CtrlMode": "21"
         },
         {
-          "StartTime": "17:00",
-          "PlanNo": "003",
+          "StartTime": "09:30",
+          "PlanNo": 2,
+          "CtrlMode": "21"
+        },
+        {
+          "StartTime": "16:30",
+          "PlanNo": 3,
+          "CtrlMode": "21"
+        },
+        {
+          "StartTime": "19:30",
+          "PlanNo": 2,
+          "CtrlMode": "21"
+        },
+        {
+          "StartTime": "23:00",
+          "PlanNo": 0,
+          "CtrlMode": "13"
+        }
+      ]
+    },
+    {
+      "CrossID": "11010180001001",
+      "DayPlanNo": 2,
+      "DayPlanName": "周末计划",
+      "PeriodList": [
+        {
+          "StartTime": "00:00",
+          "PlanNo": 0,
+          "CtrlMode": "13"
+        },
+        {
+          "StartTime": "07:00",
+          "PlanNo": 2,
           "CtrlMode": "21"
         },
         {
           "StartTime": "22:00",
-          "PlanNo": "001",
+          "PlanNo": 0,
+          "CtrlMode": "13"
+        }
+      ]
+    },
+    {
+      "CrossID": "11010180001002",
+      "DayPlanNo": 1,
+      "DayPlanName": "工作日计划",
+      "PeriodList": [
+        {
+          "StartTime": "00:00",
+          "PlanNo": 2,
           "CtrlMode": "21"
+        },
+        {
+          "StartTime": "07:00",
+          "PlanNo": 1,
+          "CtrlMode": "21"
+        },
+        {
+          "StartTime": "09:00",
+          "PlanNo": 2,
+          "CtrlMode": "21"
+        },
+        {
+          "StartTime": "17:00",
+          "PlanNo": 1,
+          "CtrlMode": "21"
+        },
+        {
+          "StartTime": "19:00",
+          "PlanNo": 2,
+          "CtrlMode": "21"
+        },
+        {
+          "StartTime": "23:30",
+          "PlanNo": 0,
+          "CtrlMode": "13"
         }
       ]
     }
   ],
   "Schedule": [
     {
-      "CrossID": "11010110000001",
-      "ScheduleNo": "001",
-      "Type": "3",
+      "CrossID": "11010180001001",
+      "ScheduleNo": 1,
+      "ScheduleName": "周一调度",
+      "Type": 3,
       "StartDay": "01-01",
       "EndDay": "12-31",
-      "WeekDay": "1",
-      "DayPlanNo": "00001"
+      "WeekDay": 1,
+      "DayPlanNo": 1
+    },
+    {
+      "CrossID": "11010180001001",
+      "ScheduleNo": 2,
+      "ScheduleName": "周二调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 2,
+      "DayPlanNo": 1
+    },
+    {
+      "CrossID": "11010180001001",
+      "ScheduleNo": 3,
+      "ScheduleName": "周三调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 3,
+      "DayPlanNo": 1
+    },
+    {
+      "CrossID": "11010180001001",
+      "ScheduleNo": 4,
+      "ScheduleName": "周四调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 4,
+      "DayPlanNo": 1
+    },
+    {
+      "CrossID": "11010180001001",
+      "ScheduleNo": 5,
+      "ScheduleName": "周五调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 5,
+      "DayPlanNo": 1
+    },
+    {
+      "CrossID": "11010180001001",
+      "ScheduleNo": 6,
+      "ScheduleName": "周六调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 6,
+      "DayPlanNo": 2
+    },
+    {
+      "CrossID": "11010180001001",
+      "ScheduleNo": 7,
+      "ScheduleName": "周日调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 7,
+      "DayPlanNo": 2
+    },
+    {
+      "CrossID": "11010180001002",
+      "ScheduleNo": 1,
+      "ScheduleName": "周一调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 1,
+      "DayPlanNo": 1
+    },
+    {
+      "CrossID": "11010180001002",
+      "ScheduleNo": 2,
+      "ScheduleName": "周二调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 2,
+      "DayPlanNo": 1
+    },
+    {
+      "CrossID": "11010180001002",
+      "ScheduleNo": 3,
+      "ScheduleName": "周三调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 3,
+      "DayPlanNo": 1
+    },
+    {
+      "CrossID": "11010180001002",
+      "ScheduleNo": 4,
+      "ScheduleName": "周四调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 4,
+      "DayPlanNo": 1
+    },
+    {
+      "CrossID": "11010180001002",
+      "ScheduleNo": 5,
+      "ScheduleName": "周五调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 5,
+      "DayPlanNo": 1
+    },
+    {
+      "CrossID": "11010180001002",
+      "ScheduleNo": 6,
+      "ScheduleName": "周六调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 6,
+      "DayPlanNo": 1
+    },
+    {
+      "CrossID": "11010180001002",
+      "ScheduleNo": 7,
+      "ScheduleName": "周日调度",
+      "Type": 3,
+      "StartDay": "01-01",
+      "EndDay": "12-31",
+      "WeekDay": 7,
+      "DayPlanNo": 1
     }
   ],
   "RunStatus": {
     "SysState": {
-      "Value": "Online"
+      "Value": "Online",
+      "Time": "2025-06-30 14:30:25"
     },
     "CrossState": [
       {
-        "CrossID": "11010110000001",
+        "CrossID": "11010180001001",
+        "Value": "Online"
+      },
+      {
+        "CrossID": "11010180001002",
         "Value": "Online"
       }
     ],
     "SignalControllerError": [
       {
-        "SignalControlerID": "11010140000111001",
+        "SignalControllerID": "110101990001",
         "ErrorType": "1",
-        "ErrorDesc": "3号灯组输出异常",
-        "OccurTime": "2025-06-13 14:30:25"
+        "ErrorDesc": "红灯输出故障，信号灯组1无法正常输出红灯信号",
+        "OccurTime": "2025-06-30 14:25:10"
+      },
+      {
+        "SignalControllerID": "110101990001",
+        "ErrorType": "2",
+        "ErrorDesc": "主电源故障，电源模块输出电压不稳定",
+        "OccurTime": "2025-06-30 14:26:15"
+      },
+      {
+        "SignalControllerID": "110101990001",
+        "ErrorType": "4",
+        "ErrorDesc": "程序运行异常，主控程序出现死循环",
+        "OccurTime": "2025-06-30 14:27:30"
+      },
+      {
+        "SignalControllerID": "110101990002",
+        "ErrorType": "3",
+        "ErrorDesc": "时钟同步失败，与上级平台时间偏差超过5秒",
+        "OccurTime": "2025-06-30 14:28:35"
+      },
+      {
+        "SignalControllerID": "110101990002",
+        "ErrorType": "5",
+        "ErrorDesc": "配时方案错误，方案2的周期长度配置不合理",
+        "OccurTime": "2025-06-30 14:29:20"
+      },
+      {
+        "SignalControllerID": "110101990002",
+        "ErrorType": "9",
+        "ErrorDesc": "网络通信故障，与监控中心连接中断",
+        "OccurTime": "2025-06-30 14:30:45"
       }
     ],
-    "CrossModePlan": [
+    "CrossCtrlInfo": [
       {
-        "CrossID": "11010110000001",
-        "ControlMode": "31",
-        "PlanNo": "001"
+        "CrossID": "11010180001001",
+        "ControlMode": "21",
+        "PlanNo": 1,
+        "Time": "2025-06-30 14:30:25"
+      },
+      {
+        "CrossID": "11010180001002",
+        "ControlMode": "22",
+        "PlanNo": 2,
+        "Time": "2025-06-30 14:30:25"
       }
     ],
     "CrossCycle": [
       {
-        "CrossID": "11010110000001",
-        "StartTime": "2025-06-13T14:35:00",
-        "LastCycleLen": 118
+        "CrossID": "11010180001001",
+        "StartTime": "2025-06-30 14:30:00",
+        "LastCycleLen": 118,
+        "AdjustFlag": 1
+      },
+      {
+        "CrossID": "11010180001002",
+        "StartTime": "2025-06-30 14:30:10",
+        "LastCycleLen": 80,
+        "AdjustFlag": 0
       }
     ],
     "CrossStage": [
       {
-        "CrossID": "11010110000001",
-        "LastStageNo": "01",
+        "CrossID": "11010180001001",
+        "LastStageNo": 1,
         "LastStageLen": 40,
-        "CurStageNo": "02",
-        "CurStageLen": 12
+        "CurStageNo": 2,
+        "CurStageStartTime": "2025-06-30 14:30:40",
+        "CurStageLen": 8
+      },
+      {
+        "CrossID": "11010180001002",
+        "LastStageNo": 2,
+        "LastStageLen": 15,
+        "CurStageNo": 3,
+        "CurStageStartTime": "2025-06-30 14:30:25",
+        "CurStageLen": 25
       }
     ],
     "CrossSignalGroupStatus": [
       {
-        "CrossID": "11010110000001",
-        "LampStatusTime": "2025-06-27 14:30:25.123",
+        "CrossID": "11010180001001",
+        "LampStatusTime": "2025-06-30 14:30:40.123",
         "SignalGroupStatusList": [
           {
-            "SignalGroupNo": "01",
-            "LampStatus": "112",
-            "RemainTime": 45
+            "SignalGroupNo": 1,
+            "LampStatus": "212",
+            "RemainTime": 12
           },
           {
-            "SignalGroupNo": "02",
-            "LampStatus": "112",
-            "RemainTime": 45
-          },
-          {
-            "SignalGroupNo": "03",
+            "SignalGroupNo": 2,
             "LampStatus": "211",
-            "RemainTime": 65
+            "RemainTime": 0
           },
           {
-            "SignalGroupNo": "04",
+            "SignalGroupNo": 3,
+            "LampStatus": "212",
+            "RemainTime": 12
+          },
+          {
+            "SignalGroupNo": 4,
             "LampStatus": "211",
-            "RemainTime": 65
+            "RemainTime": 0
+          }
+        ]
+      },
+      {
+        "CrossID": "11010180001002",
+        "LampStatusTime": "2025-06-30 14:30:25.456",
+        "SignalGroupStatusList": [
+          {
+            "SignalGroupNo": 1,
+            "LampStatus": "211",
+            "RemainTime": 0
+          },
+          {
+            "SignalGroupNo": 2,
+            "LampStatus": "212",
+            "RemainTime": 17
+          },
+          {
+            "SignalGroupNo": 3,
+            "LampStatus": "211",
+            "RemainTime": 0
           }
         ]
       }
     ],
     "CrossTrafficData": [
       {
-        "CrossID": "11010110000001",
-        "EndTime": "2025-06-13T14:35:00",
+        "CrossID": "11010180001001",
+        "EndTime": "2025-06-30 14:30:00",
         "Interval": 300,
         "DataList": [
           {
-            "LaneNo": "01",
-            "Volume": 240,
-            "AvgVehLen": 4.5,
-            "Pcu": 250,
-            "HeadDistance": 8.2,
-            "HeadTime": 2.8,
-            "Speed": 35.6,
-            "Saturation": 0.65,
-            "Density": 28,
-            "QueueLength": 15.8,
+            "LaneNo": 1,
+            "Volume": 420,
+            "AvgVehLen": 480,
+            "Pcu": 390,
+            "HeadDistance": 850,
+            "HeadTime": 86,
+            "Speed": 35.5,
+            "Saturation": 68,
+            "Density": 42,
+            "QueueLength": 28,
+            "MaxQueueLength": 45,
             "Occupancy": 25
           },
           {
-            "LaneNo": "02",
-            "Volume": 180,
-            "AvgVehLen": 4.8,
-            "Pcu": 190,
-            "HeadDistance": 9.5,
-            "HeadTime": 3.2,
-            "Speed": 32.4,
-            "Saturation": 0.48,
-            "Density": 22,
-            "QueueLength": 12.3,
+            "LaneNo": 2,
+            "Volume": 380,
+            "AvgVehLen": 460,
+            "Pcu": 350,
+            "HeadDistance": 920,
+            "HeadTime": 95,
+            "Speed": 38.2,
+            "Saturation": 62,
+            "Density": 38,
+            "QueueLength": 22,
+            "MaxQueueLength": 35,
+            "Occupancy": 22
+          },
+          {
+            "LaneNo": 3,
+            "Volume": 450,
+            "AvgVehLen": 490,
+            "Pcu": 410,
+            "HeadDistance": 810,
+            "HeadTime": 80,
+            "Speed": 36.8,
+            "Saturation": 72,
+            "Density": 45,
+            "QueueLength": 32,
+            "MaxQueueLength": 50,
+            "Occupancy": 28
+          }
+        ]
+      },
+      {
+        "CrossID": "11010180001002",
+        "EndTime": "2025-06-30 14:30:00",
+        "Interval": 300,
+        "DataList": [
+          {
+            "LaneNo": 1,
+            "Volume": 320,
+            "AvgVehLen": 470,
+            "Pcu": 300,
+            "HeadDistance": 980,
+            "HeadTime": 112,
+            "Speed": 32.5,
+            "Saturation": 55,
+            "Density": 35,
+            "QueueLength": 18,
+            "MaxQueueLength": 28,
+            "Occupancy": 20
+          },
+          {
+            "LaneNo": 2,
+            "Volume": 280,
+            "AvgVehLen": 450,
+            "Pcu": 260,
+            "HeadDistance": 1050,
+            "HeadTime": 128,
+            "Speed": 30.8,
+            "Saturation": 48,
+            "Density": 32,
+            "QueueLength": 15,
+            "MaxQueueLength": 22,
             "Occupancy": 18
+          },
+          {
+            "LaneNo": 3,
+            "Volume": 350,
+            "AvgVehLen": 480,
+            "Pcu": 320,
+            "HeadDistance": 900,
+            "HeadTime": 103,
+            "Speed": 34.2,
+            "Saturation": 58,
+            "Density": 38,
+            "QueueLength": 20,
+            "MaxQueueLength": 32,
+            "Occupancy": 22
           }
         ]
       }
     ],
     "StageTrafficData": [
       {
-        "CrossID": "11010110000001",
-        "StartTime": "2025-06-13T14:30:15",
-        "EndTime": "2025-06-13T14:30:55",
-        "StageNo": "01",
+        "CrossID": "11010180001001",
+        "StartTime": "2025-06-30 14:30:00",
+        "EndTime": "2025-06-30 14:30:35",
+        "StageNo": 1,
         "DataList": [
           {
-            "LaneNo": "01",
+            "LaneNo": 1,
+            "VehicleNum": 8,
+            "Pcu": 7,
+            "HeadTime": 42,
+            "Saturation": 65,
+            "QueueLength": 12,
+            "Occupancy": 28
+          },
+          {
+            "LaneNo": 2,
+            "VehicleNum": 12,
+            "Pcu": 11,
+            "HeadTime": 29,
+            "Saturation": 72,
+            "QueueLength": 8,
+            "Occupancy": 32
+          },
+          {
+            "LaneNo": 5,
+            "VehicleNum": 10,
+            "Pcu": 9,
+            "HeadTime": 35,
+            "Saturation": 68,
+            "QueueLength": 10,
+            "Occupancy": 30
+          }
+        ]
+      },
+      {
+        "CrossID": "11010180001001",
+        "StartTime": "2025-06-30 14:30:40",
+        "EndTime": "2025-06-30 14:30:55",
+        "StageNo": 2,
+        "DataList": [
+          {
+            "LaneNo": 1,
+            "VehicleNum": 3,
+            "Pcu": 3,
+            "HeadTime": 50,
+            "Saturation": 45,
+            "QueueLength": 6,
+            "Occupancy": 18
+          },
+          {
+            "LaneNo": 5,
+            "VehicleNum": 4,
+            "Pcu": 4,
+            "HeadTime": 38,
+            "Saturation": 52,
+            "QueueLength": 4,
+            "Occupancy": 22
+          },
+          {
+            "LaneNo": 6,
+            "VehicleNum": 2,
+            "Pcu": 2,
+            "HeadTime": 75,
+            "Saturation": 38,
+            "QueueLength": 2,
+            "Occupancy": 15
+          }
+        ]
+      },
+      {
+        "CrossID": "11010180001002",
+        "StartTime": "2025-06-30 14:30:10",
+        "EndTime": "2025-06-30 14:30:50",
+        "StageNo": 1,
+        "DataList": [
+          {
+            "LaneNo": 1,
+            "VehicleNum": 15,
+            "Pcu": 14,
+            "HeadTime": 27,
+            "Saturation": 78,
+            "QueueLength": 18,
+            "Occupancy": 35
+          },
+          {
+            "LaneNo": 2,
             "VehicleNum": 18,
-            "Pcu": 19,
-            "HeadTime": 2.8,
-            "Saturation": 0.68,
-            "QueueLength": 8.5,
+            "Pcu": 16,
+            "HeadTime": 22,
+            "Saturation": 82,
+            "QueueLength": 15,
+            "Occupancy": 38
+          },
+          {
+            "LaneNo": 5,
+            "VehicleNum": 12,
+            "Pcu": 11,
+            "HeadTime": 33,
+            "Saturation": 70,
+            "QueueLength": 12,
             "Occupancy": 32
           }
         ]
@@ -470,26 +1688,78 @@
     ],
     "VarLaneStatus": [
       {
-        "CrossID": "11010110000001",
-        "LaneNo": "05",
+        "CrossID": "11010180001002",
+        "LaneNo": 1,
         "CurMovement": "11",
-        "CurMode": "1"
+        "CurMode": "11"
+      },
+      {
+        "CrossID": "11010180001002",
+        "LaneNo": 3,
+        "CurMovement": "12",
+        "CurMode": "12"
+      },
+      {
+        "CrossID": "11010180001002",
+        "LaneNo": 5,
+        "CurMovement": "11",
+        "CurMode": "21"
       }
     ],
-    "RouteControlModeStatus": [
+    "RouteCtrlInfo": {
+      "RouteID": "11010100001",
+      "CtrlMode": "11"
+    },
+    "RouteSpeed": {
+      "RouteID": "11010100001",
+      "RoadSectionSpeedList": [
+        {
+          "UpCrossID": "11010180001001",
+          "DownCrossID": "11010180001002",
+          "RecommendSpeed": 45.0
+        }
+      ]
+    },
+    "SCDoorStatus": [
       {
-        "RouteID": "110101001",
-        "Value": "11"
-      }
-    ],
-    "RouteSpeed": [
-      {
-        "RouteID": "110101001",
-        "RoadSectionSpeedList": [
+        "SignalControllerID": "110101990001",
+        "Time": "2025-06-30 14:30:25",
+        "DoorStatusList": [
           {
-            "UpCrossID": "11010110000001",
-            "DownCrossID": "11010110000002",
-            "RecommendSpeed": 45
+            "DoorNo": 1,
+            "DoorName": "主控制柜门",
+            "Status": "0"
+          },
+          {
+            "DoorNo": 2,
+            "DoorName": "电源柜门",
+            "Status": "1"
+          },
+          {
+            "DoorNo": 3,
+            "DoorName": "检测器柜门",
+            "Status": "0"
+          }
+        ]
+      },
+      {
+        "SignalControllerID": "110101990002",
+        "Time": "2025-06-30 14:30:25",
+        "DoorStatusList": [
+          {
+            "DoorNo": 1,
+            "DoorName": "主控制柜门",
+            "Status": "0"
+          },
+          {
+            "DoorNo": 2,
+            "DoorName": "电源柜门",
+            "Status": "0"
+          },
+          {
+            "DoorNo": 3,
+            "DoorName": "检测器柜门",
+            "Status": "9"
           }
         ]
       }

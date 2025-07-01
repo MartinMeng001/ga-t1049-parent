@@ -1,13 +1,10 @@
 package com.traffic.client.network.client;
-import com.traffic.gat1049.application.session.SessionManager;
 import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
 import com.traffic.gat1049.protocol.codec.MessageCodec;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.model.sdo.SdoUser;
-import com.traffic.gat1049.protocol.processor.DefaultMessageProcessor;
 import com.traffic.gat1049.protocol.processor.MessageProcessor;
-import com.traffic.gat1049.service.abstracts.DefaultServiceFactory;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -16,8 +13,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -60,6 +55,9 @@ public class GatTcpClient {
     private static final long RECONNECT_DELAY = 10000; // 10秒
     private String username;
     private String password;
+    // 添加重连状态控制
+    private volatile ReconnectState reconnectState = ReconnectState.IDLE;
+    private final Object reconnectLock = new Object();
 
     public GatTcpClient(String host, int port, String clientId, MessageProcessor messageProcessor) throws Exception {
         this.host = host;
@@ -135,24 +133,57 @@ public class GatTcpClient {
                     }
                 });
 
-        doConnect();
+        try {
+            // 首次连接尝试
+            doConnect();
+        } catch (Exception e) {
+            logger.warn("Initial connection failed, will start auto-reconnect: {}", e.getMessage());
+
+            // 初始连接失败，启动重连机制
+            synchronized (reconnectLock) {
+                reconnectState = ReconnectState.IDLE;
+                reconnectAttempts = 0; // 重置计数器，因为这是初始连接
+            }
+
+            // 启动重连
+            scheduleReconnect();
+
+            // 不抛出异常，让应用继续运行，依靠重连机制
+            // throw e; // 注释掉这行
+        }
     }
 
+    /**
+     * 修复后的doConnect方法
+     */
     private void doConnect() throws Exception {
         try {
+            // 如果已经连接，直接返回
+            if (connected && channel != null && channel.isActive()) {
+                logger.info("Already connected, skipping connection attempt");
+                synchronized (reconnectLock) {
+                    reconnectState = ReconnectState.IDLE;
+                    reconnectAttempts = 0;
+                }
+                return;
+            }
+
             ChannelFuture future = bootstrap.connect(host, port).sync();
             channel = future.channel();
             connected = true;
-            reconnectAttempts = 0;
 
-            logger.info("Connected to GA/T 1049.2 server at {}:{}", host, port);
+            // 连接成功，重置重连状态
+            synchronized (reconnectLock) {
+                reconnectState = ReconnectState.IDLE;
+                reconnectAttempts = 0;
+            }
 
-            // 连接成功后发送登录请求
-            // sendLoginRequest();
+            logger.info("Successfully connected to GA/T 1049.2 server at {}:{} (attempt {})",
+                    host, port, reconnectAttempts);
 
         } catch (Exception e) {
-            logger.error("Failed to connect to server at {}:{}", host, port, e);
-            scheduleReconnect();
+            logger.error("Failed to connect to server at {}:{} (attempt {}): {}",
+                    host, port, reconnectAttempts, e.getMessage());
             throw e;
         }
     }
@@ -165,14 +196,21 @@ public class GatTcpClient {
             return;
         }
 
-        connected = false;
         logger.info("Disconnecting from GA/T 1049.2 server...");
 
         try {
-            // 取消重连任务
-            if (reconnectTask != null) {
-                reconnectTask.cancel(true);
+            // 停止所有重连活动
+            synchronized (reconnectLock) {
+                reconnectState = ReconnectState.STOPPED;
+                reconnectAttempts = 0;
+
+                if (reconnectTask != null) {
+                    reconnectTask.cancel(true);
+                    reconnectTask = null;
+                }
             }
+
+            connected = false;
 
             // 取消所有待处理的请求
             pendingRequests.forEach((seq, future) ->
@@ -199,7 +237,47 @@ public class GatTcpClient {
             logger.error("Error disconnecting from server", e);
         }
     }
+    /**
+     * 重新连接（公共方法，用于手动触发重连）
+     */
+    public void reconnect() {
+        synchronized (reconnectLock) {
+            if (reconnectState == ReconnectState.STOPPED) {
+                logger.info("Reconnect was stopped, resetting state to allow reconnection");
+                reconnectState = ReconnectState.IDLE;
+                reconnectAttempts = 0;
+            }
 
+            if (reconnectState == ReconnectState.IDLE) {
+                logger.info("Manual reconnect triggered");
+                scheduleReconnect();
+            } else {
+                logger.info("Reconnect already in progress (state: {})", reconnectState);
+            }
+        }
+    }
+    /**
+     * 停止重连
+     */
+    public void stopReconnect() {
+        synchronized (reconnectLock) {
+            logger.info("Stopping reconnect mechanism");
+            reconnectState = ReconnectState.STOPPED;
+            if (reconnectTask != null) {
+                reconnectTask.cancel(true);
+                reconnectTask = null;
+            }
+        }
+    }
+    /**
+     * 获取重连状态信息
+     */
+    public String getReconnectStatus() {
+        synchronized (reconnectLock) {
+            return String.format("State: %s, Attempts: %d/%d",
+                    reconnectState, reconnectAttempts, MAX_RECONNECT_ATTEMPTS);
+        }
+    }
     /**
      * 发送登录请求
      */
@@ -316,27 +394,70 @@ public class GatTcpClient {
     public String getUsername(){ return username; }
     public String getPassword(){ return password; }
     public String getHost() { return host; }
+
     /**
-     * 安排重连
+     * 完全重写的重连逻辑
      */
     private void scheduleReconnect() {
-        if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-            logger.error("Max reconnect attempts reached. Giving up.");
-            return;
-        }
-
-        reconnectAttempts++;
-        logger.info("Scheduling reconnect attempt {} in {} ms", reconnectAttempts, RECONNECT_DELAY);
-
-        reconnectTask = reconnectExecutor.schedule(() -> {
-            try {
-                logger.info("Attempting to reconnect...");
-                doConnect();
-            } catch (Exception e) {
-                logger.error("Reconnect failed", e);
-                scheduleReconnect();
+        synchronized (reconnectLock) {
+            // 检查是否应该停止重连
+            if (reconnectState == ReconnectState.STOPPED) {
+                logger.info("Reconnect is stopped, will not schedule new reconnect");
+                return;
             }
-        }, RECONNECT_DELAY, TimeUnit.MILLISECONDS);
+
+            // 检查是否已经在重连流程中
+            if (reconnectState == ReconnectState.CONNECTING || reconnectState == ReconnectState.SCHEDULED) {
+                logger.debug("Reconnect already in progress (state: {}), skipping...", reconnectState);
+                return;
+            }
+
+            // 检查重连次数
+            if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+                logger.error("Max reconnect attempts ({}) reached. Giving up.", MAX_RECONNECT_ATTEMPTS);
+                reconnectState = ReconnectState.STOPPED;
+                return;
+            }
+
+            // 设置为已安排状态
+            reconnectState = ReconnectState.SCHEDULED;
+            reconnectAttempts++;
+
+            logger.info("Scheduling reconnect attempt {} in {} ms", reconnectAttempts, RECONNECT_DELAY);
+
+            // 取消之前的重连任务（如果存在）
+            if (reconnectTask != null && !reconnectTask.isDone()) {
+                reconnectTask.cancel(false);
+            }
+
+            reconnectTask = reconnectExecutor.schedule(() -> {
+                synchronized (reconnectLock) {
+                    // 再次检查状态
+                    if (reconnectState == ReconnectState.STOPPED) {
+                        logger.info("Reconnect was stopped, aborting reconnect attempt");
+                        return;
+                    }
+
+                    // 设置为连接中状态
+                    reconnectState = ReconnectState.CONNECTING;
+                }
+
+                try {
+                    logger.info("Attempting to reconnect... (attempt {}/{})", reconnectAttempts, MAX_RECONNECT_ATTEMPTS);
+                    doConnect();
+                } catch (Exception e) {
+                    logger.error("Reconnect attempt {} failed: {}", reconnectAttempts, e.getMessage());
+
+                    synchronized (reconnectLock) {
+                        // 连接失败，重置为空闲状态
+                        reconnectState = ReconnectState.IDLE;
+
+                        // 继续尝试重连（会在scheduleReconnect中检查次数限制）
+                        scheduleReconnect();
+                    }
+                }
+            }, RECONNECT_DELAY, TimeUnit.MILLISECONDS);
+        }
     }
 
     /**
@@ -348,6 +469,12 @@ public class GatTcpClient {
         public void channelActive(ChannelHandlerContext ctx) {
             logger.info("Channel active");
             connected = true;
+
+            // 通道激活，重置重连状态
+            synchronized (reconnectLock) {
+                reconnectState = ReconnectState.IDLE;
+                reconnectAttempts = 0;
+            }
         }
 
         @Override
@@ -355,9 +482,17 @@ public class GatTcpClient {
             logger.info("Channel inactive");
             connected = false;
 
-            // 触发重连
+            // 只有在没有关闭且允许重连时才触发重连
             if (!workerGroup.isShuttingDown()) {
-                scheduleReconnect();
+                synchronized (reconnectLock) {
+                    // 只有在空闲状态下才触发重连
+                    if (reconnectState == ReconnectState.IDLE) {
+                        logger.info("Channel became inactive, triggering reconnect");
+                        scheduleReconnect();
+                    } else {
+                        logger.debug("Channel inactive but reconnect state is {}, not triggering new reconnect", reconnectState);
+                    }
+                }
             }
         }
 
@@ -452,5 +587,13 @@ public class GatTcpClient {
      */
     public interface MessageListener {
         void onMessage(Message message);
+    }
+
+    // 重连状态枚举
+    private enum ReconnectState {
+        IDLE,       // 空闲状态
+        CONNECTING, // 正在连接
+        SCHEDULED,  // 已安排重连
+        STOPPED     // 已停止重连
     }
 }

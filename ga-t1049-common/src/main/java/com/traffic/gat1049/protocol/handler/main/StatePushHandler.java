@@ -46,7 +46,7 @@ public class StatePushHandler extends AbstractProtocolHandler {
                 data instanceof CrossTrafficData ||
                 data instanceof StageTrafficData ||
                 data instanceof VarLaneStatus ||
-                data instanceof RouteControlModeStatus ||
+                data instanceof RouteCtrlInfo ||
                 data instanceof RouteSpeed;
     }
 
@@ -89,8 +89,8 @@ public class StatePushHandler extends AbstractProtocolHandler {
             handleStageTrafficData((StageTrafficData) data);
         } else if (data instanceof VarLaneStatus) {
             handleVarLaneStatus((VarLaneStatus) data);
-        } else if (data instanceof RouteControlModeStatus) {
-            handleRouteControlMode((RouteControlModeStatus) data);
+        } else if (data instanceof RouteCtrlInfo) {
+            handleRouteControlMode((RouteCtrlInfo) data);
         } else if (data instanceof RouteSpeed) {
             handleRouteSpeed((RouteSpeed) data);
         }
@@ -196,7 +196,7 @@ public class StatePushHandler extends AbstractProtocolHandler {
         serviceFactory.getLaneService().updateVarLaneStatus(varLaneStatus);
     }
 
-    private void handleRouteControlMode(RouteControlModeStatus controlMode) throws BusinessException {
+    private void handleRouteControlMode(RouteCtrlInfo controlMode) throws BusinessException {
         logger.info("Received route control mode push: routeId={}, mode={}",
                 controlMode.getRouteId(), controlMode.getValue());
 

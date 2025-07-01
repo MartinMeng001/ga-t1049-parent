@@ -58,8 +58,8 @@ public class Operation implements Serializable {
             @XmlElement(name = "SDO_TimeServer", type = SdoTimeServer.class),
 
             // 信号控制相关对象
-            @XmlElement(name = "SignalControler", type = SignalController.class),
-            @XmlElement(name = "LampGroup", type = LampGroup.class),
+            @XmlElement(name = "SignalController", type = SignalController.class),
+            @XmlElement(name = "LampGroupParam", type = LampGroupParam.class),
             @XmlElement(name = "LaneParam", type = LaneParam.class),
             @XmlElement(name = "SignalGroupParam", type = SignalGroupParam.class),
             @XmlElement(name = "PedestrianParam", type = PedestrianParam.class),
@@ -79,7 +79,7 @@ public class Operation implements Serializable {
             @XmlElement(name = "SysInfo", type = SysInfo.class),
             @XmlElement(name = "SysState", type = SysState.class),
             @XmlElement(name = "CrossState", type = CrossState.class),
-            @XmlElement(name = "SignalControlerError", type = SignalControllerError.class),
+            @XmlElement(name = "SignalControllerError", type = SignalControllerError.class),
 
             // 命令对象
             @XmlElement(name = "TSCCmd", type = TSCCmd.class),
@@ -102,7 +102,7 @@ public class Operation implements Serializable {
             @XmlElement(name = "CrossCycle", type = CrossCycle.class),
             @XmlElement(name = "CrossStage", type = CrossStage.class),
             @XmlElement(name = "CrossSignalGroupStatus", type = CrossSignalGroupStatus.class),
-            @XmlElement(name = "RouteControlModeStatus", type = RouteControlModeStatus.class),
+            @XmlElement(name = "RouteCtrlInfo", type = RouteCtrlInfo.class),
             @XmlElement(name = "RouteSpeed", type = RouteSpeed.class),
 
             // 新增：重传运行信息命令

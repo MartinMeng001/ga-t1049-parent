@@ -2,6 +2,7 @@ package com.traffic.gat1049.application;
 
 import com.sun.nio.sctp.NotificationHandler;
 import com.traffic.gat1049.application.subscription.SubscriptionManager;
+import com.traffic.gat1049.application.subscription.interfaces.SubscriptionService;
 import com.traffic.gat1049.exception.MessageEncodingException;
 import com.traffic.gat1049.protocol.handler.main.*;
 import com.traffic.gat1049.protocol.handler.main.common.LogoutHandler;
@@ -31,6 +32,9 @@ public class HandlerRegistry {
     private final MessageProcessor messageProcessor;
     private final SubscriptionManager subscriptionManager;
     private final List<ProtocolHandler> handlers;
+
+    private NotifySubscribeHandler notifySubscribeHandler;
+    private NotifyUnsubscribeHandler notifyUnsubscribeHandler;
 
     public HandlerRegistry(ServiceFactory serviceFactory, SessionManager sessionManager, SubscriptionManager subscriptionManager) throws MessageEncodingException {
         this.serviceFactory = serviceFactory;
@@ -77,11 +81,13 @@ public class HandlerRegistry {
         // 8. 状态推送处理器 - 处理系统主动推送的状态数据
         registerHandler(new StatePushHandler(serviceFactory));
 
-        // 9. 订阅处理器
-        registerHandler(new NotifySubscribeHandler(subscriptionManager, sessionManager));
+        // 9. 订阅处理器 - 保存引用以便后续注入服务
+        notifySubscribeHandler = new NotifySubscribeHandler(sessionManager);
+        registerHandler(notifySubscribeHandler);
 
-        // 10. 取消订阅处理器
-        registerHandler(new NotifyUnsubscribeHandler(subscriptionManager, sessionManager));
+        // 10. 取消订阅处理器 - 同样保存引用
+        notifyUnsubscribeHandler = new NotifyUnsubscribeHandler(sessionManager);
+        registerHandler(notifyUnsubscribeHandler);
 
         // 11. 可变车道处理器
         registerHandler(new CtrlVarLaneHandler(serviceFactory));
@@ -110,6 +116,34 @@ public class HandlerRegistry {
         LoginHandler loginHandler = new LoginHandler(sessionManager);
         registerHandler(loginHandler);
         logger.info("已注册LoginHandler");
+    }
+
+    /**
+     * 注入订阅服务到订阅处理器
+     */
+    public void injectSubscriptionService(SubscriptionService subscriptionService) {
+        if (notifySubscribeHandler != null) {
+            notifySubscribeHandler.setSubscriptionService(subscriptionService);
+            logger.info("订阅服务已注入到NotifySubscribeHandler");
+        }
+
+        if (notifyUnsubscribeHandler != null) {
+            notifyUnsubscribeHandler.setSubscriptionService(subscriptionService);
+            logger.info("订阅服务已注入到NotifyUnsubscribeHandler");
+        }
+    }
+    /**
+     * 获取NotifySubscribeHandler实例（用于外部注入）
+     */
+    public NotifySubscribeHandler getNotifySubscribeHandler() {
+        return notifySubscribeHandler;
+    }
+
+    /**
+     * 获取NotifyUnsubscribeHandler实例（用于外部注入）
+     */
+    public NotifyUnsubscribeHandler getNotifyUnsubscribeHandler() {
+        return notifyUnsubscribeHandler;
     }
     /**
      * 获取消息处理器

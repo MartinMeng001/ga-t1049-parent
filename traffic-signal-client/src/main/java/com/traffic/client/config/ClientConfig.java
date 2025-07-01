@@ -106,7 +106,8 @@ public class ClientConfig {
             // 2. 演示GA/T 1049.1标准操作（仅首次执行）
             startDemoOperations(client, demoService);
 
-            // 3. 启动交互式命令行（仅首次执行）
+            // 3. 启动订阅
+            // 4. 启动交互式命令行（仅首次执行）
             startInteractiveConsole(client, commandService);
 
             logger.info("✅ 所有业务功能启动完成");

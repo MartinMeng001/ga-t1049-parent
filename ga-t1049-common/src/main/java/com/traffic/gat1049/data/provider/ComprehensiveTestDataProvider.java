@@ -1,28 +1,28 @@
 package com.traffic.gat1049.data.provider;
 
 import com.traffic.gat1049.exception.BusinessException;
+import com.traffic.gat1049.protocol.model.command.CrossCtrlInfo;
+import com.traffic.gat1049.protocol.model.intersection.*;
 import com.traffic.gat1049.protocol.model.system.SysInfo;
 import com.traffic.gat1049.protocol.model.system.SysState;
 import com.traffic.gat1049.protocol.model.system.RegionParam;
 import com.traffic.gat1049.protocol.model.system.SubRegionParam;
 import com.traffic.gat1049.protocol.model.system.RouteParam;
-import com.traffic.gat1049.protocol.model.intersection.CrossParam;
-import com.traffic.gat1049.protocol.model.intersection.SignalController;
-import com.traffic.gat1049.protocol.model.intersection.LampGroup;
-import com.traffic.gat1049.protocol.model.intersection.DetectorParam;
-import com.traffic.gat1049.protocol.model.intersection.LaneParam;
-import com.traffic.gat1049.protocol.model.intersection.PedestrianParam;
 import com.traffic.gat1049.protocol.model.signal.SignalGroupParam;
 import com.traffic.gat1049.protocol.model.signal.StageParam;
 import com.traffic.gat1049.protocol.model.signal.PlanParam;
 import com.traffic.gat1049.protocol.model.signal.DayPlanParam;
 import com.traffic.gat1049.protocol.model.signal.ScheduleParam;
+import com.traffic.gat1049.protocol.model.runtime.*;
+import com.traffic.gat1049.protocol.model.traffic.CrossTrafficData;
+import com.traffic.gat1049.protocol.model.traffic.StageTrafficData;
 
 import java.util.List;
 
 /**
  * 全面的测试数据访问接口
  * 提供对所有测试数据的统一访问
+ * 更新版本 - 支持新的测试数据结构
  */
 public interface ComprehensiveTestDataProvider {
 
@@ -110,7 +110,7 @@ public interface ComprehensiveTestDataProvider {
      * 根据信号机ID获取信号机参数
      */
     SignalController getSignalControllerById(String signalControllerId) throws BusinessException;
-
+    List<SignalController> getSignalControllersById(String signalControllerId) throws BusinessException;
     /**
      * 根据路口ID获取该路口的信号机
      */
@@ -121,17 +121,17 @@ public interface ComprehensiveTestDataProvider {
     /**
      * 获取所有灯组
      */
-    List<LampGroup> getAllLampGroups() throws BusinessException;
+    List<LampGroupParam> getAllLampGroups() throws BusinessException;
 
     /**
      * 根据路口ID获取该路口的所有灯组
      */
-    List<LampGroup> getLampGroupsByCrossId(String crossId) throws BusinessException;
+    List<LampGroupParam> getLampGroupsByCrossId(String crossId) throws BusinessException;
 
     /**
      * 根据路口ID和灯组编号获取灯组
      */
-    LampGroup getLampGroupByCrossIdAndNo(String crossId, String lampGroupNo) throws BusinessException;
+    LampGroupParam getLampGroupByCrossIdAndNo(String crossId, String lampGroupNo) throws BusinessException;
 
     // ==================== 检测器管理相关 ====================
 
@@ -274,116 +274,132 @@ public interface ComprehensiveTestDataProvider {
     /**
      * 获取所有路口状态
      */
-    List<Object> getAllCrossStates() throws BusinessException;
+    List<CrossState> getAllCrossStates() throws BusinessException;
 
     /**
      * 根据路口ID获取路口状态
      */
-    Object getCrossStateById(String crossId) throws BusinessException;
+    CrossState getCrossStateById(String crossId) throws BusinessException;
 
     /**
      * 获取所有信号机故障信息
      */
-    List<Object> getAllSignalTroubles() throws BusinessException;
+    List<SignalControllerError> getAllSignalControllerErrors() throws BusinessException;
 
     /**
      * 根据信号机ID获取故障信息
      */
-    List<Object> getSignalTroublesByControllerId(String signalControllerId) throws BusinessException;
+    List<SignalControllerError> getSignalControllerErrorsByControllerId(String signalControllerId) throws BusinessException;
 
     /**
      * 获取所有路口控制模式和方案
      */
-    List<Object> getAllCrossModePlans() throws BusinessException;
+    List<CrossCtrlInfo> getAllCrossCtrlInfos() throws BusinessException;
 
     /**
      * 根据路口ID获取控制模式和方案
      */
-    Object getCrossModePlanById(String crossId) throws BusinessException;
+    CrossCtrlInfo getCrossCtrlInfoById(String crossId) throws BusinessException;
 
     /**
      * 获取所有路口周期信息
      */
-    List<Object> getAllCrossCycles() throws BusinessException;
+    List<CrossCycle> getAllCrossCycles() throws BusinessException;
 
     /**
      * 根据路口ID获取周期信息
      */
-    Object getCrossCycleById(String crossId) throws BusinessException;
+    CrossCycle getCrossCycleById(String crossId) throws BusinessException;
 
     /**
      * 获取所有路口阶段信息
      */
-    List<Object> getAllCrossStages() throws BusinessException;
+    List<CrossStage> getAllCrossStages() throws BusinessException;
 
     /**
      * 根据路口ID获取当前阶段信息
      */
-    Object getCrossStageById(String crossId) throws BusinessException;
+    CrossStage getCrossStageById(String crossId) throws BusinessException;
 
     /**
      * 获取所有路口信号组状态
      */
-    List<Object> getAllCrossSignalGroupStatus() throws BusinessException;
+    List<CrossSignalGroupStatus> getAllCrossSignalGroupStatus() throws BusinessException;
 
     /**
      * 根据路口ID获取信号组状态
      */
-    Object getCrossSignalGroupStatusById(String crossId) throws BusinessException;
+    CrossSignalGroupStatus getCrossSignalGroupStatusById(String crossId) throws BusinessException;
 
     // ==================== 交通数据相关 ====================
 
     /**
      * 获取所有路口交通流数据
      */
-    List<Object> getAllCrossTrafficData() throws BusinessException;
+    List<CrossTrafficData> getAllCrossTrafficData() throws BusinessException;
 
     /**
      * 根据路口ID获取交通流数据
      */
-    Object getCrossTrafficDataById(String crossId) throws BusinessException;
+    CrossTrafficData getCrossTrafficDataById(String crossId) throws BusinessException;
+    /**
+     * 根据路口ID获取交通流数据
+     */
+    List<CrossTrafficData> getCrossTrafficDataByCrossId(String crossId) throws BusinessException;
 
     /**
      * 获取所有阶段交通流数据
      */
-    List<Object> getAllStageTrafficData() throws BusinessException;
+    List<StageTrafficData> getAllStageTrafficData() throws BusinessException;
 
     /**
      * 根据路口ID获取阶段交通流数据
      */
-    Object getStageTrafficDataByCrossId(String crossId) throws BusinessException;
+    List<StageTrafficData> getStageTrafficDataByCrossId(String crossId) throws BusinessException;
 
     // ==================== 可变车道和干线控制相关 ====================
 
     /**
      * 获取所有可变车道状态
      */
-    List<Object> getAllVarLaneStatus() throws BusinessException;
+    List<VarLaneStatus> getAllVarLaneStatus() throws BusinessException;
 
     /**
      * 根据路口ID获取可变车道状态
      */
-    Object getVarLaneStatusByCrossId(String crossId) throws BusinessException;
+    List<VarLaneStatus> getVarLaneStatusByCrossId(String crossId) throws BusinessException;
 
     /**
-     * 获取所有干线控制模式
+     * 获取干线控制模式
      */
-    List<Object> getAllRouteControlModes() throws BusinessException;
+    RouteCtrlInfo getRouteCtrlInfo() throws BusinessException;
 
     /**
      * 根据线路ID获取控制模式
      */
-    Object getRouteControlModeById(String routeId) throws BusinessException;
+    RouteCtrlInfo getRouteCtrlInfoById(String routeId) throws BusinessException;
 
     /**
-     * 获取所有干线推荐车速
+     * 获取干线推荐车速
      */
-    List<Object> getAllRouteSpeeds() throws BusinessException;
+    RouteSpeed getRouteSpeed() throws BusinessException;
 
     /**
      * 根据线路ID获取推荐车速
      */
-    Object getRouteSpeedById(String routeId) throws BusinessException;
+    RouteSpeed getRouteSpeedById(String routeId) throws BusinessException;
+
+    // ==================== 信号机柜门状态相关 ====================
+
+    /**
+     * 获取所有信号机柜门状态
+     */
+    List<SCDoorStatus> getAllSCDoorStatus() throws BusinessException;
+
+    /**
+     * 根据信号机ID获取柜门状态
+     */
+    SCDoorStatus getSCDoorStatusByControllerId(String signalControllerId) throws BusinessException;
 
     // ==================== 通用方法 ====================
 

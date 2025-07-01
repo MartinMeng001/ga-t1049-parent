@@ -437,8 +437,8 @@ public class UpdatedServerDebugConsole {
             case "2": objName = "SubRegionParam"; break;
             case "3": objName = "RouteParam"; break;
             case "4": objName = "CrossParam"; break;
-            case "5": objName = "SignalControler"; break;
-            case "6": objName = "LampGroup"; break;
+            case "5": objName = "SignalController"; break;
+            case "6": objName = "LampGroupParam"; break;
             case "7": objName = "DetectorParam"; break;
             case "8": objName = "LaneParam"; break;
             case "9": objName = "PedestrianParam"; break;
@@ -486,7 +486,7 @@ public class UpdatedServerDebugConsole {
     private void performRuntimeInfoQuery(Scanner scanner, String clientId) throws GatProtocolException {
         System.out.println("\n--- 运行信息查询 ---");
         System.out.println("1.  CrossState               - 路口状态");
-        System.out.println("2.  SignalControlerError    - 信号机故障");
+        System.out.println("2.  SignalControllerError    - 信号机故障");
         System.out.println("3.  CrossModePlan            - 路口控制方式和方案");
         System.out.println("4.  CrossCycle               - 路口周期");
         System.out.println("5.  CrossStage                - 路口阶段");
@@ -494,7 +494,7 @@ public class UpdatedServerDebugConsole {
         System.out.println("7.  CrossTrafficData         - 路口交通流数据");
         System.out.println("8.  StageTrafficData         - 阶段交通流数据");
         System.out.println("9.  VarLaneStatus            - 可变车道状态");
-        System.out.println("10. RouteControlMode         - 路线控制方式");
+        System.out.println("10. RouteCtrlInfo        - 路线控制方式");
         System.out.println("11. RouteSpeed               - 路线速度");
         System.out.println("12. 返回上级菜单");
         System.out.print("请选择 (1-12): ");
@@ -504,15 +504,15 @@ public class UpdatedServerDebugConsole {
 
         switch (choice) {
             case "1": objName = "CrossState"; break;
-            case "2": objName = "SignalControlerError"; break;
-            case "3": objName = "CrossModePlan"; break;
+            case "2": objName = "SignalControllerError"; break;
+            case "3": objName = "CrossCtrlInfo"; break;
             case "4": objName = "CrossCycle"; break;
             case "5": objName = "CrossStage"; break;
             case "6": objName = "CrossSignalGroupStatus"; break;
             case "7": objName = "CrossTrafficData"; break;
             case "8": objName = "StageTrafficData"; break;
             case "9": objName = "VarLaneStatus"; break;
-            case "10": objName = "RouteControlMode"; break;
+            case "10": objName = "RouteCtrlInfo"; break;
             case "11": objName = "RouteSpeed"; break;
             case "12": return;
             default:
@@ -529,7 +529,7 @@ public class UpdatedServerDebugConsole {
         if (!inputId.isEmpty()) {
             id = inputId;
         } else {
-            id = "11010000100001"; // 默认路口ID
+            id = ""; // 默认路口ID
             System.out.println("📌 使用默认ID: " + id);
         }
 
@@ -1347,7 +1347,7 @@ public class UpdatedServerDebugConsole {
             case "SubRegionParam":
             case "RouteParam":
             case "CrossParam":
-            case "SignalControler":
+            case "SignalController":
             case "LampGroup":
             case "DetectorParam":
             case "LaneParam":
@@ -1359,7 +1359,7 @@ public class UpdatedServerDebugConsole {
             case "ScheduleParam":
                 return "TSCCommandHandler (配置参数)";
             case "CrossState":
-            case "SignalControlerError":
+            case "SignalControllerError":
             case "CrossModePlan":
             case "CrossCycle":
             case "CrossStage":

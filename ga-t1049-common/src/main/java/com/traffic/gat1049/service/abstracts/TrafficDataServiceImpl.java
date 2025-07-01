@@ -52,6 +52,16 @@ public class TrafficDataServiceImpl implements TrafficDataService {
     }
 
     @Override
+    public List<CrossTrafficData> findAll() throws BusinessException {
+        return dataProvider.getAllCrossTrafficData();
+    }
+
+    @Override
+    public List<CrossTrafficData> findById(String id) throws BusinessException {
+        return dataProvider.getCrossTrafficDataByCrossId(id);
+    }
+
+    @Override
     public CrossTrafficData getCrossTrafficData(String crossId, LocalDateTime endTime, Integer interval) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
@@ -105,8 +115,16 @@ public class TrafficDataServiceImpl implements TrafficDataService {
     }
 
     @Override
+    public List<StageTrafficData> getStageTrafficDataByCrossId(String crossId) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new ValidationException("crossId", "路口编号不能为空");
+        }
+        return dataProvider.getStageTrafficDataByCrossId(crossId);
+    }
+
+    @Override
     public List<StageTrafficData> getAllStageTrafficData(LocalDateTime startTime, LocalDateTime endTime) throws BusinessException {
-        List<Object> objs = dataProvider.getAllStageTrafficData();
+        List<StageTrafficData> objs = dataProvider.getAllStageTrafficData();
         return objs.stream()
                 .map(obj -> {
                     try {
@@ -167,19 +185,19 @@ public class TrafficDataServiceImpl implements TrafficDataService {
 
     @Override
     public List<CrossCycle> getAllCrossCycle() throws BusinessException {
-        List<Object> objs = dataProvider.getAllCrossCycles();
+        return dataProvider.getAllCrossCycles();
 
-        return objs.stream()
-                .map(obj -> {
-                    try {
-                        return OBJECT_MAPPER.convertValue(obj, CrossCycle.class);
-                    } catch (IllegalArgumentException e) {
-                        logger.warn("转换 CrossCycle 失败: {}", obj, e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+//        return objs.stream()
+//                .map(obj -> {
+//                    try {
+//                        return OBJECT_MAPPER.convertValue(obj, CrossCycle.class);
+//                    } catch (IllegalArgumentException e) {
+//                        logger.warn("转换 CrossCycle 失败: {}", obj, e);
+//                        return null;
+//                    }
+//                })
+//                .filter(Objects::nonNull)
+//                .collect(Collectors.toList());
     }
 
     @Override
@@ -216,7 +234,7 @@ public class TrafficDataServiceImpl implements TrafficDataService {
 
     @Override
     public List<CrossStage> getAllCrossStage() throws BusinessException {
-        List<Object> objs = dataProvider.getAllCrossStages();
+        List<CrossStage> objs = dataProvider.getAllCrossStages();
 
         return objs.stream()
                 .map(obj -> {

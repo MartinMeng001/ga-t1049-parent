@@ -6,7 +6,7 @@ import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.protocol.model.runtime.RoadSectionSpeed;
-import com.traffic.gat1049.protocol.model.runtime.RouteControlModeStatus;
+import com.traffic.gat1049.protocol.model.runtime.RouteCtrlInfo;
 import com.traffic.gat1049.protocol.model.runtime.RouteSpeed;
 import com.traffic.gat1049.model.enums.RouteControlMode;
 import com.traffic.gat1049.protocol.handler.base.AbstractProtocolHandler;
@@ -32,7 +32,7 @@ public class RouteControlHandler extends AbstractProtocolHandler {
         }
 
         Object data = ProtocolUtils.getOperationData(message);
-        return data instanceof RouteControlModeStatus ||
+        return data instanceof RouteCtrlInfo ||
                 data instanceof RouteSpeed;
     }
 
@@ -43,8 +43,8 @@ public class RouteControlHandler extends AbstractProtocolHandler {
         try {
             Object result = null;
 
-            if (data instanceof RouteControlModeStatus) {
-                result = handleRouteControlMode((RouteControlModeStatus) data);
+            if (data instanceof RouteCtrlInfo) {
+                result = handleRouteControlMode((RouteCtrlInfo) data);
             } else if (data instanceof RouteSpeed) {
                 result = handleRouteSpeed((RouteSpeed) data);
             }
@@ -63,7 +63,7 @@ public class RouteControlHandler extends AbstractProtocolHandler {
         }
     }
 
-    private Object handleRouteControlMode(RouteControlModeStatus controlMode) throws BusinessException {
+    private Object handleRouteControlMode(RouteCtrlInfo controlMode) throws BusinessException {
         // 验证参数
         validateRouteControlMode(controlMode);
 
@@ -106,7 +106,7 @@ public class RouteControlHandler extends AbstractProtocolHandler {
         return createRouteSpeedResult(routeSpeed);
     }
 
-    private void validateRouteControlMode(RouteControlModeStatus controlMode) throws ValidationException {
+    private void validateRouteControlMode(RouteCtrlInfo controlMode) throws ValidationException {
         if (controlMode.getRouteId() == null || controlMode.getRouteId().trim().isEmpty()) {
             throw new ValidationException("routeId", "Route ID cannot be null or empty");
         }

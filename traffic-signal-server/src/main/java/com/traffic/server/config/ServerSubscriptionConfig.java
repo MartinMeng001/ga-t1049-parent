@@ -1,207 +1,120 @@
 package com.traffic.server.config;
 
 import com.traffic.server.service.ServerSubscriptionService;
-import com.traffic.gat1049.protocol.processor.DefaultMessageProcessor;
-import com.traffic.gat1049.protocol.handler.subscription.NotifySubscribeHandler;
-import com.traffic.gat1049.protocol.handler.subscription.NotifyUnsubscribeHandler;
-import com.traffic.gat1049.application.session.SessionManager;
-import com.traffic.gat1049.application.subscription.SubscriptionManager;
+import com.traffic.gat1049.application.HandlerRegistry;
+import com.traffic.gat1049.application.subscription.interfaces.SubscriptionService;
+import com.traffic.gat1049.application.subscription.SubscriptionResult;
 import com.traffic.gat1049.protocol.model.core.Message;
-import com.traffic.gat1049.protocol.constants.GatConstants;
-import com.traffic.gat1049.protocol.util.ProtocolUtils;
-import com.traffic.gat1049.protocol.handler.base.AbstractProtocolHandler;
+import com.traffic.gat1049.protocol.model.sdo.SdoMsgEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * 服务端订阅配置
- * 配置服务端向客户端发送订阅请求，接收客户端推送数据的功能
- *
- * 放置位置：traffic-signal-server/src/main/java/com/traffic/server/config/
  */
 @Configuration
-@ConditionalOnProperty(name = "app.role", havingValue = "server", matchIfMissing = true)
-public class ServerSubscriptionConfig {
+public class ServerSubscriptionConfig implements ApplicationListener<ContextRefreshedEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerSubscriptionConfig.class);
 
-    /**
-     * 服务端订阅服务 - 负责向客户端发送订阅请求
-     */
-//    @Bean
-//    public ServerSubscriptionService serverSubscriptionService() {
-//        logger.info("创建服务端订阅服务");
-//        return new ServerSubscriptionService();
-//    }
+    @Autowired
+    private HandlerRegistry handlerRegistry;
+
+    private SubscriptionService subscriptionServiceInstance;
 
     /**
-     * 服务端接收客户端订阅请求的处理器
-     * 虽然主要是反向订阅，但服务端也可能接收客户端的正向订阅
+     * 服务端订阅服务实现
      */
     @Bean
-    public NotifySubscribeHandler serverNotifySubscribeHandler(
-            SubscriptionManager subscriptionManager,
-            SessionManager sessionManager) {
-        logger.info("创建服务端Notify订阅处理器");
-        return new NotifySubscribeHandler(subscriptionManager, sessionManager);
+    public SubscriptionService serverSubscriptionService() {
+        if (subscriptionServiceInstance == null) {
+            subscriptionServiceInstance = new ServerSubscriptionServiceImpl();
+        }
+        return subscriptionServiceInstance;
     }
 
     /**
-     * 服务端取消订阅处理器
+     * ServerSubscriptionService Bean定义
+     * 供其他组件注入使用
      */
     @Bean
-    public NotifyUnsubscribeHandler serverNotifyUnsubscribeHandler(
-            SubscriptionManager subscriptionManager,
-            SessionManager sessionManager) {
-        logger.info("创建服务端Notify取消订阅处理器");
-        return new NotifyUnsubscribeHandler(subscriptionManager, sessionManager);
+    public ServerSubscriptionService trafficServerSubscriptionService() {
+        return new ServerSubscriptionService();
     }
 
     /**
-     * 服务端推送消息处理器 - 处理客户端推送的数据
+     * 在Spring容器完全初始化后执行注入操作
      */
-    @Bean
-    public ServerPushMessageHandler serverPushMessageHandler(
-            ServerSubscriptionService subscriptionService) {
-        logger.info("创建服务端推送消息处理器");
-        return new ServerPushMessageHandler(subscriptionService);
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        // 确保只在根容器初始化完成后执行一次
+        if (event.getApplicationContext().getParent() == null) {
+            configureSubscriptionService();
+        }
+    }
+
+    private void configureSubscriptionService() {
+        try {
+            // 获取已创建的Bean实例
+            if (subscriptionServiceInstance == null) {
+                subscriptionServiceInstance = serverSubscriptionService();
+            }
+
+            // 注入到HandlerRegistry
+            handlerRegistry.injectSubscriptionService(subscriptionServiceInstance);
+            logger.info("服务端订阅服务注入完成");
+        } catch (Exception e) {
+            logger.error("订阅服务注入失败", e);
+        }
     }
 
     /**
-     * 配置服务端消息处理器
+     * 服务端订阅服务实现类
      */
-    @Bean
-    public DefaultMessageProcessor configureServerMessageProcessor(
-            DefaultMessageProcessor messageProcessor,
-            NotifySubscribeHandler subscribeHandler,
-            NotifyUnsubscribeHandler unsubscribeHandler,
-            ServerPushMessageHandler pushHandler) {
+    private static class ServerSubscriptionServiceImpl implements SubscriptionService {
 
-        logger.info("配置服务端消息处理器");
+        private static final Logger logger = LoggerFactory.getLogger(ServerSubscriptionServiceImpl.class);
 
-        // 注册订阅相关处理器
-        messageProcessor.registerHandler(subscribeHandler);
-        messageProcessor.registerHandler(unsubscribeHandler);
-        messageProcessor.registerHandler(pushHandler);
+        private static final List<String> SERVER_SUPPORTED_OBJECTS = Arrays.asList(
+                "CrossCycle", "CrossModePlan", "SignalControllerError",
+                "CrossState", "SysState", "CrossStage"
+        );
 
-        // 注册推送消息处理器
-        messageProcessor.registerHandler(pushHandler);
+        @Override
+        public SubscriptionResult handleSubscribe(String token, SdoMsgEntity subscription, Message originalMessage) {
+            logger.info("服务端处理订阅请求: token={}, objName={}", token, subscription.getObjName());
 
-        logger.info("服务端消息处理器配置完成");
-        return messageProcessor;
-    }
+            // 服务端的订阅处理逻辑
+            // 这里可以集成现有的SubscriptionManager或其他逻辑
 
-    /**
-     * 服务端推送消息处理器实现类
-     * 专门处理从客户端接收到的推送消息
-     */
-    public static class ServerPushMessageHandler extends AbstractProtocolHandler {
-
-        private static final Logger logger = LoggerFactory.getLogger(ServerPushMessageHandler.class);
-        private final ServerSubscriptionService subscriptionService;
-
-        public ServerPushMessageHandler(ServerSubscriptionService subscriptionService) {
-            this.subscriptionService = subscriptionService;
+            return SubscriptionResult.success();
         }
 
         @Override
-        public boolean supports(Message message) {
-            // 只处理推送类型的Notify消息
-            return GatConstants.MessageType.PUSH.equals(message.getType()) &&
-                    GatConstants.Operation.NOTIFY.equals(ProtocolUtils.getOperationName(message));
+        public SubscriptionResult handleUnsubscribe(String token, SdoMsgEntity subscription, Message originalMessage) {
+            logger.info("服务端处理取消订阅请求: token={}, objName={}", token, subscription.getObjName());
+
+            // 服务端的取消订阅处理逻辑
+
+            return SubscriptionResult.success();
         }
 
         @Override
-        protected Message doHandle(Message message) {
-            logger.debug("服务端接收到推送消息: seq={}, from={}",
-                    message.getSeq(),
-                    message.getFrom() != null ? message.getFrom().getSys() : "unknown");
-
-            // 将推送消息委托给订阅服务处理
-            subscriptionService.handlePushMessage(message);
-
-            // 推送消息不需要响应
-            return null;
+        public boolean supportsObject(String objName) {
+            return "*".equals(objName) || SERVER_SUPPORTED_OBJECTS.contains(objName);
         }
 
         @Override
-        public String getHandlerName() {
-            return "ServerPushMessageHandler";
-        }
-    }
-
-    /**
-     * 服务端订阅监控服务
-     */
-    @Bean
-    public ServerSubscriptionMonitor serverSubscriptionMonitor(
-            ServerSubscriptionService subscriptionService) {
-        logger.info("创建服务端订阅监控服务");
-        return new ServerSubscriptionMonitor(subscriptionService);
-    }
-
-    /**
-     * 服务端订阅监控实现
-     */
-    public static class ServerSubscriptionMonitor {
-
-        private static final Logger logger = LoggerFactory.getLogger(ServerSubscriptionMonitor.class);
-        private final ServerSubscriptionService subscriptionService;
-
-        public ServerSubscriptionMonitor(ServerSubscriptionService subscriptionService) {
-            this.subscriptionService = subscriptionService;
-        }
-
-        /**
-         * 获取订阅统计信息
-         */
-        public SubscriptionStats getSubscriptionStats() {
-            SubscriptionStats stats = new SubscriptionStats();
-            // 实现统计逻辑
-            logger.debug("获取服务端订阅统计信息");
-            return stats;
-        }
-
-        /**
-         * 检查订阅健康状态
-         */
-        public boolean checkSubscriptionHealth() {
-            logger.debug("检查服务端订阅健康状态");
-            return true;
-        }
-
-        /**
-         * 订阅统计信息
-         */
-        public static class SubscriptionStats {
-            private int totalSentSubscriptions = 0;
-            private int activeSubscriptions = 0;
-            private int receivedPushMessages = 0;
-            private long lastPushTime = System.currentTimeMillis();
-
-            // Getters and Setters
-            public int getTotalSentSubscriptions() { return totalSentSubscriptions; }
-            public void setTotalSentSubscriptions(int totalSentSubscriptions) {
-                this.totalSentSubscriptions = totalSentSubscriptions;
-            }
-
-            public int getActiveSubscriptions() { return activeSubscriptions; }
-            public void setActiveSubscriptions(int activeSubscriptions) {
-                this.activeSubscriptions = activeSubscriptions;
-            }
-
-            public int getReceivedPushMessages() { return receivedPushMessages; }
-            public void setReceivedPushMessages(int receivedPushMessages) {
-                this.receivedPushMessages = receivedPushMessages;
-            }
-
-            public long getLastPushTime() { return lastPushTime; }
-            public void setLastPushTime(long lastPushTime) {
-                this.lastPushTime = lastPushTime;
-            }
+        public List<String> getSupportedObjects() {
+            return SERVER_SUPPORTED_OBJECTS;
         }
     }
 }

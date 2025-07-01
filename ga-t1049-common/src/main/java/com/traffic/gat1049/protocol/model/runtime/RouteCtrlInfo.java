@@ -3,7 +3,6 @@ package com.traffic.gat1049.protocol.model.runtime;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.traffic.gat1049.protocol.adapters.XmlAdapter.RouteControlModeAdapter;
-import com.traffic.gat1049.protocol.model.base.BaseState;
 import com.traffic.gat1049.model.enums.RouteControlMode;
 
 import javax.validation.constraints.NotBlank;
@@ -20,7 +19,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @XmlRootElement(name = "RouteCtrlInfo")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class RouteControlModeStatus {//extends BaseState
+public class RouteCtrlInfo {//extends BaseState
 
     /**
      * 线路编号
@@ -39,11 +38,11 @@ public class RouteControlModeStatus {//extends BaseState
     private RouteControlMode value;
 
     // 构造函数
-    public RouteControlModeStatus() {
+    public RouteCtrlInfo() {
         //super();
     }
 
-    public RouteControlModeStatus(String routeId, RouteControlMode value) {
+    public RouteCtrlInfo(String routeId, RouteControlMode value) {
         //super();
         this.routeId = routeId;
         this.value = value;
@@ -68,9 +67,9 @@ public class RouteControlModeStatus {//extends BaseState
 
     @Override
     public String toString() {
-        return "RouteControlModeStatus{" +
+        return "RouteCtrlInfo{" +
                 "routeId='" + routeId + '\'' +
                 ", value=" + value +
-                "} " + super.toString();
+                "} ";
     }
 }

@@ -15,6 +15,13 @@ import java.util.List;
 public interface LaneService {
 
     /**
+     * 获取所有车道列表
+     *
+     * @return 车道参数列表
+     * @throws BusinessException 业务异常
+     */
+    List<LaneParam> findAll() throws BusinessException;
+    /**
      * 根据路口编号获取车道列表
      *
      * @param crossId 路口编号
@@ -99,6 +106,15 @@ public interface LaneService {
      * @throws BusinessException 业务异常
      */
     VarLaneStatus getVarLaneStatus(String crossId, Integer laneNo) throws BusinessException;
+
+    /**
+     * 获取可变车道状态
+     *
+     * @param crossId 路口编号
+     * @return 可变车道状态列表
+     * @throws BusinessException 业务异常
+     */
+    List<VarLaneStatus> getVarLaneStatus(String crossId) throws BusinessException;
 
     /**
      * 更新可变车道状态
