@@ -5,16 +5,18 @@ import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.model.core.MessageBody;
 import com.traffic.gat1049.protocol.model.core.Operation;
 import com.traffic.gat1049.protocol.constants.GatConstants;
-import com.traffic.gat1049.protocol.util.PushHandlingUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 /**
  * 独立的推送消息构建器
  * 专门用于构建推送消息，与现有的MessageBuilder保持独立
  * 提供与ResponseBuilder相似的API设计
+ *
+ * 修复版本：将数据处理逻辑内置，避免与PushHandlingUtils的循环依赖
  */
 public class PushBuilder {
 
@@ -28,7 +30,7 @@ public class PushBuilder {
         this.message.setVersion(GatConstants.PROTOCOL_VERSION);
         this.message.setType(GatConstants.MessageType.PUSH);
         this.message.setBody(new MessageBody());
-        this.message.setSeq(generateSequence());
+        this.message.setSeq(Message.generateSequence());
     }
 
     /**
@@ -54,6 +56,9 @@ public class PushBuilder {
      */
     public static PushBuilder clientPush() {
         return from(GatConstants.SystemAddress.UTCS);
+    }
+    public static PushBuilder clientPush(String username) {
+        return from(GatConstants.SystemAddress.UTCS, username, "");
     }
 
     /**
@@ -82,28 +87,28 @@ public class PushBuilder {
     }
 
     /**
-     * 推送到TICP
+     * 设置目标为TICP
      */
     public PushBuilder toTicp() {
-        return to(GatConstants.SystemAddress.TICP);
+        return to(GatConstants.SystemAddress.TICP, null, null);
     }
 
     /**
-     * 推送到TICP（指定用户）
+     * 设置目标为TICP - 指定用户名
      */
     public PushBuilder toTicp(String username) {
         return to(GatConstants.SystemAddress.TICP, username, null);
     }
 
     /**
-     * 推送到UTCS
+     * 设置目标为UTCS
      */
     public PushBuilder toUtcs() {
         return to(GatConstants.SystemAddress.UTCS);
     }
 
     /**
-     * 推送到UTCS（指定用户）
+     * 设置目标为UTCS - 指定用户名
      */
     public PushBuilder toUtcs(String username) {
         return to(GatConstants.SystemAddress.UTCS, username, "");
@@ -112,7 +117,7 @@ public class PushBuilder {
     // ==================== 消息属性设置方法 ====================
 
     /**
-     * 设置令牌
+     * 设置Token
      */
     public PushBuilder token(String token) {
         this.message.setToken(token != null ? token : "");
@@ -127,6 +132,112 @@ public class PushBuilder {
         return this;
     }
 
+    // ==================== 内部数据处理方法 ====================
+
+    /**
+     * 内部数据处理方法 - 避免循环依赖
+     * 将ArrayList等复杂类型转换为JAXB可序列化的格式
+     */
+    private static Object processDataForPush(Object data) {
+        if (data == null) {
+            return null;
+        }
+
+        // 处理Collection类型（包括ArrayList）
+        if (data instanceof Collection) {
+            Collection<?> collection = (Collection<?>) data;
+            if (collection.isEmpty()) {
+                return null;
+            } else if (collection.size() == 1) {
+                // 单个元素，返回元素本身（JAXB可以序列化）
+                return collection.iterator().next();
+            } else {
+                // 多个元素：返回MultiElementData
+                return new MultiElementData(new ArrayList<>(collection));
+            }
+        }
+
+        // 处理数组类型
+        else if (data.getClass().isArray()) {
+            Object[] array = (Object[]) data;
+            if (array.length == 0) {
+                return null;
+            } else if (array.length == 1) {
+                return array[0];
+            } else {
+                List<Object> list = new ArrayList<>();
+                for (Object item : array) {
+                    if (item != null) {
+                        list.add(item);
+                    }
+                }
+                return new MultiElementData(list);
+            }
+        }
+
+        // 单个对象，直接返回
+        return data;
+    }
+
+    /**
+     * 强制转换为单数据格式
+     */
+    private static Object processDataForSinglePush(Object data) {
+        Object processedData = processDataForPush(data);
+
+        if (processedData instanceof MultiElementData) {
+            List<Object> elements = ((MultiElementData) processedData).getElements();
+            return elements.isEmpty() ? null : elements.get(0);
+        }
+
+        return processedData;
+    }
+
+    /**
+     * 强制转换为多数据格式
+     */
+    private static MultiElementData processDataForMultiplePush(Object data) {
+        if (data == null) {
+            return new MultiElementData(new ArrayList<>());
+        }
+
+        if (data instanceof Collection) {
+            return new MultiElementData(new ArrayList<>((Collection<?>) data));
+        } else if (data.getClass().isArray()) {
+            List<Object> list = new ArrayList<>();
+            Object[] array = (Object[]) data;
+            for (Object item : array) {
+                if (item != null) {
+                    list.add(item);
+                }
+            }
+            return new MultiElementData(list);
+        } else {
+            List<Object> list = new ArrayList<>();
+            list.add(data);
+            return new MultiElementData(list);
+        }
+    }
+
+    /**
+     * 验证推送数据是否有效
+     */
+    private static boolean isValidPushData(Object data) {
+        if (data == null) {
+            return false;
+        }
+
+        if (data instanceof Collection) {
+            return !((Collection<?>) data).isEmpty();
+        }
+
+        if (data.getClass().isArray()) {
+            return ((Object[]) data).length > 0;
+        }
+
+        return true;
+    }
+
     // ==================== 数据推送方法 - 核心功能 ====================
 
     /**
@@ -134,25 +245,26 @@ public class PushBuilder {
      * 自动处理ArrayList等复杂数据类型
      */
     public PushBuilder notify(Object data) {
-        return operation(GatConstants.Operation.NOTIFY, data);
+        Object processedData = processDataForPush(data);
+        return operation(GatConstants.Operation.NOTIFY, processedData);
     }
 
     /**
      * 推送数据 - 指定操作名称
      */
     public PushBuilder notify(String operationName, Object data) {
-        return operation(operationName, data);
+        Object processedData = processDataForPush(data);
+        return operation(operationName, processedData);
     }
 
     /**
      * 添加操作 - 核心方法
-     * 修正：正确处理MultiElementData，避免JAXB序列化ArrayList
+     * 正确处理MultiElementData，避免JAXB序列化ArrayList
      */
     public PushBuilder operation(String operationName, Object data) {
-        // 关键修正：处理MultiElementData
-        if (data instanceof PushHandlingUtils.MultiElementData) {
+        if (data instanceof MultiElementData) {
             // 多元素数据：逐个添加到Operation的dataList，而不是设置为单个data
-            PushHandlingUtils.MultiElementData multiData = (PushHandlingUtils.MultiElementData) data;
+            MultiElementData multiData = (MultiElementData) data;
             Operation operation = new Operation(operationOrder++, operationName);
 
             // 将每个元素添加到Operation的dataList
@@ -163,8 +275,7 @@ public class PushBuilder {
             this.message.getBody().addOperation(operation);
         } else {
             // 单个数据对象：使用原来的方式
-            Object processedData = data; // 不再调用PushHandlingUtils.processPushData，因为已经处理过了
-            Operation operation = new Operation(operationOrder++, operationName, processedData);
+            Operation operation = new Operation(operationOrder++, operationName, data);
             this.message.getBody().addOperation(operation);
         }
 
@@ -186,7 +297,7 @@ public class PushBuilder {
      * 即使是ArrayList也只取第一个元素
      */
     public PushBuilder withSingleData(Object data) {
-        Object processedData = PushHandlingUtils.processPushDataAsSingle(data);
+        Object processedData = processDataForSinglePush(data);
         return operation(GatConstants.Operation.NOTIFY, processedData);
     }
 
@@ -195,7 +306,7 @@ public class PushBuilder {
      * 单个对象也包装为ArrayList
      */
     public PushBuilder withMultiData(Object data) {
-        Object processedData = PushHandlingUtils.processPushDataAsMultiple(data);
+        Object processedData = processDataForMultiplePush(data);
         return operation(GatConstants.Operation.NOTIFY, processedData);
     }
 
@@ -204,7 +315,7 @@ public class PushBuilder {
      */
     public PushBuilder withBatch(Collection<?> dataCollection) {
         // 创建MultiElementData并传递给operation方法
-        PushHandlingUtils.MultiElementData multiData = new PushHandlingUtils.MultiElementData(new ArrayList<>(dataCollection));
+        MultiElementData multiData = new MultiElementData(new ArrayList<>(dataCollection));
         return operation(GatConstants.Operation.NOTIFY, multiData);
     }
 
@@ -212,7 +323,8 @@ public class PushBuilder {
      * 批量数据推送 - 指定操作名称
      */
     public PushBuilder withBatch(String operationName, Collection<?> dataCollection) {
-        return operation(operationName, dataCollection);
+        MultiElementData multiData = new MultiElementData(new ArrayList<>(dataCollection));
+        return operation(operationName, multiData);
     }
 
     // ==================== 便捷的数据类型推送方法 ====================
@@ -272,10 +384,10 @@ public class PushBuilder {
     }
 
     /**
-     * 有效数据推送 - 使用PushHandlingUtils验证
+     * 有效数据推送 - 使用内部验证
      */
     public PushBuilder notifyIfValid(Object data) {
-        return notifyIf(PushHandlingUtils.isValidPushData(data), data);
+        return notifyIf(isValidPushData(data), data);
     }
 
     // ==================== 构建方法 ====================
@@ -335,15 +447,32 @@ public class PushBuilder {
         }
     }
 
-    /**
-     * 生成序列号
-     */
-    private String generateSequence() {
-        return "PUSH_" + System.currentTimeMillis() + "_" +
-                UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-    }
-
     // ==================== 内部数据类 ====================
+
+    /**
+     * 多元素数据包装器
+     * 用于标识数据需要添加到Operation.dataList而不是Operation.data
+     * 这样可以避免JAXB序列化ArrayList的问题
+     */
+    public static class MultiElementData {
+        private final List<Object> elements;
+
+        public MultiElementData(List<Object> elements) {
+            this.elements = elements != null ? elements : new ArrayList<>();
+        }
+
+        public List<Object> getElements() {
+            return elements;
+        }
+
+        public boolean isEmpty() {
+            return elements.isEmpty();
+        }
+
+        public int size() {
+            return elements.size();
+        }
+    }
 
     /**
      * 状态数据包装器
@@ -357,12 +486,12 @@ public class PushBuilder {
             this.details = details;
         }
 
-        public String getStatus() { return status; }
-        public Object getDetails() { return details; }
+        public String getStatus() {
+            return status;
+        }
 
-        @Override
-        public String toString() {
-            return String.format("Status{status='%s', details=%s}", status, details);
+        public Object getDetails() {
+            return details;
         }
     }
 
@@ -378,51 +507,12 @@ public class PushBuilder {
             this.errorMessage = errorMessage;
         }
 
-        public String getErrorCode() { return errorCode; }
-        public String getErrorMessage() { return errorMessage; }
-
-        @Override
-        public String toString() {
-            return String.format("Error{code='%s', message='%s'}", errorCode, errorMessage);
+        public String getErrorCode() {
+            return errorCode;
         }
-    }
 
-    // ==================== 调试和监控方法 ====================
-
-    /**
-     * 获取当前消息状态信息
-     */
-    public String getMessageInfo() {
-        return String.format("PushMessage{from='%s', to='%s', operations=%d, seq='%s'}",
-                message.getFrom(),
-                message.getTo(),
-                message.getBody().getOperations().size(),
-                message.getSeq());
-    }
-
-    /**
-     * 获取操作数量
-     */
-    public int getOperationCount() {
-        return message.getBody().getOperations().size();
-    }
-
-    /**
-     * 检查是否包含数据
-     */
-    public boolean hasData() {
-        return !message.getBody().getOperations().isEmpty();
-    }
-
-    /**
-     * 获取数据大小估计
-     */
-    public int getEstimatedDataSize() {
-        return message.getBody().getOperations().stream()
-                .mapToInt(op -> {
-                    Object data = op.getData();
-                    return PushHandlingUtils.getDataSize(data);
-                })
-                .sum();
+        public String getErrorMessage() {
+            return errorMessage;
+        }
     }
 }

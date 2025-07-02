@@ -246,7 +246,8 @@ public class ClientDataPushService {
                         return serviceFactory.getTrafficDataService().getAllStageTrafficData(null, null);
                     }
                     break;
-
+                case "CrossCtrlInfo":
+                    return serviceFactory.getControlModeService().getAllControlModes();
                 case "VarLaneStatus":
                     // 需要车道号，这里获取所有车道状态
                     return serviceFactory.getLaneService().getVarLanes();
@@ -274,7 +275,7 @@ public class ClientDataPushService {
 
                 Object data = getRealDataFromCommon(GatConstants.ObjectName.SYS_STATE);
                 if (data != null) {
-                    Message pushMessage = createPushMessageWithIndependentSystem(data);
+                    Message pushMessage = createPushMessageWithIndependentSystem(gatTcpClient.getUsername(), GatTcpClient.tocken, data);
                     sendPushMessage(serverId, pushMessage);
                     logger.debug("推送系统状态到服务端: serverId={}", serverId);
                 }
@@ -297,7 +298,7 @@ public class ClientDataPushService {
 
                 Object data = getRealDataFromCommon(GatConstants.ObjectName.CROSS_STATE);
                 if (data != null) {
-                    Message pushMessage = createPushMessageWithIndependentSystem(data);
+                    Message pushMessage = createPushMessageWithIndependentSystem(gatTcpClient.getUsername(), GatTcpClient.tocken, data);
                     sendPushMessage(serverId, pushMessage);
                     logger.debug("推送路口状态到服务端: serverId={}, crossId={}", serverId, crossId);
                 }
@@ -319,7 +320,7 @@ public class ClientDataPushService {
 
                 Object data = getRealDataFromCommon(GatConstants.ObjectName.CROSS_CYCLE);
                 if (data != null) {
-                    Message pushMessage = createPushMessageWithIndependentSystem(data);
+                    Message pushMessage = createPushMessageWithIndependentSystem(gatTcpClient.getUsername(), GatTcpClient.tocken, data);
                     sendPushMessage(serverId, pushMessage);
                     logger.debug("推送路口周期到服务端: serverId={}",
                             serverId);
@@ -342,7 +343,7 @@ public class ClientDataPushService {
 
                 Object data = getRealDataFromCommon(GatConstants.ObjectName.CROSS_STAGE);
                 if (data != null) {
-                    Message pushMessage = createPushMessageWithIndependentSystem(data);
+                    Message pushMessage = createPushMessageWithIndependentSystem(gatTcpClient.getUsername(), GatTcpClient.tocken, data);
                     sendPushMessage(serverId, pushMessage);
                     logger.debug("推送路口阶段到服务端: serverId={}",
                             serverId);
@@ -366,7 +367,7 @@ public class ClientDataPushService {
 
                 Object data = getRealDataFromCommon(GatConstants.ObjectName.CROSS_SIGNAL_GROUP_STATUS);
                 if (data != null) {
-                    Message pushMessage = createPushMessageWithIndependentSystem(data);
+                    Message pushMessage = createPushMessageWithIndependentSystem(gatTcpClient.getUsername(), GatTcpClient.tocken, data);
                     sendPushMessage(serverId, pushMessage);
                     logger.debug("推送信号组状态到服务端: serverId={}",
                             serverId);
@@ -390,7 +391,7 @@ public class ClientDataPushService {
 
                 Object data = getRealDataFromCommon(GatConstants.ObjectName.CROSS_TRAFFIC_DATA);
                 if (data != null) {
-                    Message pushMessage = createPushMessageWithIndependentSystem(data);
+                    Message pushMessage = createPushMessageWithIndependentSystem(gatTcpClient.getUsername(), GatTcpClient.tocken, data);
                     sendPushMessage(serverId, pushMessage);
                     logger.info("推送交通流数据到服务端: serverId={}",
                             serverId);
@@ -413,15 +414,15 @@ public class ClientDataPushService {
                 }
 
                 // 模拟偶发故障（10%概率）
-                if (random.nextInt(10) == 0) {
+                //if (random.nextInt(10) == 0) {
                     Object data = getRealDataFromCommon(GatConstants.ObjectName.SIGNAL_CONTROLLER_ERROR);
                     if (data != null) {
-                        Message pushMessage = createPushMessageWithIndependentSystem(data);
+                        Message pushMessage = createPushMessageWithIndependentSystem(gatTcpClient.getUsername(), GatTcpClient.tocken, data);
                         sendPushMessage(serverId, pushMessage);
                         logger.warn("推送信号机故障到服务端: serverId={}",
                                 serverId);
                     }
-                }
+                //}
             } catch (Exception e) {
                 logger.error("推送故障报告失败", e);
             }
@@ -439,16 +440,16 @@ public class ClientDataPushService {
                 }
 
                 // 模拟控制方式变更（较少发生）
-                if (random.nextInt(20) == 0) {
+                //if (random.nextInt(20) == 0) {
                     Object data = getRealDataFromCommon(GatConstants.ObjectName.CROSS_MODE_PLAN);
                     if (data != null) {
-                        Message pushMessage = createPushMessageWithIndependentSystem(data);
+                        Message pushMessage = createPushMessageWithIndependentSystem(gatTcpClient.getUsername(), GatTcpClient.tocken, data);
                         sendPushMessage(serverId, pushMessage);
                         logger.info("推送控制方式变更到服务端: serverId={}",
                                 serverId);
                     }
 
-                }
+                //}
             } catch (Exception e) {
                 logger.error("推送控制方式变更失败", e);
             }
@@ -504,6 +505,9 @@ public class ClientDataPushService {
     private Message createPushMessageWithIndependentSystem(Object data) {
         return PushHandlingUtils.createClientPushMessage(data);
     }
+    private Message createPushMessageWithIndependentSystem(String username, String token, Object data) {
+        return PushHandlingUtils.createClientPushMessage(username, token, data);
+    }
 
     /**
      * 方式二：使用PushBuilder直接构建
@@ -512,6 +516,13 @@ public class ClientDataPushService {
     private Message createPushMessageWithBuilder(Object data) {
         return PushBuilder.clientPush()
                 .toTicp()
+                .withData(data)  // 自动处理ArrayList
+                .build();
+    }
+    private Message createPushMessageWithBuilderWithToken(Object data, String username, String token) {
+        return PushBuilder.clientPush(username)
+                .toTicp()
+                .token(token)
                 .withData(data)  // 自动处理ArrayList
                 .build();
     }
@@ -694,5 +705,56 @@ public class ClientDataPushService {
             pushExecutor.shutdown();
         }
         logger.info("客户端数据推送服务已关闭");
+    }
+    // 手动订阅 - 取消订阅方案
+    private SdoMsgEntity createPushObject(String objName){
+        return new SdoMsgEntity(
+                GatConstants.MessageType.PUSH,
+                GatConstants.Operation.NOTIFY,
+                objName
+        );
+    }
+    public void manualSubscribe(String serverId, String objName) {
+        SdoMsgEntity subscription = createPushObject(objName);
+        // 验证订阅参数
+        if (!isValidSubscription(subscription)) {
+            logger.warn("订阅参数无效 - manual");
+            return;
+        }
+        // 记录订阅请求
+        List<SdoMsgEntity> subscriptions = receivedSubscriptions.computeIfAbsent(
+                serverId, k -> new CopyOnWriteArrayList<>());
+
+        // 检查是否已存在相同订阅
+        boolean exists = subscriptions.stream().anyMatch(existing ->
+                isSameSubscription(existing, subscription));
+
+        if (!exists) {
+            subscriptions.add(subscription);
+            logger.info("接受服务端订阅请求[manual]: serverId={}, objName={}", serverId, subscription.getObjName());
+
+            // 启动对应的数据推送
+            startDataPush(serverId, subscription);
+        } else {
+            logger.debug("订阅已存在[manual]: serverId={}, objName={}", serverId, subscription.getObjName());
+        }
+    }
+    public void manualUnSubscribe(String serverId, String objName) {
+        SdoMsgEntity unsubscription = createPushObject(objName);
+        // 验证订阅参数
+        if (!isValidSubscription(unsubscription)) {
+            logger.warn("取消订阅参数无效 - manual");
+            return;
+        }
+        List<SdoMsgEntity> subscriptions = receivedSubscriptions.get(serverId);
+        if (subscriptions != null) {
+            boolean removed = subscriptions.removeIf(existing ->
+                    isSameSubscription(existing, unsubscription));
+            if (removed) {
+                logger.info("取消订阅[manual]: serverId={}, objName={}", serverId, unsubscription.getObjName());
+                // 停止相应的数据推送
+                stopDataPush(serverId, unsubscription);
+            }
+        }
     }
 }
