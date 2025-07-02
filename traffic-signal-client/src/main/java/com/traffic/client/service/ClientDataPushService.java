@@ -1,10 +1,12 @@
 package com.traffic.client.service;
 
 import com.traffic.client.network.client.GatTcpClient;
+import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.model.enums.ControlMode;
 import com.traffic.gat1049.model.enums.ControllerErrorType;
 import com.traffic.gat1049.model.enums.LampStatus;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
+import com.traffic.gat1049.protocol.builder.PushBuilder;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.model.sdo.SdoMsgEntity;
 import com.traffic.gat1049.protocol.model.runtime.*;
@@ -14,6 +16,10 @@ import com.traffic.gat1049.protocol.model.traffic.*;
 import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.model.enums.SystemState;
 import com.traffic.gat1049.protocol.util.ProtocolUtils;
+import com.traffic.gat1049.protocol.util.PushHandlingUtils;
+import com.traffic.gat1049.protocol.util.ResultHandlingUtils;
+import com.traffic.gat1049.service.abstracts.DefaultServiceFactory;
+import com.traffic.gat1049.service.interfaces.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -45,10 +51,20 @@ public class ClientDataPushService {
     // 数据推送执行器
     private final ScheduledExecutorService pushExecutor = Executors.newScheduledThreadPool(5);
 
+    // 注入的GatTcpClient实例
+    private final GatTcpClient gatTcpClient;
+    private final DefaultServiceFactory serviceFactory;
+
     // 模拟数据生成器
     private final Random random = new Random();
     private final String crossId = "CROSS001"; // 模拟路口ID
     private final String controllerId = "SC001"; // 模拟信号机ID
+
+    // 构造函数注入 GatTcpClient
+    public ClientDataPushService(GatTcpClient gatTcpClient, DefaultServiceFactory serviceFactory) {
+        this.gatTcpClient = gatTcpClient;
+        this.serviceFactory = serviceFactory;
+    }
 
     @PostConstruct
     public void initialize() {
@@ -184,6 +200,69 @@ public class ClientDataPushService {
     }
 
     /**
+     * 从Common模块获取真实数据
+     * 参照TSC查询CrossSignalGroupStatus的方式
+     */
+    private Object getRealDataFromCommon(String objName) {
+        try {
+            switch (objName) {
+                case "CrossSignalGroupStatus":
+                    // 参照TSCCommandHandler.handleCrossSignalGroupStatus的实现
+                    SignalGroupService signalGroupService = serviceFactory.getSignalGroupService();
+                    return signalGroupService.getAllCrossSignalGroupStatus();
+
+                case "CrossState":
+                    // 参照TSCCommandHandler.handleCrossState的实现
+                    CrossService crossService = serviceFactory.getCrossService();
+                    return crossService.getAllCrossState();
+
+                case "CrossCycle":
+                    // 参照TSCCommandHandler.handleCrossCycle的实现
+                    TrafficDataService trafficDataService = serviceFactory.getTrafficDataService();
+                    return trafficDataService.getAllCrossCycle();
+
+                case "CrossStage":
+                    // 参照TSCCommandHandler.handleCrossStage的实现
+                    return serviceFactory.getTrafficDataService().getAllCrossStage();
+
+                case "SysState":
+                    // 参照TSCCommandHandler.handleSysState的实现
+                    SystemService systemService = serviceFactory.getSystemService();
+                    return systemService.getSystemState();
+
+                case "SignalControllerError":
+                    // 参照TSCCommandHandler.handleSignalControllerError的实现
+                    SignalControllerService controllerService = serviceFactory.getSignalControllerService();
+                    return controllerService.getAllErrors();
+
+                case "CrossTrafficData":
+                    // 参照TSCCommandHandler.handleCrossTrafficData的实现
+                    return serviceFactory.getTrafficDataService().findAll();
+
+                case "StageTrafficData":
+                    // 需要阶段号，这里使用当前阶段
+                    CrossStage currentStage = serviceFactory.getTrafficDataService().getCrossStage(crossId);
+                    if (currentStage != null) {
+                        return serviceFactory.getTrafficDataService().getAllStageTrafficData(null, null);
+                    }
+                    break;
+
+                case "VarLaneStatus":
+                    // 需要车道号，这里获取所有车道状态
+                    return serviceFactory.getLaneService().getVarLanes();
+
+                default:
+                    logger.warn("不支持的订阅对象类型: {}", objName);
+                    return null;
+            }
+        } catch (BusinessException e) {
+            logger.error("从Common模块获取数据失败: objName={}, error={}", objName, e.getMessage());
+            return null;
+        }
+
+        return null;
+    }
+    /**
      * 推送系统状态数据
      */
     private void startSystemStatePush(String serverId) {
@@ -193,11 +272,13 @@ public class ClientDataPushService {
                     return;
                 }
 
-                SysState sysState = new SysState(SystemState.ONLINE);
-                Message pushMessage = createPushMessage(sysState);
+                Object data = getRealDataFromCommon(GatConstants.ObjectName.SYS_STATE);
+                if (data != null) {
+                    Message pushMessage = createPushMessageWithIndependentSystem(data);
+                    sendPushMessage(serverId, pushMessage);
+                    logger.debug("推送系统状态到服务端: serverId={}", serverId);
+                }
 
-                sendPushMessage(serverId, pushMessage);
-                logger.debug("推送系统状态到服务端: serverId={}", serverId);
             } catch (Exception e) {
                 logger.error("推送系统状态失败", e);
             }
@@ -214,12 +295,12 @@ public class ClientDataPushService {
                     return;
                 }
 
-                CrossState crossState = new CrossState(crossId, SystemState.ONLINE);
-                //crossState.setStateTime(LocalDateTime.now());
-
-                Message pushMessage = createPushMessage(crossState);
-                sendPushMessage(serverId, pushMessage);
-                logger.debug("推送路口状态到服务端: serverId={}, crossId={}", serverId, crossId);
+                Object data = getRealDataFromCommon(GatConstants.ObjectName.CROSS_STATE);
+                if (data != null) {
+                    Message pushMessage = createPushMessageWithIndependentSystem(data);
+                    sendPushMessage(serverId, pushMessage);
+                    logger.debug("推送路口状态到服务端: serverId={}, crossId={}", serverId, crossId);
+                }
             } catch (Exception e) {
                 logger.error("推送路口状态失败", e);
             }
@@ -236,15 +317,13 @@ public class ClientDataPushService {
                     return;
                 }
 
-                CrossCycle cycle = new CrossCycle();
-                cycle.setCrossId(crossId);
-                cycle.setStartTime(LocalDateTime.now().minusSeconds(random.nextInt(120)));
-                cycle.setLastCycleLen(100 + random.nextInt(40)); // 100-140秒
-
-                Message pushMessage = createPushMessage(cycle);
-                sendPushMessage(serverId, pushMessage);
-                logger.debug("推送路口周期到服务端: serverId={}, cycleLen={}",
-                        serverId, cycle.getLastCycleLen());
+                Object data = getRealDataFromCommon(GatConstants.ObjectName.CROSS_CYCLE);
+                if (data != null) {
+                    Message pushMessage = createPushMessageWithIndependentSystem(data);
+                    sendPushMessage(serverId, pushMessage);
+                    logger.debug("推送路口周期到服务端: serverId={}",
+                            serverId);
+                }
             } catch (Exception e) {
                 logger.error("推送路口周期失败", e);
             }
@@ -261,19 +340,14 @@ public class ClientDataPushService {
                     return;
                 }
 
-                CrossStage stage = new CrossStage();
-                stage.setCrossId(crossId);
-                int curStage = random.nextInt(8)+1;
-                int lastStage = curStage>1?curStage-1:8;
-                stage.setCurStageNo(curStage); // 1-8阶段
-                stage.setCurStageLen(random.nextInt(60) + 10); // 10-70秒
-                stage.setLastStageNo(lastStage);
-                stage.setLastStageLen(random.nextInt(60) + 10);
+                Object data = getRealDataFromCommon(GatConstants.ObjectName.CROSS_STAGE);
+                if (data != null) {
+                    Message pushMessage = createPushMessageWithIndependentSystem(data);
+                    sendPushMessage(serverId, pushMessage);
+                    logger.debug("推送路口阶段到服务端: serverId={}",
+                            serverId);
+                }
 
-                Message pushMessage = createPushMessage(stage);
-                sendPushMessage(serverId, pushMessage);
-                logger.debug("推送路口阶段到服务端: serverId={}, stage={}",
-                        serverId, stage.getCurStageNo());
             } catch (Exception e) {
                 logger.error("推送路口阶段失败", e);
             }
@@ -290,30 +364,14 @@ public class ClientDataPushService {
                     return;
                 }
 
-                CrossSignalGroupStatus status = new CrossSignalGroupStatus();
-                status.setCrossId(crossId);
-//                status.setStateTime(LocalDateTime.now());
+                Object data = getRealDataFromCommon(GatConstants.ObjectName.CROSS_SIGNAL_GROUP_STATUS);
+                if (data != null) {
+                    Message pushMessage = createPushMessageWithIndependentSystem(data);
+                    sendPushMessage(serverId, pushMessage);
+                    logger.debug("推送信号组状态到服务端: serverId={}",
+                            serverId);
+                }
 
-                // 模拟4个信号组的状态
-                List<SignalGroupStatus> groupList = new CopyOnWriteArrayList<>();
-//                for (int i = 1; i <= 4; i++) {
-//                    SignalGroupStatus groupStatus = new SignalGroupStatus();
-//                    groupStatus.setSignalGroupNo(i);
-//                    int status1 = random.nextInt(3)+1;
-//                    LampStatus lampStatus;
-//                    if(status1==1) lampStatus = LampStatus.RED;
-//                    else if(status1==3) lampStatus = LampStatus.GREEN;
-//                    else if(status1==2) lampStatus = LampStatus.YELLOW;
-//                    else lampStatus = LampStatus.OFF;
-//                    groupStatus.setLampStatus(lampStatus); // 1=红 2=黄 3=绿
-//                    groupList.add(groupStatus);
-//                }
-                status.setSignalGroupStatusList(groupList);
-
-                Message pushMessage = createPushMessage(status);
-                sendPushMessage(serverId, pushMessage);
-                logger.debug("推送信号组状态到服务端: serverId={}, groups={}",
-                        serverId, groupList.size());
             } catch (Exception e) {
                 logger.error("推送信号组状态失败", e);
             }
@@ -330,27 +388,14 @@ public class ClientDataPushService {
                     return;
                 }
 
-                CrossTrafficData trafficData = new CrossTrafficData();
-                trafficData.setCrossId(crossId);
-                trafficData.setEndTimeFromLocalDateTime(LocalDateTime.now());
-                trafficData.setInterval(300); // 5分钟间隔
-
-                // 模拟车道交通流数据
-                List<LaneTrafficData> laneDataList = new CopyOnWriteArrayList<>();
-                for (int laneNo = 1; laneNo <= 8; laneNo++) {
-                    LaneTrafficData laneData = new LaneTrafficData();
-                    laneData.setLaneNo(laneNo);
-                    laneData.setVolume(random.nextInt(200) + 50); // 50-250辆
-                    laneData.setOccupancy(random.nextInt(100)); // 0-80%占有率
-                    laneData.setSpeed(new BigDecimal(30 + random.nextInt(40))); // 30-70km/h
-                    laneDataList.add(laneData);
+                Object data = getRealDataFromCommon(GatConstants.ObjectName.CROSS_TRAFFIC_DATA);
+                if (data != null) {
+                    Message pushMessage = createPushMessageWithIndependentSystem(data);
+                    sendPushMessage(serverId, pushMessage);
+                    logger.info("推送交通流数据到服务端: serverId={}",
+                            serverId);
                 }
-                trafficData.setDataList(laneDataList);
 
-                Message pushMessage = createPushMessage(trafficData);
-                sendPushMessage(serverId, pushMessage);
-                logger.info("推送交通流数据到服务端: serverId={}, lanes={}",
-                        serverId, laneDataList.size());
             } catch (Exception e) {
                 logger.error("推送交通流数据失败", e);
             }
@@ -369,16 +414,13 @@ public class ClientDataPushService {
 
                 // 模拟偶发故障（10%概率）
                 if (random.nextInt(10) == 0) {
-                    SignalControllerError error = new SignalControllerError();
-                    error.setSignalControllerId(controllerId);
-                    error.setErrorType(ControllerErrorType.OTHER);
-                    error.setErrorDesc("检测器通信超时");
-                    error.setOccurTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-
-                    Message pushMessage = createPushMessage(error);
-                    sendPushMessage(serverId, pushMessage);
-                    logger.warn("推送信号机故障到服务端: serverId={}, errorType={}",
-                            serverId, error.getErrorType());
+                    Object data = getRealDataFromCommon(GatConstants.ObjectName.SIGNAL_CONTROLLER_ERROR);
+                    if (data != null) {
+                        Message pushMessage = createPushMessageWithIndependentSystem(data);
+                        sendPushMessage(serverId, pushMessage);
+                        logger.warn("推送信号机故障到服务端: serverId={}",
+                                serverId);
+                    }
                 }
             } catch (Exception e) {
                 logger.error("推送故障报告失败", e);
@@ -398,15 +440,14 @@ public class ClientDataPushService {
 
                 // 模拟控制方式变更（较少发生）
                 if (random.nextInt(20) == 0) {
-                    CrossModePlan modePlan = new CrossModePlan();
-                    modePlan.setCrossId(crossId);
-                    modePlan.setControlMode(ControlMode.LINE_COORDINATED);
-                    modePlan.setPlanNo(random.nextInt(10) + 1);
+                    Object data = getRealDataFromCommon(GatConstants.ObjectName.CROSS_MODE_PLAN);
+                    if (data != null) {
+                        Message pushMessage = createPushMessageWithIndependentSystem(data);
+                        sendPushMessage(serverId, pushMessage);
+                        logger.info("推送控制方式变更到服务端: serverId={}",
+                                serverId);
+                    }
 
-                    Message pushMessage = createPushMessage(modePlan);
-                    sendPushMessage(serverId, pushMessage);
-                    logger.info("推送控制方式变更到服务端: serverId={}, mode={}, planNo={}",
-                            serverId, modePlan.getControlMode(), modePlan.getPlanNo());
                 }
             } catch (Exception e) {
                 logger.error("推送控制方式变更失败", e);
@@ -439,16 +480,103 @@ public class ClientDataPushService {
      * 发送推送消息到服务端
      */
     private void sendPushMessage(String serverId, Message pushMessage) {
-        // 这里应该通过网络连接发送消息到服务端
-        // 实际实现需要集成网络通信模块
-        logger.debug("发送推送消息到服务端: serverId={}, seq={}, dataType={}",
-                serverId, pushMessage.getSeq(),
-                ProtocolUtils.getOperationData(pushMessage).getClass().getSimpleName());
-
-        // 模拟网络发送
-        // networkClient.sendMessage(serverId, pushMessage);
+        try {
+            // 使用注入的GatTcpClient发送消息
+            if (gatTcpClient != null) {
+                gatTcpClient.sendMessage(pushMessage);
+                logger.debug("发送推送消息到服务端: serverId={}, seq={}, dataType={}",
+                        serverId, pushMessage.getSeq(),
+                        ProtocolUtils.getOperationData(pushMessage).getClass().getSimpleName());
+            } else {
+                logger.warn("GatTcpClient未初始化，无法发送推送消息");
+            }
+        } catch (Exception e) {
+            logger.error("发送推送消息失败: serverId={}, seq={}", serverId, pushMessage.getSeq(), e);
+        }
     }
 
+    // ==================== 独立Push系统的多种使用方式 ====================
+
+    /**
+     * 方式一：使用PushHandlingUtils便捷方法（推荐）
+     * 完全独立的系统，自动处理ArrayList
+     */
+    private Message createPushMessageWithIndependentSystem(Object data) {
+        return PushHandlingUtils.createClientPushMessage(data);
+    }
+
+    /**
+     * 方式二：使用PushBuilder直接构建
+     * 独立的构建器，与现有MessageBuilder完全分离
+     */
+    private Message createPushMessageWithBuilder(Object data) {
+        return PushBuilder.clientPush()
+                .toTicp()
+                .withData(data)  // 自动处理ArrayList
+                .build();
+    }
+
+    /**
+     * 方式三：使用智能推送构建器
+     * 提供最大的灵活性
+     */
+    private Message createSmartPushMessage(Object data) {
+        return PushHandlingUtils.smartClientPush()
+                .toTicp()
+                .withData(data)
+                .build();
+    }
+
+    /**
+     * 方式四：强制使用单数据模式
+     */
+    private Message createSingleDataPushMessage(Object data) {
+        return PushBuilder.clientPush()
+                .toTicp()
+                .withSingleData(data)  // 强制单数据处理
+                .build();
+    }
+
+    /**
+     * 方式五：强制使用多数据模式
+     */
+    private Message createMultiDataPushMessage(Object data) {
+        return PushBuilder.clientPush()
+                .toTicp()
+                .withMultiData(data)  // 强制多数据处理
+                .build();
+    }
+
+    /**
+     * 方式六：批量数据推送
+     */
+    private Message createBatchPushMessage(List<?> dataList) {
+        return PushBuilder.clientPush()
+                .toTicp()
+                .withBatch(dataList)  // 批量推送
+                .build();
+    }
+
+    /**
+     * 方式七：条件推送
+     */
+    private Message createConditionalPushMessage(Object data, boolean condition) {
+        return PushBuilder.clientPush()
+                .toTicp()
+                .notifyIf(condition, data)  // 条件推送
+                .build();
+    }
+
+    /**
+     * 方式八：链式调用的复杂推送
+     */
+    private Message createComplexPushMessage(Object data, String token) {
+        return PushBuilder.clientPush()
+                .toTicp("specificUser")
+                .token(token)
+                .notifyIfValid(data)  // 验证数据有效性后推送
+                .build();
+    }
     /**
      * 检查订阅是否仍然有效
      */
