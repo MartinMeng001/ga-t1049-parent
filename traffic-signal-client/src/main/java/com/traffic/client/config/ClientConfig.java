@@ -80,6 +80,7 @@ public class ClientConfig {
                     // 场景2：连接断开但业务仍标记为启动状态
                     logger.warn("检测到连接已断开，重置业务状态等待重连...");
                     businessStarted.set(false); // 重置业务状态
+                    demoExecuted.set(false); // 重连后，重新登录
                 }
 
                 // 更新连接状态记录

@@ -4,6 +4,7 @@ import com.traffic.client.network.client.GatTcpClient;
 import com.traffic.gat1049.application.session.SessionManager;
 import com.traffic.gat1049.model.enums.SystemType;
 import com.traffic.gat1049.protocol.builder.MessageBuilder;
+import com.traffic.gat1049.protocol.constants.GatConstants;
 import com.traffic.gat1049.protocol.model.core.Message;
 import com.traffic.gat1049.protocol.model.sdo.SdoTimeOut;
 import com.traffic.gat1049.protocol.model.sdo.SdoTimeServer;
@@ -28,6 +29,9 @@ public class ClientCommandService {
 
     @Autowired
     private SessionManager sessionManager;
+
+    @Autowired
+    private ClientDataPushService pushService;
 
     public void startInteractiveConsole(GatTcpClient client) {
         new Thread(() -> {
@@ -83,7 +87,12 @@ public class ClientCommandService {
                 break;
 
             case "subscribe":
-                performGat1049Subscribe(client, scanner);
+                //performGat1049Subscribe(client, scanner);
+                performSubscribe(scanner);
+                break;
+
+            case "unsubscribe":
+                performUnSubscribe(scanner);
                 break;
 
             case "heartbeat":
@@ -121,6 +130,7 @@ public class ClientCommandService {
         System.out.println("  login          - 手动登录");
         System.out.println("  logout         - 退出登录");
         System.out.println("  subscribe      - 订阅消息");
+        System.out.println("  unsubscribe      - 取消订阅消息");
         System.out.println("  heartbeat      - 发送心跳");
         System.out.println("  query          - 查询对时服务器");
         System.out.println("  timeout        - 设置超时时间");
@@ -181,6 +191,148 @@ public class ClientCommandService {
             }
         } else {
             System.out.println("退出登录请求超时");
+        }
+    }
+
+
+    /**
+     * 开启手动推送
+     */
+    private void performSubscribe(Scanner scanner) {
+        System.out.println("=== 订阅操作 ===");
+
+
+        System.out.println("选择订阅类型:");
+        System.out.println("1. CrossCycle");
+        System.out.println("2. CrossModePlan");
+        System.out.println("3. SignalControllerError");
+        System.out.println("4. CrossState");
+        System.out.println("5. SysState");
+        System.out.println("6. CrossStage");
+        System.out.println("7. CrossSignalGroupStatus");
+        System.out.println("8. CrossTrafficData");
+        System.out.println("9. StageTrafficData");
+        System.out.println("A. VarLaneStatus");
+        System.out.print("请选择 (1-A): ");
+
+        String choice = scanner.nextLine().trim();
+
+        try {
+            performSubscribeForClient(choice);
+        } catch (Exception e) {
+            System.out.println("❌ 订阅操作失败: " + e.getMessage());
+        }
+    }
+    private void performSubscribeForClient(String choice) {
+
+        try {
+            switch (choice) {
+                case "1":
+                    pushService.manualSubscribe("sub01", "CrossCycle");
+                    break;
+                case "2":
+                    pushService.manualSubscribe("sub02", "CrossCtrlInfo");
+                    break;
+                case "3":
+                    pushService.manualSubscribe("sub03", "SignalControllerError");
+                    break;
+                case "4":
+                    pushService.manualSubscribe("sub04", "CrossState");
+                    break;
+                case "5":
+                    pushService.manualSubscribe("sub05", "SysState");
+                    break;
+                case "6":
+                    pushService.manualSubscribe("sub06", "CrossStage");
+                    break;
+                case "7":
+                    pushService.manualSubscribe("sub07", "CrossSignalGroupStatus");
+                    break;
+                case "8":
+                    pushService.manualSubscribe("sub08", "CrossTrafficData");
+                    break;
+                case "9":
+                    pushService.manualSubscribe("sub09", "StageTrafficData");
+                    break;
+                case "A":
+                    pushService.manualSubscribe("sub10", "VarLaneStatus");
+                    break;
+                default:
+                    System.out.println("❌ 无效选择");
+                    return;
+            }
+
+        } catch (Exception e) {
+            System.out.println("❌ 订阅请求执行失败: " + e.getMessage());
+            logger.error("订阅请求执行失败", e);
+        }
+    }
+    private void performUnSubscribe(Scanner scanner) {
+        System.out.println("=== 取消订阅操作 ===");
+
+
+        System.out.println("选择订阅类型:");
+        System.out.println("1. CrossCycle");
+        System.out.println("2. CrossModePlan");
+        System.out.println("3. SignalControllerError");
+        System.out.println("4. CrossState");
+        System.out.println("5. SysState");
+        System.out.println("6. CrossStage");
+        System.out.println("7. CrossSignalGroupStatus");
+        System.out.println("8. CrossTrafficData");
+        System.out.println("9. StageTrafficData");
+        System.out.println("A. VarLaneStatus");
+        System.out.print("请选择 (1-A): ");
+
+        String choice = scanner.nextLine().trim();
+
+        try {
+            performUnSubscribeForClient(choice);
+        } catch (Exception e) {
+            System.out.println("❌ 订阅操作失败: " + e.getMessage());
+        }
+    }
+    private void performUnSubscribeForClient(String choice) {
+        try {
+            switch (choice) {
+                case "1":
+                    pushService.manualUnSubscribe("sub01", "CrossCycle");
+                    break;
+                case "2":
+                    pushService.manualUnSubscribe("sub02", "CrossModePlan");
+                    break;
+                case "3":
+                    pushService.manualUnSubscribe("sub03", "SignalControllerError");
+                    break;
+                case "4":
+                    pushService.manualUnSubscribe("sub04", "CrossState");
+                    break;
+                case "5":
+                    pushService.manualUnSubscribe("sub05", "SysState");
+                    break;
+                case "6":
+                    pushService.manualUnSubscribe("sub06", "CrossStage");
+                    break;
+                case "7":
+                    pushService.manualUnSubscribe("sub07", "CrossSignalGroupStatus");
+                    break;
+                case "8":
+                    pushService.manualUnSubscribe("sub08", "CrossTrafficData");
+                    break;
+                case "9":
+                    pushService.manualUnSubscribe("sub09", "StageTrafficData");
+                    break;
+                case "A":
+                    pushService.manualUnSubscribe("sub10", "VarLaneStatus");
+                    break;
+                default:
+                    System.out.println("❌ 无效选择");
+                    return;
+            }
+
+        } catch (Exception e) {
+            System.out.println("❌ 取消订阅请求执行失败: " + e.getMessage());
+            logger.error("取消订阅请求执行失败", e);
         }
     }
 
