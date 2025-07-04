@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.traffic</groupId>
+        <artifactId>device-adapters</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>ehualu-adapter</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Ehualu Signal Controller Adapter</name>
+    <description>易华录信号机适配器</description>
+
+    <dependencies>
+        <!-- 适配器公共模块 -->
+        <dependency>
+            <groupId>com.traffic</groupId>
+            <artifactId>adapter-common</artifactId>
+        </dependency>
+
+        <!-- 易华录专用依赖 (如果有) -->
+        <!--
+        <dependency>
+            <groupId>com.ehualu</groupId>
+            <artifactId>ehualu-sdk</artifactId>
+            <version>x.x.x</version>
+        </dependency>
+        -->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <classifier>executable</classifier>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

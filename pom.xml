@@ -11,7 +11,7 @@
     <packaging>pom</packaging>
 
     <name>GA/T 1049.2 Traffic Signal Control System</name>
-    <description>GA/T 1049.2 交通信号控制系统通信协议实现</description>
+    <description>GA/T 1049.2 交通信号控制系统实现</description>
 
     <properties>
         <maven.compiler.source>15</maven.compiler.source>
@@ -32,6 +32,7 @@
         <module>ga-t1049-common</module>
         <module>traffic-signal-server</module>
         <module>traffic-signal-client</module>
+        <module>device-adapters</module>
     </modules>
 
     <dependencyManagement>
@@ -45,10 +46,25 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- 公共模块 -->
+            <!-- 项目内部模块 -->
             <dependency>
                 <groupId>com.traffic</groupId>
                 <artifactId>ga-t1049-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.traffic</groupId>
+                <artifactId>adapter-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.traffic</groupId>
+                <artifactId>hisense-adapter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.traffic</groupId>
+                <artifactId>ehualu-adapter</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -92,7 +108,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.11.0</version>
+                    <version>3.12.0</version>
                     <configuration>
                         <source>15</source>
                         <target>15</target>

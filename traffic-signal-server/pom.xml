@@ -23,6 +23,26 @@
             <groupId>com.traffic</groupId>
             <artifactId>ga-t1049-common</artifactId>
         </dependency>
+
+        <!-- 新增适配器支持 -->
+        <dependency>
+            <groupId>com.traffic</groupId>
+            <artifactId>adapter-common</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- 可选的适配器依赖 -->
+        <dependency>
+            <groupId>com.traffic</groupId>
+            <artifactId>hisense-adapter</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>com.traffic</groupId>
+            <artifactId>ehualu-adapter</artifactId>
+            <optional>true</optional>
+        </dependency>
         
         <!-- Spring Boot Starters -->
         <dependency>
