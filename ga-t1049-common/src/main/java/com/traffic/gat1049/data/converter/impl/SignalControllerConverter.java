@@ -9,7 +9,6 @@ import com.traffic.gat1049.protocol.model.intersection.CommAddress;
 import com.traffic.gat1049.protocol.model.intersection.CapabilitySet;
 import com.traffic.gat1049.protocol.model.intersection.LampGroup;
 import com.traffic.gat1049.protocol.model.intersection.Detector;
-import com.traffic.gat1049.repository.entity.GatSignalControllerEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -17,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * 完美匹配的信号控制器转换器实现

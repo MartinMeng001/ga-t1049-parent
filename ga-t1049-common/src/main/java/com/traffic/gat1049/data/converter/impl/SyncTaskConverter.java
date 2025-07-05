@@ -2,7 +2,6 @@ package com.traffic.gat1049.data.converter.impl;
 
 import com.traffic.gat1049.data.converter.base.AbstractEntityConverter;
 import com.traffic.gat1049.model.dto.SyncTaskDto;
-import com.traffic.gat1049.repository.entity.GatSyncTaskEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

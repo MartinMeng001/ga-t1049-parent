@@ -2,9 +2,7 @@ package com.traffic.gat1049.data.converter.impl;
 
 import com.traffic.gat1049.data.converter.base.AbstractEntityConverter;
 import com.traffic.gat1049.protocol.model.system.SysInfo;
-import com.traffic.gat1049.repository.entity.GatSysInfoEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
