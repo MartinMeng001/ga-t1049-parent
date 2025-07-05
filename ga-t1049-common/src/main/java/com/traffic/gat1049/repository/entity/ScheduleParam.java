@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 @TableName("schedule_plan")
 @Entity
-@Table(name = "schedule_plan")
-public class SchedulePlan {
+@Table(name = "schedule_param")
+public class ScheduleParam {
     @TableId(type = IdType.AUTO)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
