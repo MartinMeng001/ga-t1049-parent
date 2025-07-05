@@ -122,6 +122,10 @@
             <version>8.0.28</version>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+        </dependency>
 
         <!-- 新增Redis支持 -->
         <dependency>
@@ -137,6 +141,11 @@
             <optional>true</optional>
         </dependency>
 
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
