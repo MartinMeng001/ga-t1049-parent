@@ -1,806 +1,1611 @@
--- ============================================================================
--- GA/T 1049.2 信号机品牌无关架构 MySQL数据库设计 - 修复版本
--- 支持海信、易华录等多品牌信号机统一接入
--- ============================================================================
 
--- 创建数据库
-CREATE DATABASE IF NOT EXISTS gat1049_traffic
-    CHARACTER SET utf8mb4
-    COLLATE utf8mb4_unicode_ci;
+/*
+GA/T 1049.2 交通信号控制系统数据库创建完成
 
-USE gat1049_traffic;
+数据库特性：
+1. 完全符合GA/T 1049.2协议标准
+2. 支持多系统接入架构，每个系统独立管理状态
+3. 提供完整的协议参数视图
+4. 包含运行信息和控制命令数据表
+5. 实现数据分区以提高性能
+6. 包含完整的存储过程、触发器和视图
+7. 提供数据字典和索引优化
 
--- ============================================================================
--- 1. 系统管理表
--- ============================================================================
+核心视图：
+- v_protocol_sys_info_complete: 系统完整信息
+- v_region_param_complete: 区域参数完整信息
+- v_route_param_complete: 线路参数完整信息
+- v_sub_region_param_complete: 子区参数完整信息
+- v_signal_controller_complete: 信号机参数完整信息
+- v_cross_param_complete: 路口参数完整信息
+- v_system_overview: 系统概览（包含系统状态）
+- v_cross_system_mapping: 路口归属关系
 
--- 系统信息表
-CREATE TABLE IF NOT EXISTS gat_sys_info (
-                                            id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                            system_id VARCHAR(64) NOT NULL UNIQUE COMMENT '系统编号',
-    system_name VARCHAR(128) NOT NULL COMMENT '系统名称',
-    software_version VARCHAR(32) COMMENT '软件版本',
-    hardware_version VARCHAR(32) COMMENT '硬件版本',
-    manufacturer VARCHAR(128) COMMENT '制造商',
-    installation_date DATE COMMENT '安装日期',
-    location VARCHAR(256) COMMENT '安装位置',
-    contact_info VARCHAR(256) COMMENT '联系信息',
+系统状态管理：
+- sys_state表关联system_id，支持多系统独立状态管理
+- v_system_overview视图显示每个系统的最新状态
+- 存储过程UpsertSystemState支持按系统更新状态
+
+使用建议：
+1. 定期执行清理历史数据存储过程
+2. 根据实际需要添加月度分区
+3. 监控索引性能并适时调整
+4. 建立定期备份机制
+5. 使用UpsertSystemState存储过程更新系统状态
+
+查询示例：
+-- 查询指定系统状态
+SELECT * FROM v_system_overview WHERE system_id = 'SYS001';
+
+-- 更新系统状态
+CALL UpsertSystemState('SYS001', 'Online', NOW());
+
+-- 查看所有系统状态
+SELECT system_id, sys_name, sys_status, last_status_time
+FROM v_system_overview
+ORDER BY last_status_time DESC;
+*/-- ================================
+-- GA/T 1049.2 交通信号控制系统完整数据库
+-- 基于《公安交通集成指挥平台通信协议 第2部分：交通信号控制系统》
+-- 支持多系统接入架构
+-- ================================
+
+CREATE DATABASE IF NOT EXISTS traffic_signal_control
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE traffic_signal_control;
+
+-- ================================
+-- 配置参数数据表
+-- ================================
+
+-- 1. 系统参数表 (SysInfo) - 支持多系统
+CREATE TABLE sys_info (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    system_id VARCHAR(20) NOT NULL UNIQUE COMMENT '系统唯一标识',
+    sys_name VARCHAR(50) NOT NULL COMMENT '系统名称',
+    sys_version VARCHAR(10) NOT NULL COMMENT '系统版本号',
+    supplier VARCHAR(50) NOT NULL COMMENT '供应商',
+    is_active TINYINT(1) DEFAULT 1 COMMENT '系统是否激活：1-激活；0-停用',
     description TEXT COMMENT '系统描述',
-    status TINYINT DEFAULT 1 COMMENT '系统状态：0-禁用，1-启用',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE INDEX uk_sys_info_system_id (system_id)
+) COMMENT = '系统参数表';
+
+-- 2. 区域参数表 (RegionParam)
+CREATE TABLE region_param (
+    region_id CHAR(9) PRIMARY KEY COMMENT '区域编号：6位行政区划代码+3位数字',
+    region_name VARCHAR(50) NOT NULL COMMENT '区域名称',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) COMMENT = '区域参数表';
+
+-- 3. 线路参数表 (RouteParam)
+CREATE TABLE route_param (
+    route_id CHAR(11) PRIMARY KEY COMMENT '线路编号：6位行政区划代码+5位数字',
+    route_name VARCHAR(50) NOT NULL COMMENT '线路名称',
+    type TINYINT NOT NULL COMMENT '线路类型：1-协调干线；2-公交优先线路；3-特勤线路；4-有轨电车线路；5-快速路；9-其他',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) COMMENT = '线路参数表';
+
+-- 4. 线路路口关联表 (RouteCross)
+CREATE TABLE route_cross (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    route_id CHAR(11) NOT NULL COMMENT '线路编号',
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    distance SMALLINT UNSIGNED DEFAULT 0 COMMENT '与上游路口距离(米)',
+    order_seq TINYINT UNSIGNED NOT NULL COMMENT '路口在线路中的顺序',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (route_id) REFERENCES route_param(route_id) ON DELETE CASCADE,
+    INDEX idx_route_id (route_id),
+    INDEX idx_cross_id (cross_id)
+) COMMENT = '线路路口关联表';
+
+-- 5. 子区参数表 (SubRegionParam)
+CREATE TABLE sub_region_param (
+    sub_region_id CHAR(11) PRIMARY KEY COMMENT '子区编号：6位行政区划代码+5位数字',
+    sub_region_name VARCHAR(50) NOT NULL COMMENT '子区名称',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) COMMENT = '子区参数表';
+
+-- 6. 路口参数表 (CrossParam)
+CREATE TABLE cross_param (
+    cross_id CHAR(14) PRIMARY KEY COMMENT '路口编号：机构代码前6位+80+4位路口代码',
+    cross_name VARCHAR(50) NOT NULL COMMENT '路口名称',
+    feature TINYINT NOT NULL COMMENT '路口形状：10-行人过街；12-2次行人过街；23-T形Y形；24-十字形；35-五岔；36-六岔；39-多岔；40-环形；50-匝道；51-匝道入口；52-匝道出口；61-快速路主路；90-其他',
+    grade CHAR(2) NOT NULL COMMENT '路口等级：11-一级；12-二级；13-三级；21-四级；22-五级；31-六级；99-其他',
+    green_conflict_matrix TEXT COMMENT '绿冲突矩阵',
+    longitude DOUBLE COMMENT '路口中心位置经度',
+    latitude DOUBLE COMMENT '路口中心位置纬度',
+    altitude INT COMMENT '路口位置海拔高度(米)',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_longitude_latitude (longitude, latitude)
+) COMMENT = '路口参数表';
+
+-- 7. 信号机参数表 (SignalController)
+CREATE TABLE signal_controller (
+    signal_controller_id CHAR(18) PRIMARY KEY COMMENT '信号机设备编号：机构代码前6位+99+4位数字',
+    supplier VARCHAR(50) NOT NULL COMMENT '供应商',
+    type CHAR(16) NOT NULL COMMENT '规格型号',
+    id_code CHAR(16) NOT NULL COMMENT '识别码',
+    comm_mode CHAR(2) NOT NULL COMMENT '通信接口：10-以太网；11-TCP Client；12-TCP Server；13-UDP；20-串口；99-其他',
+    ip VARCHAR(15) COMMENT '信号机通信IP地址',
+    sub_mask VARCHAR(15) COMMENT '子网掩码',
+    gateway VARCHAR(15) COMMENT '网关',
+    port SMALLINT UNSIGNED DEFAULT 0 COMMENT '端口号',
+    has_door_status TINYINT(1) DEFAULT 0 COMMENT '是否有柜门状态检测：1-是；0-否',
+    longitude DOUBLE COMMENT '安装位置经度',
+    latitude DOUBLE COMMENT '安装位置纬度',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_ip (ip),
+    INDEX idx_longitude_latitude (longitude, latitude)
+) COMMENT = '信号机参数表';
+
+-- 8. 信号机控制路口关联表
+CREATE TABLE signal_controller_cross (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    signal_controller_id CHAR(18) NOT NULL COMMENT '信号机设备编号',
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    is_main TINYINT(1) DEFAULT 0 COMMENT '是否为主路口：1-是；0-否',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (signal_controller_id) REFERENCES signal_controller(signal_controller_id) ON DELETE CASCADE,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_controller_cross (signal_controller_id, cross_id)
+) COMMENT = '信号机控制路口关联表';
+
+-- 9. 信号灯组参数表 (LampGroupParam)
+CREATE TABLE lamp_group_param (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    lamp_group_no TINYINT UNSIGNED NOT NULL COMMENT '信号灯组序号(1-99)',
+    direction CHAR(1) NOT NULL COMMENT '控制进口方向',
+    type CHAR(2) NOT NULL COMMENT '灯组类型',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_cross_lamp_group (cross_id, lamp_group_no)
+) COMMENT = '信号灯组参数表';
+
+-- 10. 检测器参数表 (DetectorParam)
+CREATE TABLE detector_param (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    detector_no SMALLINT UNSIGNED NOT NULL COMMENT '检测器序号(1-999)',
+    type TINYINT NOT NULL COMMENT '检测器类型：1-线圈；2-视频；3-地磁；4-微波；5-RFID；6-雷视一体；9-其他',
+    position TINYINT NOT NULL COMMENT '检测位置：1-进口；2-出口；9-其他',
+    target CHAR(3) NOT NULL COMMENT '检测对象：从左到右分别标记机动车、非机动车、行人(1-支持，0-不支持)',
+    distance INT NOT NULL COMMENT '距停车线距离(厘米)',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_cross_detector (cross_id, detector_no)
+) COMMENT = '检测器参数表';
+
+-- 11. 车道参数表 (LaneParam)
+CREATE TABLE lane_param (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    lane_no TINYINT UNSIGNED NOT NULL COMMENT '车道序号(1-99)',
+    direction CHAR(1) NOT NULL COMMENT '车道所在进口方向',
+    attribute TINYINT NOT NULL COMMENT '车道属性：0-路口进口；1-路口出口；2-匝道；3-路段车道；9-其他',
+    movement CHAR(2) NOT NULL COMMENT '车道转向属性',
+    feature TINYINT NOT NULL COMMENT '车道特性：1-机动车；2-非机动车；3-机非混合；4-行人便道；9-其他',
+    azimuth SMALLINT UNSIGNED COMMENT '方位角(0-359度)',
+    waiting_area TINYINT(1) DEFAULT 0 COMMENT '待行区：0-无；1-有',
+    var_movement_list JSON COMMENT '可变车道功能列表',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_cross_lane (cross_id, lane_no)
+) COMMENT = '车道参数表';
+
+-- 12. 人行横道参数表 (PedestrianParam)
+CREATE TABLE pedestrian_param (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    pedestrian_no TINYINT UNSIGNED NOT NULL COMMENT '人行横道序号(1-99)',
+    direction CHAR(1) NOT NULL COMMENT '所在进口方向',
+    attribute TINYINT NOT NULL COMMENT '属性：1-一次过街；21-二次过街路口进口；22-二次过街路口出口',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_cross_pedestrian (cross_id, pedestrian_no)
+) COMMENT = '人行横道参数表';
+
+-- 13. 信号组参数表 (SignalGroupParam)
+CREATE TABLE signal_group_param (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    signal_group_no SMALLINT UNSIGNED NOT NULL COMMENT '信号组序号(1-999)',
+    name VARCHAR(50) COMMENT '信号组名称',
+    green_flash_len TINYINT UNSIGNED COMMENT '绿闪时长(秒)',
+    max_green TINYINT UNSIGNED COMMENT '最大绿灯时长(秒)',
+    min_green TINYINT UNSIGNED COMMENT '最小绿灯时长(秒)',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_cross_signal_group (cross_id, signal_group_no)
+) COMMENT = '信号组参数表';
+
+-- 14. 信号组灯组关联表
+CREATE TABLE signal_group_lamp_group (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    signal_group_no SMALLINT UNSIGNED NOT NULL COMMENT '信号组序号',
+    lamp_group_no TINYINT UNSIGNED NOT NULL COMMENT '信号灯组序号',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_signal_group_lamp (cross_id, signal_group_no, lamp_group_no)
+) COMMENT = '信号组灯组关联表';
+
+-- 15. 阶段参数表 (StageParam)
+CREATE TABLE stage_param (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    stage_no SMALLINT UNSIGNED NOT NULL COMMENT '阶段号',
+    stage_name VARCHAR(50) COMMENT '阶段名称',
+    attribute TINYINT DEFAULT 0 COMMENT '特征：0-一般；1-感应',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_cross_stage (cross_id, stage_no)
+) COMMENT = '阶段参数表';
+
+-- 16. 阶段信号组状态表
+CREATE TABLE stage_signal_group_status (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    stage_no SMALLINT UNSIGNED NOT NULL COMMENT '阶段号',
+    signal_group_no SMALLINT UNSIGNED NOT NULL COMMENT '信号组序号',
+    lamp_status CHAR(3) NOT NULL COMMENT '灯色状态',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_stage_signal_group (cross_id, stage_no, signal_group_no)
+) COMMENT = '阶段信号组状态表';
+
+-- 17. 配时方案参数表 (PlanParam)
+CREATE TABLE plan_param (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    plan_no SMALLINT UNSIGNED NOT NULL COMMENT '方案序号(1-9999)',
+    plan_name VARCHAR(50) COMMENT '方案名称',
+    cycle_len TINYINT UNSIGNED NOT NULL COMMENT '周期长度(秒)',
+    coord_stage_no TINYINT UNSIGNED DEFAULT 0 COMMENT '协调相位号',
+    offset TINYINT UNSIGNED DEFAULT 0 COMMENT '协调相位差(秒)',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_cross_plan (cross_id, plan_no)
+) COMMENT = '配时方案参数表';
+
+-- 18. 阶段配时信息表 (StageTiming)
+CREATE TABLE stage_timing (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    plan_no SMALLINT UNSIGNED NOT NULL COMMENT '方案序号',
+    stage_no SMALLINT UNSIGNED NOT NULL COMMENT '阶段号',
+    green TINYINT UNSIGNED NOT NULL COMMENT '绿灯时长(秒)',
+    yellow TINYINT UNSIGNED NOT NULL COMMENT '黄灯时长(秒)',
+    all_red TINYINT UNSIGNED NOT NULL COMMENT '全红时长(秒)',
+    max_green TINYINT UNSIGNED COMMENT '感应/自适应控制最大绿灯时长(秒)',
+    min_green TINYINT UNSIGNED COMMENT '感应/自适应控制最小绿灯时长(秒)',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_plan_stage_timing (cross_id, plan_no, stage_no)
+) COMMENT = '阶段配时信息表';
+
+-- 19. 信号组迟开早闭调整表 (Adjust)
+CREATE TABLE signal_group_adjust (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    plan_no SMALLINT UNSIGNED NOT NULL COMMENT '方案序号',
+    stage_no SMALLINT UNSIGNED NOT NULL COMMENT '阶段号',
+    signal_group_no SMALLINT UNSIGNED NOT NULL COMMENT '信号组序号',
+    oper TINYINT NOT NULL COMMENT '调整方式：1-迟开；2-早闭',
+    len TINYINT UNSIGNED NOT NULL COMMENT '调整时长(秒)',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE
+) COMMENT = '信号组迟开早闭调整表';
+
+-- 20. 日计划参数表 (DayPlanParam)
+CREATE TABLE day_plan_param (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    day_plan_no SMALLINT UNSIGNED NOT NULL COMMENT '日计划号(1-999)',
+    day_plan_name VARCHAR(50) COMMENT '日计划名称',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_cross_day_plan (cross_id, day_plan_no)
+) COMMENT = '日计划参数表';
+
+-- 21. 时段信息表 (Period)
+CREATE TABLE period_info (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    day_plan_no SMALLINT UNSIGNED NOT NULL COMMENT '日计划号',
+    start_time TIME NOT NULL COMMENT '开始时间',
+    plan_no SMALLINT UNSIGNED NOT NULL COMMENT '配时方案序号',
+    ctrl_mode CHAR(2) NOT NULL COMMENT '控制方式',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    INDEX idx_day_plan_start_time (cross_id, day_plan_no, start_time)
+) COMMENT = '时段信息表';
+
+-- 22. 调度参数表 (ScheduleParam)
+CREATE TABLE schedule_param (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    schedule_no SMALLINT UNSIGNED NOT NULL COMMENT '调度号(1-999)',
+    schedule_name VARCHAR(50) COMMENT '调度名称',
+    type TINYINT NOT NULL COMMENT '调度类型：1-特殊日调度；2-时间段周调度；3-周调度',
+    start_day CHAR(5) NOT NULL COMMENT '开始月日(MM-DD)',
+    end_day CHAR(5) NOT NULL COMMENT '结束月日(MM-DD)',
+    week_day TINYINT COMMENT '周几(1-7分别代表周一至周日)',
+    day_plan_no SMALLINT UNSIGNED NOT NULL COMMENT '日计划号',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_cross_schedule (cross_id, schedule_no)
+) COMMENT = '调度参数表';
+
+-- ================================
+-- 多系统关联关系表
+-- ================================
+
+-- 23. 系统路口关联表
+CREATE TABLE sys_cross_relation (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    system_id VARCHAR(20) NOT NULL COMMENT '系统标识',
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    is_primary TINYINT(1) DEFAULT 0 COMMENT '是否为主控系统：1-是；0-否',
+    priority TINYINT DEFAULT 1 COMMENT '优先级：1-5，数字越小优先级越高',
+    start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '关联开始时间',
+    end_time TIMESTAMP NULL COMMENT '关联结束时间，NULL表示永久有效',
+    is_active TINYINT(1) DEFAULT 1 COMMENT '关联是否有效：1-有效；0-无效',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    remark VARCHAR(200) COMMENT '备注',
+    FOREIGN KEY (system_id) REFERENCES sys_info(system_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_sys_cross_active (system_id, cross_id, is_active),
     INDEX idx_system_id (system_id),
-    INDEX idx_status (status)
-    ) ENGINE=InnoDB COMMENT='系统信息表';
+    INDEX idx_cross_id (cross_id),
+    INDEX idx_active_time (is_active, start_time, end_time),
+    INDEX idx_priority (priority)
+) COMMENT = '系统路口关联表';
 
--- 系统状态表
-CREATE TABLE IF NOT EXISTS gat_sys_state (
-                                             id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                             system_id VARCHAR(64) NOT NULL,
-    `current_time` TIMESTAMP NOT NULL COMMENT '系统当前时间',
-    running_state TINYINT COMMENT '运行状态：0-停止，1-运行，2-故障',
-    work_mode TINYINT COMMENT '工作模式：0-手动，1-自动，2-维护',
-    cpu_usage DECIMAL(5,2) COMMENT 'CPU使用率(%)',
-    memory_usage DECIMAL(5,2) COMMENT '内存使用率(%)',
-    disk_usage DECIMAL(5,2) COMMENT '磁盘使用率(%)',
-    network_status TINYINT COMMENT '网络状态：0-断开，1-连接',
-    last_heartbeat TIMESTAMP COMMENT '最后心跳时间',
-    error_count INT DEFAULT 0 COMMENT '错误计数',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (system_id) REFERENCES gat_sys_info(system_id) ON DELETE CASCADE,
+-- 24. 系统子区关联表
+CREATE TABLE sys_sub_region_relation (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    system_id VARCHAR(20) NOT NULL COMMENT '系统标识',
+    sub_region_id CHAR(11) NOT NULL COMMENT '子区编号',
+    region_id CHAR(9) COMMENT '所属区域编号',
+    is_active TINYINT(1) DEFAULT 1 COMMENT '关联是否有效：1-有效；0-无效',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (system_id) REFERENCES sys_info(system_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (sub_region_id) REFERENCES sub_region_param(sub_region_id) ON DELETE CASCADE,
+    FOREIGN KEY (region_id) REFERENCES region_param(region_id) ON DELETE SET NULL,
+    UNIQUE KEY uk_sys_sub_region (system_id, sub_region_id),
     INDEX idx_system_id (system_id),
-    INDEX idx_current_time (`current_time`),
-    INDEX idx_running_state (running_state)
-    ) ENGINE=InnoDB COMMENT='系统状态表';
+    INDEX idx_sub_region_id (sub_region_id),
+    INDEX idx_region_id (region_id)
+) COMMENT = '系统子区关联表';
 
--- ============================================================================
--- 2. 信号机设备管理表
--- ============================================================================
+-- 25. 系统线路关联表
+CREATE TABLE sys_route_relation (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    system_id VARCHAR(20) NOT NULL COMMENT '系统标识',
+    route_id CHAR(11) NOT NULL COMMENT '线路编号',
+    sub_region_id CHAR(11) COMMENT '所属子区编号',
+    is_active TINYINT(1) DEFAULT 1 COMMENT '关联是否有效：1-有效；0-无效',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (system_id) REFERENCES sys_info(system_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (route_id) REFERENCES route_param(route_id) ON DELETE CASCADE,
+    FOREIGN KEY (sub_region_id) REFERENCES sub_region_param(sub_region_id) ON DELETE SET NULL,
+    UNIQUE KEY uk_sys_route (system_id, route_id),
+    INDEX idx_system_id (system_id),
+    INDEX idx_route_id (route_id),
+    INDEX idx_sub_region_id (sub_region_id)
+) COMMENT = '系统线路关联表';
 
--- 信号机控制器表
-CREATE TABLE IF NOT EXISTS gat_signal_controller (
-                                                     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                     controller_id VARCHAR(12) NOT NULL UNIQUE COMMENT '信号机设备编号(6位机构代码+99+4位数字)',
-    controller_name VARCHAR(128) COMMENT '信号机名称',
-    supplier VARCHAR(64) NOT NULL COMMENT '供应商(海信/易华录/其他)',
-    device_type VARCHAR(16) NOT NULL COMMENT '规格型号',
-    identification VARCHAR(16) NOT NULL COMMENT '识别码',
-    communication_mode TINYINT NOT NULL COMMENT '通信方式：1-有线，2-无线，3-光纤',
-    ip_address VARCHAR(45) COMMENT 'IP地址',
-    port INT COMMENT '端口号',
-    location VARCHAR(256) COMMENT '安装位置',
-    longitude DECIMAL(10,7) COMMENT '经度',
-    latitude DECIMAL(10,7) COMMENT '纬度',
-    installation_date DATE COMMENT '安装日期',
-    maintenance_date DATE COMMENT '最后维护日期',
-    warranty_expiry DATE COMMENT '保修期截止日期',
-    device_status TINYINT DEFAULT 0 COMMENT '设备状态：0-离线，1-在线，2-故障，3-维护',
-    connection_status TINYINT DEFAULT 0 COMMENT '连接状态：0-未连接，1-已连接',
-    last_online TIMESTAMP COMMENT '最后在线时间',
-    firmware_version VARCHAR(32) COMMENT '固件版本',
-    protocol_version VARCHAR(16) COMMENT '协议版本',
-    adapter_type VARCHAR(32) COMMENT '适配器类型',
-    config_version BIGINT DEFAULT 1 COMMENT '配置版本号',
-    sync_status TINYINT DEFAULT 0 COMMENT '同步状态：0-未同步，1-同步中，2-已同步，3-同步失败',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_supplier (supplier),
-    INDEX idx_device_status (device_status),
-    INDEX idx_location (location),
-    INDEX idx_ip_address (ip_address)
-    ) ENGINE=InnoDB COMMENT='信号机控制器表';
+-- 26. 系统区域关联表
+CREATE TABLE sys_region_relation (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    system_id VARCHAR(20) NOT NULL COMMENT '系统标识',
+    region_id CHAR(9) NOT NULL COMMENT '区域编号',
+    is_active TINYINT(1) DEFAULT 1 COMMENT '关联是否有效：1-有效；0-无效',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (system_id) REFERENCES sys_info(system_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (region_id) REFERENCES region_param(region_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_sys_region (system_id, region_id),
+    INDEX idx_system_id (system_id),
+    INDEX idx_region_id (region_id)
+) COMMENT = '系统区域关联表';
 
--- 信号机状态表
-CREATE TABLE IF NOT EXISTS gat_signal_controller_state (
-                                                           id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                           controller_id VARCHAR(12) NOT NULL,
-    `current_time` TIMESTAMP NOT NULL COMMENT '当前时间',
-    operation_state TINYINT COMMENT '运行状态：0-停止，1-正常，2-闪烁，3-全红，4-故障',
-    control_mode TINYINT COMMENT '控制模式：0-关灯，1-闪烁，2-手动，3-本地，4-远程',
-    current_plan_id VARCHAR(32) COMMENT '当前配时方案ID',
-    current_phase_id VARCHAR(32) COMMENT '当前相位ID',
-    remaining_time INT COMMENT '剩余时间(秒)',
-    fault_code VARCHAR(16) COMMENT '故障代码',
-    fault_description TEXT COMMENT '故障描述',
-    voltage DECIMAL(5,2) COMMENT '电压(V)',
-    current_val DECIMAL(5,2) COMMENT '电流(A)',
-    temperature DECIMAL(4,1) COMMENT '温度(℃)',
-    humidity DECIMAL(4,1) COMMENT '湿度(%)',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE CASCADE,
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_current_time (`current_time`),
-    INDEX idx_operation_state (operation_state)
-    ) ENGINE=InnoDB COMMENT='信号机状态表';
+-- 27. 系统信号机关联表
+CREATE TABLE sys_signal_controller_relation (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    system_id VARCHAR(20) NOT NULL COMMENT '系统标识',
+    signal_controller_id CHAR(18) NOT NULL COMMENT '信号机设备编号',
+    is_active TINYINT(1) DEFAULT 1 COMMENT '关联是否有效：1-有效；0-无效',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (system_id) REFERENCES sys_info(system_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (signal_controller_id) REFERENCES signal_controller(signal_controller_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_sys_controller (system_id, signal_controller_id),
+    INDEX idx_system_id (system_id),
+    INDEX idx_controller_id (signal_controller_id)
+) COMMENT = '系统信号机关联表';
 
--- ============================================================================
--- 3. 路口配置管理表
--- ============================================================================
+-- ================================
+-- 关联关系表
+-- ================================
 
--- 路口基础信息表
-CREATE TABLE IF NOT EXISTS gat_intersection (
-                                                id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                intersection_id VARCHAR(32) NOT NULL UNIQUE COMMENT '路口编号',
-    intersection_name VARCHAR(128) NOT NULL COMMENT '路口名称',
-    controller_id VARCHAR(12) COMMENT '关联的信号机控制器ID',
-    road_names TEXT COMMENT '道路名称(JSON格式)',
-    intersection_type TINYINT COMMENT '路口类型：1-十字，2-T字，3-Y字，4-环岛，5-其他',
-    lanes_count TINYINT COMMENT '车道总数',
-    longitude DECIMAL(10,7) COMMENT '经度',
-    latitude DECIMAL(10,7) COMMENT '纬度',
-    region_code VARCHAR(12) COMMENT '行政区划代码',
-    description TEXT COMMENT '路口描述',
-    status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE SET NULL,
-    INDEX idx_intersection_id (intersection_id),
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_location (longitude, latitude)
-    ) ENGINE=InnoDB COMMENT='路口基础信息表';
+-- 28. 区域子区关联表
+CREATE TABLE region_sub_region (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    region_id CHAR(9) NOT NULL COMMENT '区域编号',
+    sub_region_id CHAR(11) NOT NULL COMMENT '子区编号',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (region_id) REFERENCES region_param(region_id) ON DELETE CASCADE,
+    FOREIGN KEY (sub_region_id) REFERENCES sub_region_param(sub_region_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_region_sub_region (region_id, sub_region_id)
+) COMMENT = '区域子区关联表';
 
--- 信号组表
-CREATE TABLE IF NOT EXISTS gat_signal_group (
-                                                id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                signal_group_id VARCHAR(32) NOT NULL COMMENT '信号组编号',
-    controller_id VARCHAR(12) NOT NULL COMMENT '信号机控制器ID',
-    signal_group_name VARCHAR(64) COMMENT '信号组名称',
-    signal_group_type TINYINT COMMENT '信号组类型：1-机动车，2-行人，3-非机动车',
-    output_port TINYINT COMMENT '输出端口号',
-    direction VARCHAR(16) COMMENT '方向：东西南北',
-    lamp_types VARCHAR(32) COMMENT '灯组类型(红黄绿箭头等)',
-    min_green_time INT COMMENT '最小绿灯时间(秒)',
-    max_green_time INT COMMENT '最大绿灯时间(秒)',
-    yellow_time INT COMMENT '黄灯时间(秒)',
-    all_red_time INT COMMENT '全红时间(秒)',
-    status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE CASCADE,
-    UNIQUE KEY uk_signal_group (controller_id, signal_group_id),
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_signal_group_type (signal_group_type)
-    ) ENGINE=InnoDB COMMENT='信号组表';
+-- 29. 区域路口关联表
+CREATE TABLE region_cross (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    region_id CHAR(9) NOT NULL COMMENT '区域编号',
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (region_id) REFERENCES region_param(region_id) ON DELETE CASCADE,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_region_cross (region_id, cross_id)
+) COMMENT = '区域路口关联表';
 
--- 相位表
-CREATE TABLE IF NOT EXISTS gat_phase (
-                                         id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                         phase_id VARCHAR(32) NOT NULL COMMENT '相位编号',
-    controller_id VARCHAR(12) NOT NULL COMMENT '信号机控制器ID',
-    phase_name VARCHAR(64) COMMENT '相位名称',
-    phase_type TINYINT COMMENT '相位类型：1-机动车，2-行人，3-混合',
-    min_duration INT COMMENT '最小持续时间(秒)',
-    max_duration INT COMMENT '最大持续时间(秒)',
-    yellow_duration INT COMMENT '黄灯时间(秒)',
-    all_red_duration INT COMMENT '全红时间(秒)',
-    pedestrian_clear_time INT COMMENT '行人清空时间(秒)',
-    status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE CASCADE,
-    UNIQUE KEY uk_phase (controller_id, phase_id),
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_phase_type (phase_type)
-    ) ENGINE=InnoDB COMMENT='相位表';
+-- 30. 线路子区关联表
+CREATE TABLE route_sub_region (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    route_id CHAR(11) NOT NULL COMMENT '线路编号',
+    sub_region_id CHAR(11) NOT NULL COMMENT '子区编号',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (route_id) REFERENCES route_param(route_id) ON DELETE CASCADE,
+    FOREIGN KEY (sub_region_id) REFERENCES sub_region_param(sub_region_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_route_sub_region (route_id, sub_region_id)
+) COMMENT = '线路子区关联表';
 
--- 相位-信号组关联表
-CREATE TABLE IF NOT EXISTS gat_phase_signal_group (
-                                                      id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                      controller_id VARCHAR(12) NOT NULL,
-    phase_id VARCHAR(32) NOT NULL,
-    signal_group_id VARCHAR(32) NOT NULL,
-    lamp_state TINYINT NOT NULL COMMENT '灯态：1-红，2-黄，3-绿，4-绿箭头，5-黄闪',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE CASCADE,
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_phase_id (phase_id),
-    INDEX idx_signal_group_id (signal_group_id),
-    UNIQUE KEY uk_phase_signal_group (controller_id, phase_id, signal_group_id)
-    ) ENGINE=InnoDB COMMENT='相位-信号组关联表';
+-- 31. 子区路口关联表
+CREATE TABLE sub_region_cross (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    sub_region_id CHAR(11) NOT NULL COMMENT '子区编号',
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    is_key_cross TINYINT(1) DEFAULT 0 COMMENT '是否为关键路口：1-是；0-否',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sub_region_id) REFERENCES sub_region_param(sub_region_id) ON DELETE CASCADE,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_sub_region_cross (sub_region_id, cross_id)
+) COMMENT = '子区路口关联表';
 
--- ============================================================================
--- 4. 配时方案管理表
--- ============================================================================
+-- 32. 检测器车道关联表
+CREATE TABLE detector_lane (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    detector_no SMALLINT UNSIGNED NOT NULL COMMENT '检测器序号',
+    lane_no TINYINT UNSIGNED NOT NULL COMMENT '车道序号',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_detector_lane (cross_id, detector_no, lane_no)
+) COMMENT = '检测器车道关联表';
 
--- 配时方案表
-CREATE TABLE IF NOT EXISTS gat_timing_plan (
-                                               id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                               plan_id VARCHAR(32) NOT NULL COMMENT '配时方案编号',
-    controller_id VARCHAR(12) NOT NULL COMMENT '信号机控制器ID',
-    plan_name VARCHAR(64) NOT NULL COMMENT '方案名称',
-    plan_type TINYINT COMMENT '方案类型：1-工作日，2-周末，3-节假日，4-特殊',
-    cycle_length INT NOT NULL COMMENT '周期长度(秒)',
-    offset_time INT DEFAULT 0 COMMENT '偏移时间(秒)',
-    start_time TIME COMMENT '启用开始时间',
-    end_time TIME COMMENT '启用结束时间',
-    effective_date DATE COMMENT '生效日期',
-    expiry_date DATE COMMENT '失效日期',
-    priority_level TINYINT DEFAULT 5 COMMENT '优先级(1-10，数字越大优先级越高)',
-    is_active TINYINT DEFAULT 0 COMMENT '是否激活：0-否，1-是',
-    status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用，2-草稿',
-    description TEXT COMMENT '方案描述',
-    created_by VARCHAR(64) COMMENT '创建人',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE CASCADE,
-    UNIQUE KEY uk_timing_plan (controller_id, plan_id),
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_plan_type (plan_type),
-    INDEX idx_is_active (is_active)
-    ) ENGINE=InnoDB COMMENT='配时方案表';
+-- 33. 检测器人行横道关联表
+CREATE TABLE detector_pedestrian (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    detector_no SMALLINT UNSIGNED NOT NULL COMMENT '检测器序号',
+    pedestrian_no TINYINT UNSIGNED NOT NULL COMMENT '人行横道序号',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_detector_pedestrian (cross_id, detector_no, pedestrian_no)
+) COMMENT = '检测器人行横道关联表';
 
--- 配时方案-相位表
-CREATE TABLE IF NOT EXISTS gat_timing_plan_phase (
-                                                     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                     controller_id VARCHAR(12) NOT NULL,
-    plan_id VARCHAR(32) NOT NULL,
-    phase_id VARCHAR(32) NOT NULL,
-    phase_sequence TINYINT NOT NULL COMMENT '相位顺序',
-    start_time INT NOT NULL COMMENT '相位开始时间(周期内秒数)',
-    duration INT NOT NULL COMMENT '相位持续时间(秒)',
-    green_time INT COMMENT '绿灯时间(秒)',
-    yellow_time INT COMMENT '黄灯时间(秒)',
-    all_red_time INT COMMENT '全红时间(秒)',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE CASCADE,
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_plan_id (plan_id),
-    INDEX idx_phase_sequence (phase_sequence),
-    UNIQUE KEY uk_plan_phase_seq (controller_id, plan_id, phase_sequence)
-    ) ENGINE=InnoDB COMMENT='配时方案-相位表';
+-- ================================
+-- 运行信息数据表
+-- ================================
 
--- ============================================================================
--- 5. 设备适配管理表
--- ============================================================================
+-- 34. 系统状态表 (SysState)
+CREATE TABLE sys_state (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    system_id VARCHAR(20) NOT NULL COMMENT '系统标识',
+    value ENUM('Online', 'Offline', 'Error') NOT NULL COMMENT '系统运行状态',
+    time TIMESTAMP NOT NULL COMMENT '系统当前时间',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (system_id) REFERENCES sys_info(system_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_system_id_time (system_id, time),
+    INDEX idx_time (time)
+) COMMENT = '系统状态表';
 
--- 设备适配器配置表
-CREATE TABLE IF NOT EXISTS gat_device_adapter (
-                                                  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                  adapter_id VARCHAR(32) NOT NULL UNIQUE COMMENT '适配器编号',
-    adapter_name VARCHAR(64) NOT NULL COMMENT '适配器名称',
-    vendor VARCHAR(32) NOT NULL COMMENT '厂商名称(海信/易华录/其他)',
-    adapter_type VARCHAR(32) NOT NULL COMMENT '适配器类型',
-    adapter_version VARCHAR(16) COMMENT '适配器版本',
-    protocol_type VARCHAR(32) COMMENT '通信协议类型',
-    communication_params JSON COMMENT '通信参数配置(JSON格式)',
-    config_template JSON COMMENT '配置模板(JSON格式)',
-    status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
-    description TEXT COMMENT '适配器描述',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_adapter_id (adapter_id),
-    INDEX idx_vendor (vendor),
-    INDEX idx_adapter_type (adapter_type)
-    ) ENGINE=InnoDB COMMENT='设备适配器配置表';
+-- 35. 路口状态表 (CrossState)
+CREATE TABLE cross_state (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    value ENUM('Online', 'Offline', 'Error') NOT NULL COMMENT '路口运行状态',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    INDEX idx_cross_id_time (cross_id, created_time)
+) COMMENT = '路口状态表';
 
--- 设备适配器实例表
-CREATE TABLE IF NOT EXISTS gat_device_adapter_instance (
-                                                           id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                           instance_id VARCHAR(32) NOT NULL UNIQUE COMMENT '适配器实例编号',
-    adapter_id VARCHAR(32) NOT NULL COMMENT '适配器编号',
-    controller_id VARCHAR(12) NOT NULL COMMENT '信号机控制器ID',
-    instance_name VARCHAR(64) COMMENT '实例名称',
-    config_params JSON COMMENT '实例配置参数',
-    connection_params JSON COMMENT '连接参数',
-    sync_interval INT DEFAULT 30 COMMENT '同步间隔(秒)',
-    retry_count INT DEFAULT 3 COMMENT '重试次数',
-    timeout_seconds INT DEFAULT 10 COMMENT '超时时间(秒)',
-    last_sync_time TIMESTAMP COMMENT '最后同步时间',
-    sync_status TINYINT DEFAULT 0 COMMENT '同步状态：0-未同步，1-同步中，2-同步成功，3-同步失败',
+-- 36. 信号机故障表 (SignalControllerError)
+CREATE TABLE signal_controller_error (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    signal_controller_id CHAR(18) NOT NULL COMMENT '信号机设备编号',
+    error_type VARCHAR(10) COMMENT '故障类型：1-灯输出故障；2-电源故障；3-时钟故障；4-运行故障；5-方案错误；9-其他错误',
+    error_desc VARCHAR(200) COMMENT '故障描述',
+    occur_time TIMESTAMP NOT NULL COMMENT '故障发生时间',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (signal_controller_id) REFERENCES signal_controller(signal_controller_id) ON DELETE CASCADE,
+    INDEX idx_controller_occur_time (signal_controller_id, occur_time)
+) COMMENT = '信号机故障表';
+
+-- 37. 路口控制方式方案表 (CrossCtrlInfo)
+CREATE TABLE cross_ctrl_info (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    control_mode CHAR(2) NOT NULL COMMENT '控制方式',
+    plan_no SMALLINT UNSIGNED DEFAULT 0 COMMENT '方案序号',
+    time TIMESTAMP NOT NULL COMMENT '路口本地时间',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    INDEX idx_cross_id_time (cross_id, time)
+) COMMENT = '路口控制方式方案表';
+
+-- 38. 路口周期表 (CrossCycle)
+CREATE TABLE cross_cycle (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    start_time TIMESTAMP NOT NULL COMMENT '周期开始时间',
+    last_cycle_len TINYINT UNSIGNED NOT NULL COMMENT '上周期长度(秒)',
+    adjust_flag TINYINT(1) DEFAULT 0 COMMENT '过渡标志：0-否；1-是',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    INDEX idx_cross_start_time (cross_id, start_time)
+) COMMENT = '路口周期表';
+
+-- 39. 路口阶段表 (CrossStage)
+CREATE TABLE cross_stage (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    last_stage_no TINYINT UNSIGNED COMMENT '上个阶段号',
+    last_stage_len TINYINT UNSIGNED COMMENT '上个阶段执行时长(秒)',
+    cur_stage_no TINYINT UNSIGNED NOT NULL COMMENT '当前阶段号',
+    cur_stage_start_time TIMESTAMP NOT NULL COMMENT '当前阶段开始时间',
+    cur_stage_len TINYINT UNSIGNED NOT NULL COMMENT '当前阶段已执行时长(秒)',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    INDEX idx_cross_stage_time (cross_id, cur_stage_start_time)
+) COMMENT = '路口阶段表';
+
+-- 40. 路口信号组灯色状态表 (CrossSignalGroupStatus)
+CREATE TABLE cross_signal_group_status (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    lamp_status_time TIMESTAMP(3) NOT NULL COMMENT '灯态开始时间(精确到毫秒)',
+    signal_group_no SMALLINT UNSIGNED NOT NULL COMMENT '信号组序号',
+    lamp_status CHAR(3) NOT NULL COMMENT '灯色状态',
+    remain_time SMALLINT UNSIGNED DEFAULT 0 COMMENT '剩余时长(秒)：0-不确定；1-500-具体时长',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    INDEX idx_cross_lamp_time (cross_id, lamp_status_time),
+    INDEX idx_cross_signal_group (cross_id, signal_group_no)
+) COMMENT = '路口信号组灯色状态表';
+
+-- 41. 路口交通流数据表 (CrossTrafficData) - 分区表
+CREATE TABLE cross_traffic_data (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    end_time TIMESTAMP NOT NULL COMMENT '统计截止时间',
+    interval_seconds SMALLINT UNSIGNED NOT NULL COMMENT '时间间隔(秒)',
+    lane_no TINYINT UNSIGNED NOT NULL COMMENT '车道序号',
+    volume SMALLINT UNSIGNED COMMENT '交通流量(辆/小时)',
+    avg_veh_len SMALLINT UNSIGNED COMMENT '平均车长(厘米)',
+    pcu SMALLINT UNSIGNED COMMENT '小客车当量(pcu/小时)',
+    head_distance SMALLINT UNSIGNED COMMENT '平均车头间距(厘米/辆)',
+    head_time SMALLINT UNSIGNED COMMENT '平均车头时距(秒/辆)',
+    speed FLOAT COMMENT '平均速度(公里/小时)',
+    saturation TINYINT UNSIGNED COMMENT '饱和度(0-100)',
+    density SMALLINT UNSIGNED COMMENT '平均密度(辆/公里)',
+    queue_length SMALLINT UNSIGNED COMMENT '平均排队长度(米)',
+    max_queue_length SMALLINT UNSIGNED COMMENT '统计周期内最大排队长度(米)',
+    occupancy TINYINT UNSIGNED COMMENT '占有率(0-100)',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    INDEX idx_cross_end_time (cross_id, end_time),
+    INDEX idx_cross_lane_end_time (cross_id, lane_no, end_time)
+) COMMENT '路口交通流数据表';
+
+-- 42. 阶段交通流数据表 (StageTrafficData)
+CREATE TABLE stage_traffic_data (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    start_time TIMESTAMP NOT NULL COMMENT '阶段开始时间',
+    end_time TIMESTAMP NOT NULL COMMENT '阶段结束时间',
+    stage_no TINYINT UNSIGNED NOT NULL COMMENT '阶段号',
+    lane_no TINYINT UNSIGNED NOT NULL COMMENT '车道序号',
+    vehicle_num SMALLINT UNSIGNED COMMENT '过车数量(辆)',
+    pcu SMALLINT UNSIGNED COMMENT '小客车当量(pcu/小时)',
+    head_time SMALLINT UNSIGNED COMMENT '平均车头时距(秒/辆)',
+    saturation TINYINT UNSIGNED COMMENT '饱和度(0-100)',
+    queue_length SMALLINT UNSIGNED COMMENT '阶段结束时排队长度(米)',
+    occupancy TINYINT UNSIGNED COMMENT '占有率(0-100)',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    INDEX idx_cross_stage_time (cross_id, stage_no, start_time),
+    INDEX idx_cross_lane_stage_time (cross_id, lane_no, start_time)
+)COMMENT '阶段交通流数据表';
+
+-- 43. 可变导向车道状态表 (VarLaneStatus)
+CREATE TABLE var_lane_status (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    lane_no TINYINT UNSIGNED NOT NULL COMMENT '车道序号',
+    cur_movement CHAR(2) NOT NULL COMMENT '当前转向',
+    cur_mode CHAR(2) NOT NULL COMMENT '可变导向车道控制方式：00-恢复信号机控制；11-信号机控制固定方案；12-信号机控制自适应；21-干预控制固定方案；22-干预控制自适应；99-其他',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_cross_lane_var (cross_id, lane_no)
+)COMMENT '可变导向车道状态表';
+
+-- 44. 干线控制方式表 (RouteCtrlInfo)
+CREATE TABLE route_ctrl_info (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    route_id CHAR(11) NOT NULL COMMENT '线路编号',
+    ctrl_mode CHAR(2) NOT NULL COMMENT '干线控制方式：00-未进行干线协调控制；11-固定方案协调控制；12-自适应协调控制',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (route_id) REFERENCES route_param(route_id) ON DELETE CASCADE,
+    INDEX idx_route_id_time (route_id, created_time)
+)COMMENT '干线控制方式表';
+
+-- 45. 干线路段推荐车速表 (RouteSpeed)
+CREATE TABLE route_speed (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    route_id CHAR(11) NOT NULL COMMENT '线路编号',
+    up_cross_id CHAR(14) NOT NULL COMMENT '上游路口编号',
+    down_cross_id CHAR(14) NOT NULL COMMENT '下游路口编号',
+    recommend_speed FLOAT NOT NULL COMMENT '推荐车速(公里/小时)',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (route_id) REFERENCES route_param(route_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_route_cross_section (route_id, up_cross_id, down_cross_id)
+)COMMENT '干线路段推荐车速表';
+
+-- 46. 信号机柜门状态表 (SCDoorStatus)
+CREATE TABLE sc_door_status (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    signal_controller_id CHAR(18) NOT NULL COMMENT '信号机设备编号',
+    time TIMESTAMP NOT NULL COMMENT '时间',
+    door_no TINYINT UNSIGNED NOT NULL COMMENT '机柜门序号(1-20)',
+    door_name VARCHAR(50) COMMENT '机柜门名称',
+    status CHAR(1) NOT NULL COMMENT '机柜门当前状态：0-关闭；1-打开；9-未知',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (signal_controller_id) REFERENCES signal_controller(signal_controller_id) ON DELETE CASCADE,
+    INDEX idx_controller_door_time (signal_controller_id, door_no, time)
+)COMMENT '信号机柜门状态表';
+
+-- ================================
+-- 控制命令数据表
+-- ================================
+
+-- 47. 控制命令日志表
+CREATE TABLE control_command_log (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    command_type VARCHAR(50) NOT NULL COMMENT '命令类型',
+    cross_id CHAR(14) COMMENT '路口编号',
+    command_data JSON NOT NULL COMMENT '命令数据(JSON格式)',
+    execute_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '执行时间',
+    result ENUM('SUCCESS', 'FAILED', 'PENDING') DEFAULT 'PENDING' COMMENT '执行结果',
     error_message TEXT COMMENT '错误信息',
-    status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (adapter_id) REFERENCES gat_device_adapter(adapter_id) ON DELETE CASCADE,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE CASCADE,
-    INDEX idx_instance_id (instance_id),
-    INDEX idx_adapter_id (adapter_id),
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_sync_status (sync_status)
-    ) ENGINE=InnoDB COMMENT='设备适配器实例表';
+    operator_id VARCHAR(50) COMMENT '操作员ID',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_command_type_time (command_type, execute_time),
+    INDEX idx_cross_id_time (cross_id, execute_time)
+)COMMENT '控制命令日志表';
 
--- ============================================================================
--- 6. 数据同步管理表
--- ============================================================================
+-- 48. 锁定交通流向记录表 (LockFlowDirection)
+CREATE TABLE lock_flow_direction (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    type TINYINT NOT NULL COMMENT '交通流类型：0-行人；1-机动车；2-非机动车',
+    entrance CHAR(1) NOT NULL COMMENT '进口方向',
+    `exit` CHAR(1) NOT NULL COMMENT '出口方向',
+    lock_type TINYINT NOT NULL COMMENT '锁定类型：1-匹配当前方案；2-单个进口方向放行；3-只放行此流向信号组；4-锁定指定阶段',
+    lock_stage_no TINYINT UNSIGNED DEFAULT 0 COMMENT '锁定阶段号',
+    duration SMALLINT UNSIGNED NOT NULL COMMENT '锁定持续时长(秒)：0-持续锁定；1-3600-具体时长',
+    start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '锁定开始时间',
+    end_time TIMESTAMP NULL COMMENT '锁定结束时间',
+    status ENUM('ACTIVE', 'EXPIRED', 'UNLOCKED') DEFAULT 'ACTIVE' COMMENT '锁定状态',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    INDEX idx_cross_status_time (cross_id, status, start_time)
+)COMMENT '锁定交通流向记录表';
 
--- 同步任务表
-CREATE TABLE IF NOT EXISTS gat_sync_task (
-                                             id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                             task_id VARCHAR(32) NOT NULL UNIQUE COMMENT '任务编号',
-    task_name VARCHAR(64) NOT NULL COMMENT '任务名称',
-    task_type TINYINT NOT NULL COMMENT '任务类型：1-配置下发，2-状态上报，3-数据采集',
-    controller_id VARCHAR(12) NOT NULL COMMENT '信号机控制器ID',
-    sync_direction TINYINT NOT NULL COMMENT '同步方向：1-数据库到设备，2-设备到数据库',
-    data_type VARCHAR(32) COMMENT '数据类型',
-    sync_content JSON COMMENT '同步内容',
-    schedule_type TINYINT COMMENT '调度类型：1-立即执行，2-定时执行，3-周期执行',
-    schedule_config JSON COMMENT '调度配置',
-    priority_level TINYINT DEFAULT 5 COMMENT '优先级(1-10)',
-    max_retry_count INT DEFAULT 3 COMMENT '最大重试次数',
-    timeout_seconds INT DEFAULT 30 COMMENT '超时时间(秒)',
-    status TINYINT DEFAULT 0 COMMENT '任务状态：0-待执行，1-执行中，2-成功，3-失败，4-取消',
-    last_execute_time TIMESTAMP COMMENT '最后执行时间',
-    next_execute_time TIMESTAMP COMMENT '下次执行时间',
-    error_message TEXT COMMENT '错误信息',
-    created_by VARCHAR(64) COMMENT '创建人',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE CASCADE,
-    INDEX idx_task_id (task_id),
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_task_type (task_type),
-    INDEX idx_status (status),
-    INDEX idx_next_execute_time (next_execute_time)
-    ) ENGINE=InnoDB COMMENT='同步任务表';
+-- 49. 数据上传控制表 (CrossReportCtrl)
+CREATE TABLE cross_report_ctrl (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    data_type VARCHAR(30) NOT NULL COMMENT '数据类型：CrossCycle-路口周期；CrossStage-路口阶段；CrossSignalGroupStatus-信号组灯色状态；CrossTrafficData-路口交通流数据；StageTrafficData-阶段交通流数据',
+    cmd ENUM('Start', 'Stop') NOT NULL COMMENT '命令：Start-开始上传；Stop-停止上传',
+    status ENUM('ACTIVE', 'INACTIVE') DEFAULT 'ACTIVE' COMMENT '状态',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_cross_data_type (cross_id, data_type)
+)COMMENT '数据上传控制表';
 
--- 同步日志表
-CREATE TABLE IF NOT EXISTS gat_sync_log (
-                                            id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                            log_id VARCHAR(32) NOT NULL UNIQUE COMMENT '日志编号',
-    task_id VARCHAR(32) COMMENT '关联任务编号',
-    controller_id VARCHAR(12) NOT NULL COMMENT '信号机控制器ID',
-    sync_type TINYINT NOT NULL COMMENT '同步类型：1-配置下发，2-状态上报，3-数据采集',
-    sync_direction TINYINT NOT NULL COMMENT '同步方向：1-数据库到设备，2-设备到数据库',
-    data_type VARCHAR(32) COMMENT '数据类型',
-    data_size INT COMMENT '数据大小(字节)',
+-- 50. 中心预案表 (CenterPlan)
+CREATE TABLE center_plan (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    control_mode CHAR(2) NOT NULL COMMENT '控制方式',
+    max_run_time SMALLINT UNSIGNED NOT NULL COMMENT '预案最大运行时长(分钟)',
+    plan_data JSON NOT NULL COMMENT '配时方案参数数据',
+    start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '开始执行时间',
+    end_time TIMESTAMP NULL COMMENT '结束时间',
+    status ENUM('ACTIVE', 'EXPIRED', 'STOPPED') DEFAULT 'ACTIVE' COMMENT '预案状态',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    INDEX idx_cross_status_time (cross_id, status, start_time)
+)COMMENT '中心预案表';
+
+-- 51. 阶段干预记录表 (AdjustStage)
+CREATE TABLE adjust_stage_log (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    stage_no TINYINT UNSIGNED COMMENT '干预的阶段号',
+    type TINYINT NOT NULL COMMENT '干预类型：1-延长；2-缩短；3-切换到下阶段',
+    len SMALLINT UNSIGNED COMMENT '干预时长(秒)',
+    execute_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '执行时间',
+    result ENUM('SUCCESS', 'FAILED') COMMENT '执行结果',
+    operator_id VARCHAR(50) COMMENT '操作员ID',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    INDEX idx_cross_execute_time (cross_id, execute_time)
+)COMMENT '阶段干预记录表';
+
+-- 52. 可变导向车道控制记录表 (CtrlVarLane)
+CREATE TABLE ctrl_var_lane_log (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cross_id CHAR(14) NOT NULL COMMENT '路口编号',
+    lane_no TINYINT UNSIGNED NOT NULL COMMENT '车道序号',
+    movement CHAR(2) NOT NULL COMMENT '设置的功能(转向)',
+    ctrl_mode CHAR(2) NOT NULL COMMENT '控制模式',
     start_time TIMESTAMP NOT NULL COMMENT '开始时间',
-    end_time TIMESTAMP COMMENT '结束时间',
-    duration_ms INT COMMENT '耗时(毫秒)',
-    result TINYINT COMMENT '同步结果：0-失败，1-成功，2-部分成功',
-    success_count INT DEFAULT 0 COMMENT '成功项数',
-    failed_count INT DEFAULT 0 COMMENT '失败项数',
-    error_code VARCHAR(16) COMMENT '错误代码',
-    error_message TEXT COMMENT '错误信息',
-    request_data JSON COMMENT '请求数据',
-    response_data JSON COMMENT '响应数据',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (task_id) REFERENCES gat_sync_task(task_id) ON DELETE SET NULL,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE CASCADE,
-    INDEX idx_log_id (log_id),
-    INDEX idx_task_id (task_id),
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_sync_type (sync_type),
-    INDEX idx_start_time (start_time),
-    INDEX idx_result (result)
-    ) ENGINE=InnoDB COMMENT='同步日志表';
+    end_time TIMESTAMP NULL COMMENT '结束时间',
+    status ENUM('ACTIVE', 'EXPIRED', 'STOPPED') DEFAULT 'ACTIVE' COMMENT '状态',
+    operator_id VARCHAR(50) COMMENT '操作员ID',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cross_id) REFERENCES cross_param(cross_id) ON DELETE CASCADE,
+    INDEX idx_cross_lane_time (cross_id, lane_no, start_time)
+)COMMENT '可变导向车道控制记录表';
 
--- ============================================================================
--- 7. 检测器和传感器表
--- ============================================================================
-
--- 检测器表
-CREATE TABLE IF NOT EXISTS gat_detector (
-                                            id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                            detector_id VARCHAR(32) NOT NULL COMMENT '检测器编号',
-    controller_id VARCHAR(12) NOT NULL COMMENT '关联信号机控制器ID',
-    detector_name VARCHAR(64) COMMENT '检测器名称',
-    detector_type TINYINT COMMENT '检测器类型：1-线圈，2-视频，3-雷达，4-红外',
-    installation_position VARCHAR(64) COMMENT '安装位置',
-    lane_id VARCHAR(32) COMMENT '关联车道编号',
-    direction VARCHAR(16) COMMENT '检测方向',
-    detection_zone JSON COMMENT '检测区域配置',
-    sensitivity_level TINYINT COMMENT '灵敏度等级(1-10)',
-    detection_params JSON COMMENT '检测参数配置',
-    status TINYINT DEFAULT 1 COMMENT '状态：0-故障，1-正常，2-维护',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE CASCADE,
-    UNIQUE KEY uk_detector (controller_id, detector_id),
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_detector_type (detector_type)
-    ) ENGINE=InnoDB COMMENT='检测器表';
-
--- 检测器数据表
-CREATE TABLE IF NOT EXISTS gat_detector_data (
-                                                 id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                 controller_id VARCHAR(12) NOT NULL,
-    detector_id VARCHAR(32) NOT NULL,
-    detection_time TIMESTAMP NOT NULL COMMENT '检测时间',
-    vehicle_count INT DEFAULT 0 COMMENT '车辆数量',
-    occupancy DECIMAL(5,2) COMMENT '占有率(%)',
-    average_speed DECIMAL(5,2) COMMENT '平均速度(km/h)',
-    queue_length DECIMAL(6,2) COMMENT '排队长度(米)',
-    headway DECIMAL(6,2) COMMENT '车头间距(秒)',
-    volume_data JSON COMMENT '流量数据详情',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE CASCADE,
-    INDEX idx_controller_detector (controller_id, detector_id),
-    INDEX idx_detection_time (detection_time)
-    ) ENGINE=InnoDB COMMENT='检测器数据表';
-
--- ============================================================================
--- 8. 事件和告警管理表
--- ============================================================================
-
--- 事件表
-CREATE TABLE IF NOT EXISTS gat_event (
-                                         id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                         event_id VARCHAR(32) NOT NULL UNIQUE COMMENT '事件编号',
-    controller_id VARCHAR(12) COMMENT '关联信号机控制器ID',
-    event_type TINYINT NOT NULL COMMENT '事件类型：1-设备故障，2-通信异常，3-配置变更，4-系统告警',
-    event_level TINYINT NOT NULL COMMENT '事件等级：1-信息，2-警告，3-错误，4-严重',
-    event_source VARCHAR(32) COMMENT '事件源',
-    event_title VARCHAR(128) NOT NULL COMMENT '事件标题',
-    event_description TEXT COMMENT '事件描述',
-    event_time TIMESTAMP NOT NULL COMMENT '事件发生时间',
-    event_data JSON COMMENT '事件相关数据',
-    is_handled TINYINT DEFAULT 0 COMMENT '是否已处理：0-未处理，1-已处理',
-    handled_by VARCHAR(64) COMMENT '处理人',
-    handled_time TIMESTAMP COMMENT '处理时间',
-    handle_result TEXT COMMENT '处理结果',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE SET NULL,
-    INDEX idx_event_id (event_id),
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_event_type (event_type),
-    INDEX idx_event_level (event_level),
-    INDEX idx_event_time (event_time),
-    INDEX idx_is_handled (is_handled)
-    ) ENGINE=InnoDB COMMENT='事件表';
-
--- 告警规则表
-CREATE TABLE IF NOT EXISTS gat_alarm_rule (
-                                              id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                              rule_id VARCHAR(32) NOT NULL UNIQUE COMMENT '规则编号',
-    rule_name VARCHAR(64) NOT NULL COMMENT '规则名称',
-    rule_type TINYINT NOT NULL COMMENT '规则类型：1-设备状态，2-通信状态，3-性能指标',
-    condition_expression JSON NOT NULL COMMENT '条件表达式',
-    alarm_level TINYINT NOT NULL COMMENT '告警等级：1-信息，2-警告，3-错误，4-严重',
-    notification_config JSON COMMENT '通知配置',
-    enabled TINYINT DEFAULT 1 COMMENT '是否启用：0-禁用，1-启用',
-    description TEXT COMMENT '规则描述',
-    created_by VARCHAR(64) COMMENT '创建人',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_rule_id (rule_id),
-    INDEX idx_rule_type (rule_type),
-    INDEX idx_enabled (enabled)
-    ) ENGINE=InnoDB COMMENT='告警规则表';
-
--- 告警记录表
-CREATE TABLE IF NOT EXISTS gat_alarm_record (
-                                                id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                alarm_id VARCHAR(32) NOT NULL UNIQUE COMMENT '告警编号',
-    rule_id VARCHAR(32) COMMENT '关联规则编号',
-    controller_id VARCHAR(12) COMMENT '关联信号机控制器ID',
-    alarm_type TINYINT NOT NULL COMMENT '告警类型：1-设备故障，2-通信异常，3-性能告警',
-    alarm_level TINYINT NOT NULL COMMENT '告警等级：1-信息，2-警告，3-错误，4-严重',
-    alarm_title VARCHAR(128) NOT NULL COMMENT '告警标题',
-    alarm_description TEXT COMMENT '告警描述',
-    alarm_time TIMESTAMP NOT NULL COMMENT '告警时间',
-    trigger_data JSON COMMENT '触发数据',
-    status TINYINT DEFAULT 0 COMMENT '告警状态：0-未处理，1-处理中，2-已处理，3-已忽略',
-    acknowledged_by VARCHAR(64) COMMENT '确认人',
-    acknowledged_time TIMESTAMP COMMENT '确认时间',
-    resolved_by VARCHAR(64) COMMENT '解决人',
-    resolved_time TIMESTAMP COMMENT '解决时间',
-    resolution TEXT COMMENT '解决方案',
-    notification_sent TINYINT DEFAULT 0 COMMENT '是否已发送通知：0-否，1-是',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (rule_id) REFERENCES gat_alarm_rule(rule_id) ON DELETE SET NULL,
-    FOREIGN KEY (controller_id) REFERENCES gat_signal_controller(controller_id) ON DELETE SET NULL,
-    INDEX idx_alarm_id (alarm_id),
-    INDEX idx_rule_id (rule_id),
-    INDEX idx_controller_id (controller_id),
-    INDEX idx_alarm_type (alarm_type),
-    INDEX idx_alarm_level (alarm_level),
-    INDEX idx_alarm_time (alarm_time),
-    INDEX idx_status (status)
-    ) ENGINE=InnoDB COMMENT='告警记录表';
-
--- ============================================================================
--- 9. 用户权限管理表
--- ============================================================================
-
--- 用户表
-CREATE TABLE IF NOT EXISTS gat_user (
-                                        id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                        user_id VARCHAR(32) NOT NULL UNIQUE COMMENT '用户编号',
-    username VARCHAR(64) NOT NULL UNIQUE COMMENT '用户名',
-    password_hash VARCHAR(128) NOT NULL COMMENT '密码哈希',
-    real_name VARCHAR(64) COMMENT '真实姓名',
-    email VARCHAR(128) COMMENT '邮箱',
-    phone VARCHAR(32) COMMENT '电话',
-    department VARCHAR(64) COMMENT '部门',
-    position VARCHAR(64) COMMENT '职位',
-    user_type TINYINT DEFAULT 1 COMMENT '用户类型：1-普通用户，2-管理员，3-超级管理员',
-    status TINYINT DEFAULT 1 COMMENT '用户状态：0-禁用，1-启用，2-锁定',
-    last_login_time TIMESTAMP COMMENT '最后登录时间',
-    last_login_ip VARCHAR(45) COMMENT '最后登录IP',
-    password_update_time TIMESTAMP COMMENT '密码更新时间',
-    failed_login_count INT DEFAULT 0 COMMENT '连续登录失败次数',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_username (username),
-    INDEX idx_status (status)
-    ) ENGINE=InnoDB COMMENT='用户表';
-
--- 会话表
-CREATE TABLE IF NOT EXISTS gat_session (
-                                           id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                           session_id VARCHAR(64) NOT NULL UNIQUE COMMENT '会话ID',
-    user_id VARCHAR(32) NOT NULL COMMENT '用户编号',
-    token VARCHAR(128) NOT NULL UNIQUE COMMENT '访问令牌',
-    client_ip VARCHAR(45) COMMENT '客户端IP',
-    user_agent TEXT COMMENT '用户代理',
-    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '登录时间',
-    last_access_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后访问时间',
-    expire_time TIMESTAMP NOT NULL COMMENT '过期时间',
-    status TINYINT DEFAULT 1 COMMENT '会话状态：0-无效，1-有效',
-    FOREIGN KEY (user_id) REFERENCES gat_user(user_id) ON DELETE CASCADE,
-    INDEX idx_session_id (session_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_token (token),
-    INDEX idx_expire_time (expire_time)
-    ) ENGINE=InnoDB COMMENT='会话表';
-
--- ============================================================================
--- 10. 操作日志表
--- ============================================================================
-
--- 操作日志表
-CREATE TABLE IF NOT EXISTS gat_operation_log (
-                                                 id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                 log_id VARCHAR(32) NOT NULL UNIQUE COMMENT '日志编号',
-    user_id VARCHAR(32) COMMENT '操作用户ID',
-    username VARCHAR(64) COMMENT '用户名',
-    operation_type VARCHAR(32) NOT NULL COMMENT '操作类型',
-    operation_name VARCHAR(64) NOT NULL COMMENT '操作名称',
-    operation_description TEXT COMMENT '操作描述',
-    target_type VARCHAR(32) COMMENT '目标对象类型',
-    target_id VARCHAR(64) COMMENT '目标对象ID',
-    request_params JSON COMMENT '请求参数',
-    response_data JSON COMMENT '响应数据',
-    operation_result TINYINT COMMENT '操作结果：0-失败，1-成功',
-    error_message TEXT COMMENT '错误信息',
-    client_ip VARCHAR(45) COMMENT '客户端IP',
-    user_agent TEXT COMMENT '用户代理',
-    operation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
-    duration_ms INT COMMENT '操作耗时(毫秒)',
-    FOREIGN KEY (user_id) REFERENCES gat_user(user_id) ON DELETE SET NULL,
-    INDEX idx_log_id (log_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_operation_type (operation_type),
-    INDEX idx_operation_time (operation_time),
-    INDEX idx_operation_result (operation_result)
-    ) ENGINE=InnoDB COMMENT='操作日志表';
-
--- ============================================================================
--- 11. 数据字典表
--- ============================================================================
-
+-- ================================
 -- 数据字典表
-CREATE TABLE IF NOT EXISTS gat_data_dictionary (
-                                                   id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                   dict_code VARCHAR(32) NOT NULL COMMENT '字典编码',
-    dict_name VARCHAR(64) NOT NULL COMMENT '字典名称',
-    dict_type VARCHAR(32) NOT NULL COMMENT '字典类型',
-    dict_value VARCHAR(128) NOT NULL COMMENT '字典值',
-    dict_label VARCHAR(128) NOT NULL COMMENT '字典标签',
+-- ================================
+
+-- 53. 数据字典表
+CREATE TABLE data_dictionary (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    dict_type VARCHAR(50) NOT NULL COMMENT '字典类型',
+    dict_code VARCHAR(10) NOT NULL COMMENT '字典代码',
+    dict_name VARCHAR(100) NOT NULL COMMENT '字典名称',
+    dict_value VARCHAR(200) COMMENT '字典值',
+    parent_code VARCHAR(10) COMMENT '父级代码',
     sort_order INT DEFAULT 0 COMMENT '排序',
-    parent_code VARCHAR(32) COMMENT '父级编码',
-    is_default TINYINT DEFAULT 0 COMMENT '是否默认：0-否，1-是',
-    status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
-    description TEXT COMMENT '描述',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_dict_code (dict_code),
-    INDEX idx_dict_type (dict_type),
-    INDEX idx_parent_code (parent_code),
-    UNIQUE KEY uk_dict_type_value (dict_type, dict_value)
-    ) ENGINE=InnoDB COMMENT='数据字典表';
+    is_active TINYINT(1) DEFAULT 1 COMMENT '是否有效',
+    remark TEXT COMMENT '备注',
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_dict_type_code (dict_type, dict_code),
+    INDEX idx_dict_type (dict_type)
+)COMMENT '数据字典表';
 
--- ============================================================================
--- 12. 配置管理表
--- ============================================================================
+-- ================================
+-- 协议参数完整信息视图
+-- ================================
 
--- 系统配置表
-CREATE TABLE IF NOT EXISTS gat_system_config (
-                                                 id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                                                 config_key VARCHAR(64) NOT NULL UNIQUE COMMENT '配置键',
-    config_value TEXT COMMENT '配置值',
-    config_type VARCHAR(32) DEFAULT 'STRING' COMMENT '配置类型：STRING/NUMBER/BOOLEAN/JSON',
-    config_group VARCHAR(32) COMMENT '配置分组',
-    config_name VARCHAR(128) COMMENT '配置名称',
-    description TEXT COMMENT '配置描述',
-    is_encrypted TINYINT DEFAULT 0 COMMENT '是否加密：0-否，1-是',
-    is_readonly TINYINT DEFAULT 0 COMMENT '是否只读：0-否，1-是',
-    sort_order INT DEFAULT 0 COMMENT '排序',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_config_key (config_key),
-    INDEX idx_config_group (config_group)
-    ) ENGINE=InnoDB COMMENT='系统配置表';
-
--- ============================================================================
--- 13. 初始化数据
--- ============================================================================
-
--- 插入初始系统配置
-INSERT INTO gat_system_config (config_key, config_value, config_type, config_group, config_name, description) VALUES
-                                                                                                                  ('system.name', 'GA/T 1049信号机品牌无关架构系统', 'STRING', 'SYSTEM', '系统名称', '系统显示名称'),
-                                                                                                                  ('system.version', '1.0.0', 'STRING', 'SYSTEM', '系统版本', '当前系统版本号'),
-                                                                                                                  ('sync.default_interval', '30', 'NUMBER', 'SYNC', '默认同步间隔', '设备状态同步默认间隔(秒)'),
-                                                                                                                  ('sync.max_retry_count', '3', 'NUMBER', 'SYNC', '最大重试次数', '同步失败时的最大重试次数'),
-                                                                                                                  ('sync.timeout_seconds', '10', 'NUMBER', 'SYNC', '同步超时时间', '设备同步操作超时时间(秒)'),
-                                                                                                                  ('session.expire_hours', '8', 'NUMBER', 'SECURITY', '会话过期时间', '用户会话过期时间(小时)'),
-                                                                                                                  ('password.min_length', '8', 'NUMBER', 'SECURITY', '最小密码长度', '用户密码最小长度'),
-                                                                                                                  ('log.retention_days', '90', 'NUMBER', 'LOG', '日志保留天数', '操作日志保留天数');
-
--- 插入数据字典
-INSERT INTO gat_data_dictionary (dict_code, dict_name, dict_type, dict_value, dict_label, sort_order, description) VALUES
--- 设备状态
-('DEVICE_STATUS_OFFLINE', '设备状态-离线', 'DEVICE_STATUS', '0', '离线', 1, '设备离线状态'),
-('DEVICE_STATUS_ONLINE', '设备状态-在线', 'DEVICE_STATUS', '1', '在线', 2, '设备在线状态'),
-('DEVICE_STATUS_FAULT', '设备状态-故障', 'DEVICE_STATUS', '2', '故障', 3, '设备故障状态'),
-('DEVICE_STATUS_MAINTENANCE', '设备状态-维护', 'DEVICE_STATUS', '3', '维护', 4, '设备维护状态'),
-
--- 通信方式
-('COMM_MODE_WIRED', '通信方式-有线', 'COMM_MODE', '1', '有线', 1, '有线通信'),
-('COMM_MODE_WIRELESS', '通信方式-无线', 'COMM_MODE', '2', '无线', 2, '无线通信'),
-('COMM_MODE_FIBER', '通信方式-光纤', 'COMM_MODE', '3', '光纤', 3, '光纤通信'),
-
--- 信号机供应商
-('VENDOR_HISENSE', '供应商-海信', 'VENDOR', 'HISENSE', '海信', 1, '海信网络科技'),
-('VENDOR_EHUALU', '供应商-易华录', 'VENDOR', 'EHUALU', '易华录', 2, '易华录信息技术'),
-('VENDOR_DAHUA', '供应商-大华', 'VENDOR', 'DAHUA', '大华', 3, '大华技术'),
-('VENDOR_OTHER', '供应商-其他', 'VENDOR', 'OTHER', '其他', 99, '其他供应商'),
-
--- 信号组类型
-('SIGNAL_GROUP_VEHICLE', '信号组-机动车', 'SIGNAL_GROUP_TYPE', '1', '机动车', 1, '机动车信号组'),
-('SIGNAL_GROUP_PEDESTRIAN', '信号组-行人', 'SIGNAL_GROUP_TYPE', '2', '行人', 2, '行人信号组'),
-('SIGNAL_GROUP_BICYCLE', '信号组-非机动车', 'SIGNAL_GROUP_TYPE', '3', '非机动车', 3, '非机动车信号组'),
-
--- 灯态
-('LAMP_STATE_RED', '灯态-红', 'LAMP_STATE', '1', '红', 1, '红灯'),
-('LAMP_STATE_YELLOW', '灯态-黄', 'LAMP_STATE', '2', '黄', 2, '黄灯'),
-('LAMP_STATE_GREEN', '灯态-绿', 'LAMP_STATE', '3', '绿', 3, '绿灯'),
-('LAMP_STATE_GREEN_ARROW', '灯态-绿箭头', 'LAMP_STATE', '4', '绿箭头', 4, '绿色箭头灯'),
-('LAMP_STATE_YELLOW_FLASH', '灯态-黄闪', 'LAMP_STATE', '5', '黄闪', 5, '黄闪灯');
-
--- 插入默认管理员用户 (密码: admin123)
-INSERT INTO gat_user (user_id, username, password_hash, real_name, user_type, status) VALUES
-    ('admin', 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVepjG', '系统管理员', 3, 1);
-
--- ============================================================================
--- 14. 创建视图
--- ============================================================================
-
--- 设备状态汇总视图
-CREATE OR REPLACE VIEW v_device_status_summary AS
+-- 1. SysInfo协议完整信息视图
+CREATE VIEW v_protocol_sys_info_complete AS
 SELECT
-    sc.controller_id,
-    sc.controller_name,
+    si.system_id,
+    si.sys_name,
+    si.sys_version,
+    si.supplier,
+    si.is_active as system_active,
+    si.description as system_description,
+
+    CASE
+        WHEN cross_list.cross_ids IS NOT NULL AND cross_list.cross_ids != ''
+        THEN cross_list.cross_ids
+        ELSE NULL
+    END as cross_id_list,
+
+    CASE
+        WHEN sub_region_list.sub_region_ids IS NOT NULL AND sub_region_list.sub_region_ids != ''
+        THEN sub_region_list.sub_region_ids
+        ELSE NULL
+    END as sub_region_id_list,
+
+    CASE
+        WHEN route_list.route_ids IS NOT NULL AND route_list.route_ids != ''
+        THEN route_list.route_ids
+        ELSE NULL
+    END as route_id_list,
+
+    CASE
+        WHEN region_list.region_ids IS NOT NULL AND region_list.region_ids != ''
+        THEN region_list.region_ids
+        ELSE NULL
+    END as region_id_list,
+
+    CASE
+        WHEN controller_list.controller_ids IS NOT NULL AND controller_list.controller_ids != ''
+        THEN controller_list.controller_ids
+        ELSE NULL
+    END as signal_controller_id_list,
+
+    COALESCE(cross_list.cross_count, 0) as cross_count,
+    COALESCE(sub_region_list.sub_region_count, 0) as sub_region_count,
+    COALESCE(route_list.route_count, 0) as route_count,
+    COALESCE(region_list.region_count, 0) as region_count,
+    COALESCE(controller_list.controller_count, 0) as controller_count,
+
+    si.created_time as system_created_time,
+    si.updated_time as system_updated_time,
+    NOW() AS `current_time`
+
+FROM sys_info si
+
+LEFT JOIN (
+    SELECT
+        scr.system_id,
+        GROUP_CONCAT(scr.cross_id ORDER BY scr.cross_id SEPARATOR ',') as cross_ids,
+        COUNT(*) as cross_count
+    FROM sys_cross_relation scr
+    WHERE scr.is_active = 1
+        AND (scr.end_time IS NULL OR scr.end_time > NOW())
+    GROUP BY scr.system_id
+) cross_list ON si.system_id = cross_list.system_id
+
+LEFT JOIN (
+    SELECT
+        ssrr.system_id,
+        GROUP_CONCAT(ssrr.sub_region_id ORDER BY ssrr.sub_region_id SEPARATOR ',') as sub_region_ids,
+        COUNT(*) as sub_region_count
+    FROM sys_sub_region_relation ssrr
+    WHERE ssrr.is_active = 1
+    GROUP BY ssrr.system_id
+) sub_region_list ON si.system_id = sub_region_list.system_id
+
+LEFT JOIN (
+    SELECT
+        srr.system_id,
+        GROUP_CONCAT(srr.route_id ORDER BY srr.route_id SEPARATOR ',') as route_ids,
+        COUNT(*) as route_count
+    FROM sys_route_relation srr
+    WHERE srr.is_active = 1
+    GROUP BY srr.system_id
+) route_list ON si.system_id = route_list.system_id
+
+LEFT JOIN (
+    SELECT
+        srgr.system_id,
+        GROUP_CONCAT(srgr.region_id ORDER BY srgr.region_id SEPARATOR ',') as region_ids,
+        COUNT(*) as region_count
+    FROM sys_region_relation srgr
+    WHERE srgr.is_active = 1
+    GROUP BY srgr.system_id
+) region_list ON si.system_id = region_list.system_id
+
+LEFT JOIN (
+    SELECT
+        sscr.system_id,
+        GROUP_CONCAT(sscr.signal_controller_id ORDER BY sscr.signal_controller_id SEPARATOR ',') as controller_ids,
+        COUNT(*) as controller_count
+    FROM sys_signal_controller_relation sscr
+    WHERE sscr.is_active = 1
+    GROUP BY sscr.system_id
+) controller_list ON si.system_id = controller_list.system_id
+
+WHERE si.is_active = 1;
+
+-- 2. 区域参数完整信息视图 (RegionParam)
+CREATE VIEW v_region_param_complete AS
+SELECT
+    rp.region_id,
+    rp.region_name,
+    rp.created_time,
+    rp.updated_time,
+
+    CASE
+        WHEN sub_region_list.sub_region_ids IS NOT NULL AND sub_region_list.sub_region_ids != ''
+        THEN sub_region_list.sub_region_ids
+        ELSE NULL
+    END as sub_region_id_list,
+
+    CASE
+        WHEN cross_list.cross_ids IS NOT NULL AND cross_list.cross_ids != ''
+        THEN cross_list.cross_ids
+        ELSE NULL
+    END as cross_id_list,
+
+    COALESCE(sub_region_list.sub_region_count, 0) as sub_region_count,
+    COALESCE(cross_list.cross_count, 0) as direct_cross_count
+
+FROM region_param rp
+
+LEFT JOIN (
+    SELECT
+        rsr.region_id,
+        GROUP_CONCAT(rsr.sub_region_id ORDER BY rsr.sub_region_id SEPARATOR ',') as sub_region_ids,
+        COUNT(*) as sub_region_count
+    FROM region_sub_region rsr
+    GROUP BY rsr.region_id
+) sub_region_list ON rp.region_id = sub_region_list.region_id
+
+LEFT JOIN (
+    SELECT
+        rc.region_id,
+        GROUP_CONCAT(rc.cross_id ORDER BY rc.cross_id SEPARATOR ',') as cross_ids,
+        COUNT(*) as cross_count
+    FROM region_cross rc
+    GROUP BY rc.region_id
+) cross_list ON rp.region_id = cross_list.region_id;
+
+-- 3. 线路参数完整信息视图 (RouteParam)
+CREATE VIEW v_route_param_complete AS
+SELECT
+    rp.route_id,
+    rp.route_name,
+    rp.type as route_type,
+    rp.created_time,
+    rp.updated_time,
+
+    route_cross_list.route_cross_data,
+
+    CASE
+        WHEN sub_region_list.sub_region_ids IS NOT NULL AND sub_region_list.sub_region_ids != ''
+        THEN sub_region_list.sub_region_ids
+        ELSE NULL
+    END as sub_region_id_list,
+
+    COALESCE(route_cross_list.cross_count, 0) as cross_count,
+    COALESCE(sub_region_list.sub_region_count, 0) as sub_region_count
+
+FROM route_param rp
+
+LEFT JOIN (
+    SELECT
+        rc.route_id,
+        CONCAT('[', GROUP_CONCAT(
+            CONCAT('{"CrossID":"', rc.cross_id, '","Distance":', rc.distance, ',"OrderSeq":', rc.order_seq, '}')
+            ORDER BY rc.order_seq SEPARATOR ','
+        ), ']') as route_cross_data,
+        COUNT(*) as cross_count
+    FROM route_cross rc
+    GROUP BY rc.route_id
+) route_cross_list ON rp.route_id = route_cross_list.route_id
+
+LEFT JOIN (
+    SELECT
+        rsr.route_id,
+        GROUP_CONCAT(rsr.sub_region_id ORDER BY rsr.sub_region_id SEPARATOR ',') as sub_region_ids,
+        COUNT(*) as sub_region_count
+    FROM route_sub_region rsr
+    GROUP BY rsr.route_id
+    ) sub_region_list ON rp.route_id = sub_region_list.route_id;
+
+-- 4. 子区参数完整信息视图 (SubRegionParam)
+CREATE VIEW v_sub_region_param_complete AS
+SELECT
+    srp.sub_region_id,
+    srp.sub_region_name,
+    srp.created_time,
+    srp.updated_time,
+
+    CASE
+        WHEN cross_list.cross_ids IS NOT NULL AND cross_list.cross_ids != ''
+        THEN cross_list.cross_ids
+        ELSE NULL
+    END as cross_id_list,
+
+    CASE
+        WHEN key_cross_list.key_cross_ids IS NOT NULL AND key_cross_list.key_cross_ids != ''
+        THEN key_cross_list.key_cross_ids
+        ELSE NULL
+    END as key_cross_id_list,
+
+    COALESCE(cross_list.cross_count, 0) as cross_count,
+    COALESCE(key_cross_list.key_cross_count, 0) as key_cross_count
+
+FROM sub_region_param srp
+
+LEFT JOIN (
+    SELECT
+        src.sub_region_id,
+        GROUP_CONCAT(src.cross_id ORDER BY src.cross_id SEPARATOR ',') as cross_ids,
+        COUNT(*) as cross_count
+    FROM sub_region_cross src
+    GROUP BY src.sub_region_id
+) cross_list ON srp.sub_region_id = cross_list.sub_region_id
+
+LEFT JOIN (
+    SELECT
+        src.sub_region_id,
+        GROUP_CONCAT(src.cross_id ORDER BY src.cross_id SEPARATOR ',') as key_cross_ids,
+        COUNT(*) as key_cross_count
+    FROM sub_region_cross src
+    WHERE src.is_key_cross = 1
+    GROUP BY src.sub_region_id
+) key_cross_list ON srp.sub_region_id = key_cross_list.sub_region_id;
+
+-- 5. 信号机参数完整信息视图 (SignalController)
+CREATE VIEW v_signal_controller_complete AS
+SELECT
+    sc.signal_controller_id,
     sc.supplier,
-    sc.device_type,
-    sc.device_status,
-    sc.connection_status,
-    sc.last_online,
-    scs.operation_state,
-    scs.control_mode,
-    scs.current_plan_id,
-    scs.fault_code,
-    scs.fault_description,
-    scs.created_at as status_update_time
-FROM gat_signal_controller sc
-         LEFT JOIN gat_signal_controller_state scs ON sc.controller_id = scs.controller_id
-    AND scs.id = (SELECT MAX(id) FROM gat_signal_controller_state WHERE controller_id = sc.controller_id);
+    sc.type,
+    sc.id_code,
+    sc.comm_mode,
+    sc.ip,
+    sc.sub_mask,
+    sc.gateway,
+    sc.port,
+    sc.has_door_status,
+    sc.longitude,
+    sc.latitude,
+    sc.created_time,
+    sc.updated_time,
 
--- 告警统计视图
-CREATE OR REPLACE VIEW v_alarm_statistics AS
+    CASE
+        WHEN cross_list.cross_ids IS NOT NULL AND cross_list.cross_ids != ''
+        THEN cross_list.cross_ids
+        ELSE NULL
+    END as cross_id_list,
+
+    cross_list.main_cross_id,
+    cross_list.main_cross_name,
+
+    COALESCE(cross_list.cross_count, 0) as cross_count
+
+FROM signal_controller sc
+
+LEFT JOIN (
+    SELECT
+        scc.signal_controller_id,
+        GROUP_CONCAT(scc.cross_id ORDER BY scc.is_main DESC, scc.cross_id SEPARATOR ',') as cross_ids,
+        COUNT(*) as cross_count,
+        MAX(CASE WHEN scc.is_main = 1 THEN scc.cross_id END) as main_cross_id,
+        MAX(CASE WHEN scc.is_main = 1 THEN cp.cross_name END) as main_cross_name
+    FROM signal_controller_cross scc
+    LEFT JOIN cross_param cp ON scc.cross_id = cp.cross_id AND scc.is_main = 1
+    GROUP BY scc.signal_controller_id
+) cross_list ON sc.signal_controller_id = cross_list.signal_controller_id;
+
+-- 6. 路口参数完整信息视图 (CrossParam)
+CREATE VIEW v_cross_param_complete AS
 SELECT
-    DATE(alarm_time) as alarm_date,
-    alarm_level,
-    alarm_type,
-    COUNT(*) as alarm_count,
-    SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as resolved_count,
-    SUM(CASE WHEN status IN (0,1) THEN 1 ELSE 0 END) as pending_count
-FROM gat_alarm_record
-WHERE alarm_time >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-GROUP BY DATE(alarm_time), alarm_level, alarm_type;
+    cp.cross_id,
+    cp.cross_name,
+    cp.feature,
+    cp.grade,
+    cp.green_conflict_matrix,
+    cp.longitude,
+    cp.latitude,
+    cp.altitude,
+    cp.created_time,
+    cp.updated_time,
 
--- 同步任务执行统计视图
-CREATE OR REPLACE VIEW v_sync_task_statistics AS
+    detector_list.detector_no_list,
+    lane_list.lane_no_list,
+    pedestrian_list.pedestrian_no_list,
+    lamp_group_list.lamp_group_no_list,
+    signal_group_list.signal_group_no_list,
+    stage_list.stage_no_list,
+    plan_list.plan_no_list,
+    day_plan_list.day_plan_no_list,
+    schedule_list.schedule_no_list,
+
+    COALESCE(detector_list.detector_count, 0) as detector_count,
+    COALESCE(lane_list.lane_count, 0) as lane_count,
+    COALESCE(pedestrian_list.pedestrian_count, 0) as pedestrian_count,
+    COALESCE(lamp_group_list.lamp_group_count, 0) as lamp_group_count,
+    COALESCE(signal_group_list.signal_group_count, 0) as signal_group_count,
+    COALESCE(stage_list.stage_count, 0) as stage_count,
+    COALESCE(plan_list.plan_count, 0) as plan_count,
+    COALESCE(day_plan_list.day_plan_count, 0) as day_plan_count,
+    COALESCE(schedule_list.schedule_count, 0) as schedule_count
+
+FROM cross_param cp
+
+LEFT JOIN (
+    SELECT
+        cross_id,
+        GROUP_CONCAT(detector_no ORDER BY detector_no SEPARATOR ',') as detector_no_list,
+        COUNT(*) as detector_count
+    FROM detector_param
+    GROUP BY cross_id
+) detector_list ON cp.cross_id = detector_list.cross_id
+
+LEFT JOIN (
+    SELECT
+        cross_id,
+        GROUP_CONCAT(lane_no ORDER BY lane_no SEPARATOR ',') as lane_no_list,
+        COUNT(*) as lane_count
+    FROM lane_param
+    GROUP BY cross_id
+) lane_list ON cp.cross_id = lane_list.cross_id
+
+LEFT JOIN (
+    SELECT
+        cross_id,
+        GROUP_CONCAT(pedestrian_no ORDER BY pedestrian_no SEPARATOR ',') as pedestrian_no_list,
+        COUNT(*) as pedestrian_count
+    FROM pedestrian_param
+    GROUP BY cross_id
+) pedestrian_list ON cp.cross_id = pedestrian_list.cross_id
+
+LEFT JOIN (
+    SELECT
+        cross_id,
+        GROUP_CONCAT(lamp_group_no ORDER BY lamp_group_no SEPARATOR ',') as lamp_group_no_list,
+        COUNT(*) as lamp_group_count
+    FROM lamp_group_param
+    GROUP BY cross_id
+) lamp_group_list ON cp.cross_id = lamp_group_list.cross_id
+
+LEFT JOIN (
+    SELECT
+        cross_id,
+        GROUP_CONCAT(signal_group_no ORDER BY signal_group_no SEPARATOR ',') as signal_group_no_list,
+        COUNT(*) as signal_group_count
+    FROM signal_group_param
+    GROUP BY cross_id
+) signal_group_list ON cp.cross_id = signal_group_list.cross_id
+
+LEFT JOIN (
+    SELECT
+        cross_id,
+        GROUP_CONCAT(stage_no ORDER BY stage_no SEPARATOR ',') as stage_no_list,
+        COUNT(*) as stage_count
+    FROM stage_param
+    GROUP BY cross_id
+) stage_list ON cp.cross_id = stage_list.cross_id
+
+LEFT JOIN (
+    SELECT
+        cross_id,
+        GROUP_CONCAT(plan_no ORDER BY plan_no SEPARATOR ',') as plan_no_list,
+        COUNT(*) as plan_count
+    FROM plan_param
+    GROUP BY cross_id
+) plan_list ON cp.cross_id = plan_list.cross_id
+
+LEFT JOIN (
+    SELECT
+        cross_id,
+        GROUP_CONCAT(day_plan_no ORDER BY day_plan_no SEPARATOR ',') as day_plan_no_list,
+        COUNT(*) as day_plan_count
+    FROM day_plan_param
+    GROUP BY cross_id
+) day_plan_list ON cp.cross_id = day_plan_list.cross_id
+
+LEFT JOIN (
+    SELECT
+        cross_id,
+        GROUP_CONCAT(schedule_no ORDER BY schedule_no SEPARATOR ',') as schedule_no_list,
+        COUNT(*) as schedule_count
+    FROM schedule_param
+    GROUP BY cross_id
+) schedule_list ON cp.cross_id = schedule_list.cross_id;
+
+-- ================================
+-- 系统管理视图
+-- ================================
+
+-- 7. 系统概览视图
+CREATE VIEW v_system_overview AS
 SELECT
-    controller_id,
-    task_type,
-    COUNT(*) as total_tasks,
-    SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as success_count,
-    SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as failed_count,
-    AVG(CASE WHEN status = 2 AND last_execute_time IS NOT NULL
-                 THEN TIMESTAMPDIFF(SECOND, created_at, last_execute_time) END) as avg_duration_seconds
-FROM gat_sync_task
-GROUP BY controller_id, task_type;
+    si.system_id,
+    si.sys_name,
+    si.sys_version,
+    si.supplier,
+    si.is_active,
+    si.description,
 
--- ============================================================================
--- 15. 创建存储过程
--- ============================================================================
+    -- 系统当前状态
+    latest_sys_state.sys_status,
+    latest_sys_state.last_status_time,
 
-DELIMITER $
+    COALESCE(stats.cross_count, 0) as total_crosses,
+    COALESCE(stats.sub_region_count, 0) as total_sub_regions,
+    COALESCE(stats.route_count, 0) as total_routes,
+    COALESCE(stats.region_count, 0) as total_regions,
+    COALESCE(stats.controller_count, 0) as total_controllers,
 
--- 清理过期数据的存储过程
-CREATE PROCEDURE CleanExpiredData()
+    COALESCE(active_stats.active_crosses, 0) as active_crosses,
+    COALESCE(active_stats.active_controllers, 0) as active_controllers,
+
+    si.created_time,
+    si.updated_time
+
+FROM sys_info si
+
+-- 系统最新状态
+LEFT JOIN (
+    SELECT
+        ss.system_id,
+        ss.value as sys_status,
+        ss.time as last_status_time,
+        ROW_NUMBER() OVER (PARTITION BY ss.system_id ORDER BY ss.time DESC) as rn
+    FROM sys_state ss
+) latest_sys_state ON si.system_id = latest_sys_state.system_id AND latest_sys_state.rn = 1
+
+LEFT JOIN (
+    SELECT
+        system_id,
+        SUM(cross_count) as cross_count,
+        SUM(sub_region_count) as sub_region_count,
+        SUM(route_count) as route_count,
+        SUM(region_count) as region_count,
+        SUM(controller_count) as controller_count
+    FROM (
+        SELECT system_id, COUNT(*) as cross_count, 0 as sub_region_count, 0 as route_count, 0 as region_count, 0 as controller_count
+        FROM sys_cross_relation WHERE is_active = 1 GROUP BY system_id
+        UNION ALL
+        SELECT system_id, 0, COUNT(*), 0, 0, 0 FROM sys_sub_region_relation WHERE is_active = 1 GROUP BY system_id
+        UNION ALL
+        SELECT system_id, 0, 0, COUNT(*), 0, 0 FROM sys_route_relation WHERE is_active = 1 GROUP BY system_id
+        UNION ALL
+        SELECT system_id, 0, 0, 0, COUNT(*), 0 FROM sys_region_relation WHERE is_active = 1 GROUP BY system_id
+        UNION ALL
+        SELECT system_id, 0, 0, 0, 0, COUNT(*) FROM sys_signal_controller_relation WHERE is_active = 1 GROUP BY system_id
+    ) combined_stats
+    GROUP BY system_id
+) stats ON si.system_id = stats.system_id
+
+LEFT JOIN (
+    SELECT
+        scr.system_id,
+        COUNT(DISTINCT CASE WHEN cs.created_time >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN scr.cross_id END) as active_crosses,
+        COUNT(DISTINCT CASE WHEN sce.occur_time >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN sscr.signal_controller_id END) as active_controllers
+    FROM sys_cross_relation scr
+    LEFT JOIN cross_state cs ON scr.cross_id = cs.cross_id
+    LEFT JOIN sys_signal_controller_relation sscr ON scr.system_id = sscr.system_id
+    LEFT JOIN signal_controller_error sce ON sscr.signal_controller_id = sce.signal_controller_id
+    WHERE scr.is_active = 1
+    GROUP BY scr.system_id
+) active_stats ON si.system_id = active_stats.system_id;
+
+-- 8. 路口归属查询视图
+CREATE VIEW v_cross_system_mapping AS
+SELECT
+    cp.cross_id,
+    cp.cross_name,
+    scr.system_id,
+    si.sys_name,
+    scr.is_primary,
+    scr.priority,
+    scr.start_time,
+    scr.end_time,
+    scr.is_active,
+    scr.remark,
+
+    CASE
+        WHEN scr.is_active = 0 THEN '已停用'
+        WHEN scr.end_time IS NOT NULL AND scr.end_time <= NOW() THEN '已过期'
+        ELSE '有效'
+    END as status_desc
+
+FROM cross_param cp
+LEFT JOIN sys_cross_relation scr ON cp.cross_id = scr.cross_id
+LEFT JOIN sys_info si ON scr.system_id = si.system_id
+ORDER BY cp.cross_id, scr.priority;
+
+-- ================================
+-- 数据字典初始化
+-- ================================
+
+-- 路口形状字典
+INSERT INTO data_dictionary (dict_type, dict_code, dict_name, dict_value, sort_order) VALUES
+('cross_feature', '10', '行人过街', '行人过街', 1),
+('cross_feature', '12', '2次行人过街', '2次行人过街', 2),
+('cross_feature', '23', 'T形、Y形', 'T形、Y形', 3),
+('cross_feature', '24', '十字形', '十字形', 4),
+('cross_feature', '35', '五岔路口', '五岔路口', 5),
+('cross_feature', '36', '六岔路口', '六岔路口', 6),
+('cross_feature', '39', '多岔路口', '多岔路口', 7),
+('cross_feature', '40', '环形交叉口(环岛)', '环形交叉口(环岛)', 8),
+('cross_feature', '50', '匝道', '匝道', 9),
+('cross_feature', '51', '匝道-入口', '匝道-入口', 10),
+('cross_feature', '52', '匝道-出口', '匝道-出口', 11),
+('cross_feature', '61', '快速路主路路段(交汇区)', '快速路主路路段(交汇区)', 12),
+('cross_feature', '90', '其他', '其他', 99);
+
+-- 路口等级字典
+INSERT INTO data_dictionary (dict_type, dict_code, dict_name, dict_value, sort_order) VALUES
+('cross_grade', '11', '一级', '主干路与主干路相交交叉口', 1),
+('cross_grade', '12', '二级', '主干路与次干路相交交叉口', 2),
+('cross_grade', '13', '三级', '主干路与支路相交交叉口', 3),
+('cross_grade', '21', '四级', '次干路与次干路相交交叉口', 4),
+('cross_grade', '22', '五级', '次干路与支路相交交叉口', 5),
+('cross_grade', '31', '六级', '支路与支路相交交叉口', 6),
+('cross_grade', '99', '其他', '其他', 99);
+
+-- 方向字典
+INSERT INTO data_dictionary (dict_type, dict_code, dict_name, dict_value, sort_order) VALUES
+('direction', '1', '北', '北', 1),
+('direction', '2', '东北', '东北', 2),
+('direction', '3', '东', '东', 3),
+('direction', '4', '东南', '东南', 4),
+('direction', '5', '南', '南', 5),
+('direction', '6', '西南', '西南', 6),
+('direction', '7', '西', '西', 7),
+('direction', '8', '西北', '西北', 8),
+('direction', '9', '其他', '其他', 99);
+
+-- 控制方式字典
+INSERT INTO data_dictionary (dict_type, dict_code, dict_name, dict_value, sort_order) VALUES
+('ctrl_mode', '00', '撤销或恢复自主', '撤销或恢复自主', 1),
+('ctrl_mode', '01', '本地手动控制', '本地手动控制', 2),
+('ctrl_mode', '11', '特殊控制-全部关灯', '特殊控制-全部关灯', 3),
+('ctrl_mode', '12', '特殊控制-全红', '特殊控制-全红', 4),
+('ctrl_mode', '13', '特殊控制-全部黄闪', '特殊控制-全部黄闪', 5),
+('ctrl_mode', '21', '单点多时段定时控制', '单点多时段定时控制', 6),
+('ctrl_mode', '22', '单点感应控制', '单点感应控制', 7),
+('ctrl_mode', '23', '单点自适应控制', '单点自适应控制', 8),
+('ctrl_mode', '31', '线协调定时控制', '线协调定时控制', 9),
+('ctrl_mode', '32', '线协调感应控制', '线协调感应控制', 10),
+('ctrl_mode', '33', '线协调自适应控制', '线协调自适应控制', 11),
+('ctrl_mode', '41', '区域协调控制', '区域协调控制', 12),
+('ctrl_mode', '51', '干预控制-手动控制', '干预控制-手动控制', 13),
+('ctrl_mode', '52', '干预控制-锁定阶段', '干预控制-锁定阶段', 14),
+('ctrl_mode', '53', '干预控制-指定方案', '干预控制-指定方案', 15);
+
+-- 线路类型字典
+INSERT INTO data_dictionary (dict_type, dict_code, dict_name, dict_value, sort_order) VALUES
+('route_type', '1', '协调干线', '协调干线', 1),
+('route_type', '2', '公交优先线路', '公交优先线路', 2),
+('route_type', '3', '特勤线路', '特勤线路', 3),
+('route_type', '4', '有轨电车线路', '有轨电车线路', 4),
+('route_type', '5', '快速路(沿线匝道路口)', '快速路(沿线匝道路口)', 5),
+('route_type', '9', '其他', '其他', 99);
+
+-- 检测器类型字典
+INSERT INTO data_dictionary (dict_type, dict_code, dict_name, dict_value, sort_order) VALUES
+('detector_type', '1', '线圈', '线圈', 1),
+('detector_type', '2', '视频', '视频', 2),
+('detector_type', '3', '地磁', '地磁', 3),
+('detector_type', '4', '微波', '微波', 4),
+('detector_type', '5', '汽车电子标识(RFID)', '汽车电子标识(RFID)', 5),
+('detector_type', '6', '雷视一体', '雷视一体', 6),
+('detector_type', '9', '其他', '其他', 99);
+
+-- 车道转向属性字典
+INSERT INTO data_dictionary (dict_type, dict_code, dict_name, dict_value, sort_order) VALUES
+('lane_movement', '11', '直行', '直行', 1),
+('lane_movement', '12', '左转', '左转', 2),
+('lane_movement', '13', '右转', '右转', 3),
+('lane_movement', '21', '直左混行', '直左混行', 4),
+('lane_movement', '22', '直右混行', '直右混行', 5),
+('lane_movement', '23', '左右混行', '左右混行', 6),
+('lane_movement', '24', '直左右混行', '直左右混行', 7),
+('lane_movement', '31', '掉头', '掉头', 8),
+('lane_movement', '32', '掉头加左转', '掉头加左转', 9),
+('lane_movement', '33', '掉头加直行', '掉头加直行', 10),
+('lane_movement', '34', '掉头加右转', '掉头加右转', 11),
+('lane_movement', '99', '其他', '其他', 99);
+
+-- 信号机故障类型字典
+INSERT INTO data_dictionary (dict_type, dict_code, dict_name, dict_value, sort_order) VALUES
+('error_type', '1', '灯输出故障', '灯输出故障', 1),
+('error_type', '2', '电源故障', '电源故障', 2),
+('error_type', '3', '时钟故障', '时钟故障', 3),
+('error_type', '4', '运行故障', '运行故障', 4),
+('error_type', '5', '方案错误', '方案错误', 5),
+('error_type', '9', '其他错误', '其他错误', 99);
+
+-- ================================
+-- 存储过程
+-- ================================
+
+DELIMITER //
+
+-- 获取路口当前信号组状态的存储过程
+CREATE PROCEDURE GetCrossCurrentSignalStatus(IN p_cross_id CHAR(14))
 BEGIN
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    SELECT
+        csgs.cross_id,
+        csgs.signal_group_no,
+        csgs.lamp_status,
+        csgs.remain_time,
+        csgs.lamp_status_time,
+        sgp.name AS signal_group_name
+    FROM cross_signal_group_status csgs
+    JOIN signal_group_param sgp ON csgs.cross_id = sgp.cross_id
+        AND csgs.signal_group_no = sgp.signal_group_no
+    WHERE csgs.cross_id = p_cross_id
+        AND csgs.lamp_status_time = (
+            SELECT MAX(lamp_status_time)
+            FROM cross_signal_group_status
+            WHERE cross_id = p_cross_id
+        )
+    ORDER BY csgs.signal_group_no;
+END //
+
+-- 获取路口指定时间段交通流数据的存储过程
+CREATE PROCEDURE GetCrossTrafficDataByPeriod(
+    IN p_cross_id CHAR(14),
+    IN p_start_time TIMESTAMP,
+    IN p_end_time TIMESTAMP
+)
 BEGIN
-ROLLBACK;
-RESIGNAL;
-END;
+    SELECT
+        ctd.cross_id,
+        ctd.end_time,
+        ctd.interval_seconds,
+        ctd.lane_no,
+        lp.direction,
+        lp.movement,
+        ctd.volume,
+        ctd.speed,
+        ctd.saturation,
+        ctd.occupancy,
+        ctd.queue_length,
+        ctd.max_queue_length
+    FROM cross_traffic_data ctd
+    JOIN lane_param lp ON ctd.cross_id = lp.cross_id AND ctd.lane_no = lp.lane_no
+    WHERE ctd.cross_id = p_cross_id
+        AND ctd.end_time BETWEEN p_start_time AND p_end_time
+    ORDER BY ctd.end_time, ctd.lane_no;
+END //
 
-START TRANSACTION;
-
--- 清理过期会话
-DELETE FROM gat_session WHERE expire_time < NOW();
-
--- 清理90天前的检测器数据
-DELETE FROM gat_detector_data WHERE created_at < DATE_SUB(NOW(), INTERVAL 90 DAY);
-
--- 清理90天前的操作日志
-DELETE FROM gat_operation_log WHERE operation_time < DATE_SUB(NOW(), INTERVAL 90 DAY);
-
--- 清理已处理的告警记录（保留30天）
-DELETE FROM gat_alarm_record
-WHERE status = 2 AND resolved_time < DATE_SUB(NOW(), INTERVAL 30 DAY);
-
--- 清理成功的同步日志（保留7天）
-DELETE FROM gat_sync_log
-WHERE result = 1 AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY);
-
-COMMIT;
-END$
-
--- 获取设备状态统计的存储过程
-CREATE PROCEDURE GetDeviceStatistics()
+-- 插入或更新系统状态的存储过程
+CREATE PROCEDURE UpsertSystemState(
+    IN p_system_id VARCHAR(20),
+    IN p_value ENUM('Online', 'Offline', 'Error'),
+    IN p_time TIMESTAMP
+)
 BEGIN
-SELECT
-    'total' as category,
-    COUNT(*) as count
-FROM gat_signal_controller
+    INSERT INTO sys_state (system_id, value, time)
+    VALUES (p_system_id, p_value, p_time);
+END //
 
-UNION ALL
+-- 清理历史数据的存储过程（保留最近3个月数据）
+CREATE PROCEDURE CleanHistoryData()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE v_table_name VARCHAR(64);
+    DECLARE v_sql TEXT;
+    DECLARE cleanup_cursor CURSOR FOR
+        SELECT TABLE_NAME
+        FROM INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME IN (
+            'cross_traffic_data',
+            'stage_traffic_data',
+            'cross_signal_group_status',
+            'cross_cycle',
+            'cross_stage',
+            'signal_controller_error',
+            'control_command_log'
+        );
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
-SELECT
-    'online' as category,
-    COUNT(*) as count
-FROM gat_signal_controller
-WHERE device_status = 1
+    SET @cleanup_date = DATE_SUB(CURDATE(), INTERVAL 3 MONTH);
 
-UNION ALL
+    OPEN cleanup_cursor;
+    read_loop: LOOP
+        FETCH cleanup_cursor INTO v_table_name;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
 
-SELECT
-    'offline' as category,
-    COUNT(*) as count
-FROM gat_signal_controller
-WHERE device_status = 0
+        CASE v_table_name
+            WHEN 'cross_traffic_data' THEN
+                SET v_sql = CONCAT('DELETE FROM ', v_table_name, ' WHERE end_time < ''', @cleanup_date, '''');
+            WHEN 'stage_traffic_data' THEN
+                SET v_sql = CONCAT('DELETE FROM ', v_table_name, ' WHERE end_time < ''', @cleanup_date, '''');
+            WHEN 'cross_signal_group_status' THEN
+                SET v_sql = CONCAT('DELETE FROM ', v_table_name, ' WHERE lamp_status_time < ''', @cleanup_date, '''');
+            ELSE
+                SET v_sql = CONCAT('DELETE FROM ', v_table_name, ' WHERE created_time < ''', @cleanup_date, '''');
+        END CASE;
 
-UNION ALL
+        SET @sql = v_sql;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
 
-SELECT
-    'fault' as category,
-    COUNT(*) as count
-FROM gat_signal_controller
-WHERE device_status = 2;
-END$
+    END LOOP;
+    CLOSE cleanup_cursor;
+
+    SELECT CONCAT('清理完成，删除了 ', @cleanup_date, ' 之前的历史数据') AS result;
+END //
+
+-- 添加新分区的存储过程
+CREATE PROCEDURE AddMonthlyPartition(IN p_year INT, IN p_month INT)
+BEGIN
+    DECLARE v_partition_name VARCHAR(20);
+    DECLARE v_partition_value INT;
+    DECLARE v_sql TEXT;
+
+    SET v_partition_name = CONCAT('p', p_year, LPAD(p_month, 2, '0'));
+    SET v_partition_value = p_year * 100 + p_month + 1;
+
+    SET v_sql = CONCAT(
+        'ALTER TABLE cross_traffic_data ADD PARTITION (',
+        'PARTITION ', v_partition_name, ' VALUES LESS THAN (', v_partition_value, ')',
+        ')'
+    );
+
+    SET @sql = v_sql;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+
+    SELECT CONCAT('已添加分区: ', v_partition_name) AS result;
+END //
 
 DELIMITER ;
 
--- ============================================================================
--- 16. 性能优化索引
--- ============================================================================
+-- ================================
+-- 触发器
+-- ================================
 
--- 为经常查询的字段组合创建复合索引
-CREATE INDEX idx_controller_status_time ON gat_signal_controller_state(controller_id, operation_state, created_at);
-CREATE INDEX idx_sync_task_status_time ON gat_sync_task(status, next_execute_time);
-CREATE INDEX idx_alarm_level_time ON gat_alarm_record(alarm_level, alarm_time);
-CREATE INDEX idx_detector_time_type ON gat_detector_data(detection_time, controller_id, detector_id);
+DELIMITER //
 
--- ============================================================================
--- 数据库设计完成
--- ============================================================================
+-- 确保每个路口至少有一个主控系统的触发器
+CREATE TRIGGER tr_check_primary_system
+BEFORE UPDATE ON sys_cross_relation
+FOR EACH ROW
+BEGIN
+    IF OLD.is_primary = 1 AND NEW.is_primary = 0 THEN
+        IF (SELECT COUNT(*) FROM sys_cross_relation
+            WHERE cross_id = NEW.cross_id
+              AND is_primary = 1
+              AND is_active = 1
+              AND system_id != NEW.system_id) = 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = '路口必须至少有一个主控系统';
+        END IF;
+    END IF;
+END //
 
--- 显示创建的表
-SHOW TABLES;
+-- 自动更新路口状态的触发器
+CREATE TRIGGER tr_update_cross_state_after_ctrl_info
+AFTER INSERT ON cross_ctrl_info
+FOR EACH ROW
+BEGIN
+    INSERT INTO cross_state (cross_id, value)
+    VALUES (NEW.cross_id, 'Online');
+END //
+
+DELIMITER ;
+
+-- ================================
+-- 索引优化
+-- ================================
+
+-- 为高频查询添加复合索引
+CREATE INDEX idx_cross_traffic_data_composite ON cross_traffic_data(cross_id, end_time, lane_no);
+CREATE INDEX idx_cross_signal_status_composite ON cross_signal_group_status(cross_id, lamp_status_time, signal_group_no);
+CREATE INDEX idx_cross_ctrl_info_composite ON cross_ctrl_info(cross_id, time, control_mode);
+CREATE INDEX idx_sys_cross_active_primary ON sys_cross_relation(system_id, is_active, is_primary);
+
+-- ================================
+-- 数据库创建完成
+-- ================================
