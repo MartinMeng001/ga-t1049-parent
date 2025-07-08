@@ -1,7 +1,7 @@
 package com.traffic.gat1049.repository.interfaces;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.traffic.gat1049.repository.entity.RegionParam;
+import com.traffic.gat1049.repository.entity.RegionParamEntity;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
@@ -11,19 +11,19 @@ import java.util.List;
  * 区域参数Repository
  */
 @Repository
-public interface RegionParamRepository extends BaseMapper<RegionParam> {
+public interface RegionParamRepository extends BaseMapper<RegionParamEntity> {
 
     /**
      * 根据区域ID查询
      */
     @Select("SELECT * FROM region_param WHERE region_id = #{regionId}")
-    RegionParam findByRegionId(@Param("regionId") String regionId);
+    RegionParamEntity findByRegionId(@Param("regionId") String regionId);
 
     /**
      * 根据区域名称模糊查询
      */
     @Select("SELECT * FROM region_param WHERE region_name LIKE CONCAT('%', #{regionName}, '%') ORDER BY region_id")
-    List<RegionParam> findByRegionNameLike(@Param("regionName") String regionName);
+    List<RegionParamEntity> findByRegionNameLike(@Param("regionName") String regionName);
 
     /**
      * 查询所有区域（带完整信息视图）
@@ -39,11 +39,11 @@ public interface RegionParamRepository extends BaseMapper<RegionParam> {
             @Result(property = "createdTime", column = "created_time"),
             @Result(property = "updatedTime", column = "updated_time")
     })
-    List<RegionParam> findAllWithCompleteInfo();
+    List<RegionParamEntity> findAllWithCompleteInfo();
 
     /**
      * 根据行政区划代码前缀查询
      */
     @Select("SELECT * FROM region_param WHERE region_id LIKE CONCAT(#{prefix}, '%') ORDER BY region_id")
-    List<RegionParam> findByRegionIdPrefix(@Param("prefix") String prefix);
+    List<RegionParamEntity> findByRegionIdPrefix(@Param("prefix") String prefix);
 }

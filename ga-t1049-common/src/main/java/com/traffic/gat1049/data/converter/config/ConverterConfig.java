@@ -1,3 +1,6 @@
+// ================================================================
+// 7. 配置类
+// ================================================================
 package com.traffic.gat1049.data.converter.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +29,10 @@ public class ConverterConfig {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         // 忽略未知属性
-        mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(
+                com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+                false
+        );
 
         return mapper;
     }

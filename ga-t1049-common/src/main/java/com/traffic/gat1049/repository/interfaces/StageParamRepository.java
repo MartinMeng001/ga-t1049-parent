@@ -1,7 +1,7 @@
 package com.traffic.gat1049.repository.interfaces;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.traffic.gat1049.repository.entity.StageParam;
+import com.traffic.gat1049.repository.entity.StageParamEntity;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
@@ -11,32 +11,32 @@ import java.util.List;
  * 阶段参数Repository
  */
 @Repository
-public interface StageParamRepository extends BaseMapper<StageParam> {
+public interface StageParamRepository extends BaseMapper<StageParamEntity> {
 
     /**
      * 根据路口ID查询所有阶段
      */
     @Select("SELECT * FROM stage_param WHERE cross_id = #{crossId} ORDER BY stage_no")
-    List<StageParam> findByCrossId(@Param("crossId") String crossId);
+    List<StageParamEntity> findByCrossId(@Param("crossId") String crossId);
 
     /**
      * 根据路口ID和阶段号查询
      */
     @Select("SELECT * FROM stage_param WHERE cross_id = #{crossId} AND stage_no = #{stageNo}")
-    StageParam findByCrossIdAndStageNo(@Param("crossId") String crossId, @Param("stageNo") Integer stageNo);
+    StageParamEntity findByCrossIdAndStageNo(@Param("crossId") String crossId, @Param("stageNo") Integer stageNo);
 
     /**
      * 查询感应阶段
      */
     @Select("SELECT * FROM stage_param WHERE cross_id = #{crossId} AND attribute = 1 ORDER BY stage_no")
-    List<StageParam> findInductiveStages(@Param("crossId") String crossId);
+    List<StageParamEntity> findInductiveStages(@Param("crossId") String crossId);
 
     /**
      * 根据配时方案查询阶段（方案内唯一编号）
      */
     @Select("SELECT * FROM stage_param WHERE cross_id = #{crossId} " +
             "AND stage_no BETWEEN #{planNo} * 100 + 1 AND #{planNo} * 100 + 99 ORDER BY stage_no")
-    List<StageParam> findByPlanNo(@Param("crossId") String crossId, @Param("planNo") Integer planNo);
+    List<StageParamEntity> findByPlanNo(@Param("crossId") String crossId, @Param("planNo") Integer planNo);
 
     /**
      * 查询阶段及其信号组状态
@@ -54,5 +54,5 @@ public interface StageParamRepository extends BaseMapper<StageParam> {
             @Result(property = "createdTime", column = "created_time"),
             @Result(property = "updatedTime", column = "updated_time")
     })
-    List<StageParam> findWithSignalGroupStatus(@Param("crossId") String crossId);
+    List<StageParamEntity> findWithSignalGroupStatus(@Param("crossId") String crossId);
 }

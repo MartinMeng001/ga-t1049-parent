@@ -1,7 +1,7 @@
 package com.traffic.gat1049.repository.interfaces;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.traffic.gat1049.repository.entity.SysCrossRelation;
+import com.traffic.gat1049.repository.entity.SysCrossRelationEntity;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
@@ -12,31 +12,31 @@ import java.util.List;
  * 系统路口关联Repository
  */
 @Repository
-public interface SysCrossRelationRepository extends BaseMapper<SysCrossRelation> {
+public interface SysCrossRelationRepository extends BaseMapper<SysCrossRelationEntity> {
 
     /**
      * 查询系统的所有路口关联
      */
     @Select("SELECT * FROM sys_cross_relation WHERE system_id = #{systemId} AND is_active = 1 ORDER BY priority, cross_id")
-    List<SysCrossRelation> findBySystemId(@Param("systemId") String systemId);
+    List<SysCrossRelationEntity> findBySystemId(@Param("systemId") String systemId);
 
     /**
      * 查询路口的所有系统关联
      */
     @Select("SELECT * FROM sys_cross_relation WHERE cross_id = #{crossId} AND is_active = 1 ORDER BY priority")
-    List<SysCrossRelation> findByCrossId(@Param("crossId") String crossId);
+    List<SysCrossRelationEntity> findByCrossId(@Param("crossId") String crossId);
 
     /**
      * 查询主控系统关联
      */
     @Select("SELECT * FROM sys_cross_relation WHERE cross_id = #{crossId} AND is_primary = 1 AND is_active = 1")
-    SysCrossRelation findPrimarySystemByCrossId(@Param("crossId") String crossId);
+    SysCrossRelationEntity findPrimarySystemByCrossId(@Param("crossId") String crossId);
 
     /**
      * 查询系统的主控路口
      */
     @Select("SELECT * FROM sys_cross_relation WHERE system_id = #{systemId} AND is_primary = 1 AND is_active = 1 ORDER BY cross_id")
-    List<SysCrossRelation> findPrimaryCrossesBySystemId(@Param("systemId") String systemId);
+    List<SysCrossRelationEntity> findPrimaryCrossesBySystemId(@Param("systemId") String systemId);
 
     /**
      * 更新关联状态
