@@ -3,7 +3,7 @@ package com.traffic.gat1049.repository.interfaces;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.traffic.gat1049.repository.entity.SysInfo;
+import com.traffic.gat1049.repository.entity.SysInfoEntity;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
@@ -14,25 +14,25 @@ import java.util.List;
  * 系统信息Repository
  */
 @Repository
-public interface SysInfoRepository extends BaseMapper<SysInfo> {
+public interface SysInfoRepository extends BaseMapper<SysInfoEntity> {
 
     /**
      * 根据系统ID查询系统信息
      */
     @Select("SELECT * FROM sys_info WHERE system_id = #{systemId}")
-    SysInfo findBySystemId(@Param("systemId") String systemId);
+    SysInfoEntity findBySystemId(@Param("systemId") String systemId);
 
     /**
      * 查询所有激活的系统
      */
     @Select("SELECT * FROM sys_info WHERE is_active = 1 ORDER BY created_time DESC")
-    List<SysInfo> findAllActive();
+    List<SysInfoEntity> findAllActive();
 
     /**
      * 根据供应商查询系统
      */
     @Select("SELECT * FROM sys_info WHERE supplier = #{supplier} AND is_active = 1")
-    List<SysInfo> findBySupplier(@Param("supplier") String supplier);
+    List<SysInfoEntity> findBySupplier(@Param("supplier") String supplier);
 
     /**
      * 更新系统状态
@@ -44,5 +44,5 @@ public interface SysInfoRepository extends BaseMapper<SysInfo> {
      * 分页查询系统信息
      */
     @Select("SELECT * FROM sys_info WHERE sys_name LIKE CONCAT('%', #{keyword}, '%') OR supplier LIKE CONCAT('%', #{keyword}, '%') ORDER BY created_time DESC")
-    IPage<SysInfo> findByKeywordPaged(Page<SysInfo> page, @Param("keyword") String keyword);
+    IPage<SysInfoEntity> findByKeywordPaged(Page<SysInfoEntity> page, @Param("keyword") String keyword);
 }

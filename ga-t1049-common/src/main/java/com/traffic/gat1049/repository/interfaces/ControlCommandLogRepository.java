@@ -1,7 +1,7 @@
 package com.traffic.gat1049.repository.interfaces;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.traffic.gat1049.repository.entity.ControlCommandLog;
+import com.traffic.gat1049.repository.entity.ControlCommandLogEntity;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +12,7 @@ import java.util.List;
  * 控制命令日志Repository
  */
 @Repository
-public interface ControlCommandLogRepository extends BaseMapper<ControlCommandLog> {
+public interface ControlCommandLogRepository extends BaseMapper<ControlCommandLogEntity> {
 
     /**
      * 查询路口命令历史
@@ -20,9 +20,9 @@ public interface ControlCommandLogRepository extends BaseMapper<ControlCommandLo
     @Select("SELECT * FROM control_command_log WHERE cross_id = #{crossId} " +
             "AND execute_time BETWEEN #{startTime} AND #{endTime} " +
             "ORDER BY execute_time DESC")
-    List<ControlCommandLog> findByCrossIdAndTimeRange(@Param("crossId") String crossId,
-                                                      @Param("startTime") LocalDateTime startTime,
-                                                      @Param("endTime") LocalDateTime endTime);
+    List<ControlCommandLogEntity> findByCrossIdAndTimeRange(@Param("crossId") String crossId,
+                                                            @Param("startTime") LocalDateTime startTime,
+                                                            @Param("endTime") LocalDateTime endTime);
 
     /**
      * 查询指定命令类型的日志
@@ -30,9 +30,9 @@ public interface ControlCommandLogRepository extends BaseMapper<ControlCommandLo
     @Select("SELECT * FROM control_command_log WHERE command_type = #{commandType} " +
             "AND execute_time BETWEEN #{startTime} AND #{endTime} " +
             "ORDER BY execute_time DESC")
-    List<ControlCommandLog> findByCommandTypeAndTimeRange(@Param("commandType") String commandType,
-                                                          @Param("startTime") LocalDateTime startTime,
-                                                          @Param("endTime") LocalDateTime endTime);
+    List<ControlCommandLogEntity> findByCommandTypeAndTimeRange(@Param("commandType") String commandType,
+                                                                @Param("startTime") LocalDateTime startTime,
+                                                                @Param("endTime") LocalDateTime endTime);
 
     /**
      * 查询执行失败的命令
@@ -40,14 +40,14 @@ public interface ControlCommandLogRepository extends BaseMapper<ControlCommandLo
     @Select("SELECT * FROM control_command_log WHERE result = 'FAILED' " +
             "AND execute_time BETWEEN #{startTime} AND #{endTime} " +
             "ORDER BY execute_time DESC")
-    List<ControlCommandLog> findFailedCommands(@Param("startTime") LocalDateTime startTime,
-                                               @Param("endTime") LocalDateTime endTime);
+    List<ControlCommandLogEntity> findFailedCommands(@Param("startTime") LocalDateTime startTime,
+                                                     @Param("endTime") LocalDateTime endTime);
 
     /**
      * 查询待执行命令
      */
     @Select("SELECT * FROM control_command_log WHERE result = 'PENDING' ORDER BY execute_time")
-    List<ControlCommandLog> findPendingCommands();
+    List<ControlCommandLogEntity> findPendingCommands();
 
     /**
      * 更新命令执行结果

@@ -1,7 +1,7 @@
 package com.traffic.gat1049.repository.interfaces;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.traffic.gat1049.repository.entity.PlanParam;
+import com.traffic.gat1049.repository.entity.PlanParamEntity;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
@@ -11,34 +11,34 @@ import java.util.List;
  * 配时方案Repository
  */
 @Repository
-public interface PlanParamRepository extends BaseMapper<PlanParam> {
+public interface PlanParamRepository extends BaseMapper<PlanParamEntity> {
 
     /**
      * 根据路口ID查询所有配时方案
      */
     @Select("SELECT * FROM plan_param WHERE cross_id = #{crossId} ORDER BY plan_no")
-    List<PlanParam> findByCrossId(@Param("crossId") String crossId);
+    List<PlanParamEntity> findByCrossId(@Param("crossId") String crossId);
 
     /**
      * 根据路口ID和方案号查询
      */
     @Select("SELECT * FROM plan_param WHERE cross_id = #{crossId} AND plan_no = #{planNo}")
-    PlanParam findByCrossIdAndPlanNo(@Param("crossId") String crossId, @Param("planNo") Integer planNo);
+    PlanParamEntity findByCrossIdAndPlanNo(@Param("crossId") String crossId, @Param("planNo") Integer planNo);
 
     /**
      * 查询协调方案（有协调相位的方案）
      */
     @Select("SELECT * FROM plan_param WHERE cross_id = #{crossId} AND coord_stage_no > 0 ORDER BY plan_no")
-    List<PlanParam> findCoordinatedPlans(@Param("crossId") String crossId);
+    List<PlanParamEntity> findCoordinatedPlans(@Param("crossId") String crossId);
 
     /**
      * 根据周期长度范围查询方案
      */
     @Select("SELECT * FROM plan_param WHERE cross_id = #{crossId} " +
             "AND cycle_len BETWEEN #{minCycle} AND #{maxCycle} ORDER BY plan_no")
-    List<PlanParam> findByCycleLenRange(@Param("crossId") String crossId,
-                                        @Param("minCycle") Integer minCycle,
-                                        @Param("maxCycle") Integer maxCycle);
+    List<PlanParamEntity> findByCycleLenRange(@Param("crossId") String crossId,
+                                              @Param("minCycle") Integer minCycle,
+                                              @Param("maxCycle") Integer maxCycle);
 
     /**
      * 查询方案及其阶段配时
@@ -58,5 +58,5 @@ public interface PlanParamRepository extends BaseMapper<PlanParam> {
             @Result(property = "createdTime", column = "created_time"),
             @Result(property = "updatedTime", column = "updated_time")
     })
-    List<PlanParam> findWithStageTiming(@Param("crossId") String crossId);
+    List<PlanParamEntity> findWithStageTiming(@Param("crossId") String crossId);
 }

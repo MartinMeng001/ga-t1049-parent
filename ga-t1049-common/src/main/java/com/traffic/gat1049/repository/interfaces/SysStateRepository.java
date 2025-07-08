@@ -1,7 +1,7 @@
 package com.traffic.gat1049.repository.interfaces;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.traffic.gat1049.repository.entity.SysState;
+import com.traffic.gat1049.repository.entity.SysStateEntity;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
@@ -12,13 +12,13 @@ import java.util.List;
  * 系统状态Repository
  */
 @Repository
-public interface SysStateRepository extends BaseMapper<SysState> {
+public interface SysStateRepository extends BaseMapper<SysStateEntity> {
 
     /**
      * 获取系统最新状态
      */
     @Select("SELECT * FROM sys_state WHERE system_id = #{systemId} ORDER BY time DESC LIMIT 1")
-    SysState findLatestBySystemId(@Param("systemId") String systemId);
+    SysStateEntity findLatestBySystemId(@Param("systemId") String systemId);
 
     /**
      * 插入系统状态（使用存储过程）
@@ -33,9 +33,9 @@ public interface SysStateRepository extends BaseMapper<SysState> {
      */
     @Select("SELECT * FROM sys_state WHERE system_id = #{systemId} " +
             "AND time BETWEEN #{startTime} AND #{endTime} ORDER BY time")
-    List<SysState> findByTimeRange(@Param("systemId") String systemId,
-                                   @Param("startTime") LocalDateTime startTime,
-                                   @Param("endTime") LocalDateTime endTime);
+    List<SysStateEntity> findByTimeRange(@Param("systemId") String systemId,
+                                         @Param("startTime") LocalDateTime startTime,
+                                         @Param("endTime") LocalDateTime endTime);
 
     /**
      * 统计系统在线时长

@@ -1,3 +1,6 @@
+// ================================================================
+// 2. 抽象转换器基类
+// ================================================================
 package com.traffic.gat1049.data.converter.base;
 
 import com.traffic.gat1049.data.converter.interfaces.EntityConverter;
@@ -7,12 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.lang.reflect.ParameterizedType;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * 抽象实体转换器基类
- * 提供通用的转换逻辑和工具方法
+ * 提供通用转换逻辑和工具方法
  */
 public abstract class AbstractEntityConverter<E, P> implements EntityConverter<E, P> {
 
@@ -20,6 +25,17 @@ public abstract class AbstractEntityConverter<E, P> implements EntityConverter<E
 
     @Autowired
     protected ObjectMapper objectMapper;
+
+    private final Class<E> entityType;
+    private final Class<P> protocolType;
+
+    @SuppressWarnings("unchecked")
+    public AbstractEntityConverter() {
+        // 通过反射获取泛型类型
+        ParameterizedType superClass = (ParameterizedType) getClass().getGenericSuperclass();
+        this.entityType = (Class<E>) superClass.getActualTypeArguments()[0];
+        this.protocolType = (Class<P>) superClass.getActualTypeArguments()[1];
+    }
 
     @Override
     public List<P> toProtocolList(List<E> entities) {
@@ -43,6 +59,16 @@ public abstract class AbstractEntityConverter<E, P> implements EntityConverter<E
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Class<E> getEntityType() {
+        return entityType;
+    }
+
+    @Override
+    public Class<P> getProtocolType() {
+        return protocolType;
+    }
+
     /**
      * 安全的JSON序列化
      */
@@ -52,7 +78,7 @@ public abstract class AbstractEntityConverter<E, P> implements EntityConverter<E
         try {
             return objectMapper.writeValueAsString(obj);
         } catch (Exception e) {
-            logger.error("JSON序列化失败", e);
+            logger.error("JSON序列化失败: {}", obj, e);
             throw new DataConversionException("JSON序列化失败", e);
         }
     }
@@ -74,11 +100,47 @@ public abstract class AbstractEntityConverter<E, P> implements EntityConverter<E
     }
 
     /**
-     * 设置实体的通用字段
+     * 设置实体通用字段
      */
-    protected void setEntityCommonFields(E entity, boolean isNew) {
-        // 由于泛型擦除，这里需要在具体实现中处理
-        // 可以通过反射或接口方式实现
+    protected void setEntityAuditFields(E entity, boolean isNew) {
+        LocalDateTime now = LocalDateTime.now();
+
+        try {
+            if (isNew) {
+                // 新建时设置创建时间
+                setFieldValue(entity, "createdTime", now);
+                setFieldValue(entity, "createdAt", now);
+            }
+            // 总是更新修改时间
+            setFieldValue(entity, "updatedTime", now);
+            setFieldValue(entity, "updatedAt", now);
+        } catch (Exception e) {
+            logger.debug("设置审计字段失败，实体可能没有这些字段: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 通过反射设置字段值
+     */
+    private void setFieldValue(Object obj, String fieldName, Object value) {
+        try {
+            var field = obj.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(obj, value);
+        } catch (NoSuchFieldException e) {
+            // 字段不存在，忽略
+        } catch (Exception e) {
+            logger.debug("设置字段{}失败: {}", fieldName, e.getMessage());
+        }
+    }
+
+    /**
+     * 部分更新：将协议对象的非空字段更新到现有实体
+     * 默认实现抛出异常，子类需要重写此方法
+     */
+    @Override
+    public void updateEntity(P protocol, E entity) {
+        throw new UnsupportedOperationException("部分更新功能需要在具体转换器中实现");
     }
 
     /**

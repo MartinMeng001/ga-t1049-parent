@@ -1,7 +1,7 @@
 package com.traffic.gat1049.repository.interfaces;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.traffic.gat1049.repository.entity.CrossSignalGroupStatus;
+import com.traffic.gat1049.repository.entity.CrossSignalGroupStatusEntity;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
@@ -12,14 +12,14 @@ import java.util.List;
  * 路口信号组状态Repository
  */
 @Repository
-public interface CrossSignalGroupStatusRepository extends BaseMapper<CrossSignalGroupStatus> {
+public interface CrossSignalGroupStatusRepository extends BaseMapper<CrossSignalGroupStatusEntity> {
 
     /**
      * 查询路口当前信号状态
      */
     @Select("SELECT * FROM cross_signal_group_status WHERE cross_id = #{crossId} " +
             "ORDER BY lamp_status_time DESC, signal_group_no LIMIT #{signalGroupCount}")
-    List<CrossSignalGroupStatus> findCurrentStatus(@Param("crossId") String crossId, @Param("signalGroupCount") Integer signalGroupCount);
+    List<CrossSignalGroupStatusEntity> findCurrentStatus(@Param("crossId") String crossId, @Param("signalGroupCount") Integer signalGroupCount);
 
     /**
      * 查询信号组状态历史
@@ -28,10 +28,10 @@ public interface CrossSignalGroupStatusRepository extends BaseMapper<CrossSignal
             "AND signal_group_no = #{signalGroupNo} " +
             "AND lamp_status_time BETWEEN #{startTime} AND #{endTime} " +
             "ORDER BY lamp_status_time")
-    List<CrossSignalGroupStatus> findSignalGroupHistory(@Param("crossId") String crossId,
-                                                        @Param("signalGroupNo") Integer signalGroupNo,
-                                                        @Param("startTime") LocalDateTime startTime,
-                                                        @Param("endTime") LocalDateTime endTime);
+    List<CrossSignalGroupStatusEntity> findSignalGroupHistory(@Param("crossId") String crossId,
+                                                              @Param("signalGroupNo") Integer signalGroupNo,
+                                                              @Param("startTime") LocalDateTime startTime,
+                                                              @Param("endTime") LocalDateTime endTime);
 
     /**
      * 查询最新信号状态
@@ -39,7 +39,7 @@ public interface CrossSignalGroupStatusRepository extends BaseMapper<CrossSignal
     @Select("SELECT * FROM cross_signal_group_status WHERE cross_id = #{crossId} " +
             "AND lamp_status_time = (SELECT MAX(lamp_status_time) FROM cross_signal_group_status WHERE cross_id = #{crossId}) " +
             "ORDER BY signal_group_no")
-    List<CrossSignalGroupStatus> findLatestStatusByCrossId(@Param("crossId") String crossId);
+    List<CrossSignalGroupStatusEntity> findLatestStatusByCrossId(@Param("crossId") String crossId);
 
     /**
      * 统计信号状态持续时间
@@ -62,5 +62,5 @@ public interface CrossSignalGroupStatusRepository extends BaseMapper<CrossSignal
             "(#{status.crossId}, #{status.signalGroupNo}, #{status.lampStatus}, #{status.lampStatusTime})" +
             "</foreach>" +
             "</script>")
-    int batchInsert(@Param("statusList") List<CrossSignalGroupStatus> statusList);
+    int batchInsert(@Param("statusList") List<CrossSignalGroupStatusEntity> statusList);
 }

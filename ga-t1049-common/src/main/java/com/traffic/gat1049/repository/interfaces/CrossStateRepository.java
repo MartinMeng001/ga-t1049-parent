@@ -1,24 +1,23 @@
 package com.traffic.gat1049.repository.interfaces;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.traffic.gat1049.repository.entity.CrossState;
+import com.traffic.gat1049.repository.entity.CrossStateEntity;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * 路口状态Repository
  */
 @Repository
-public interface CrossStateRepository extends BaseMapper<CrossState> {
+public interface CrossStateRepository extends BaseMapper<CrossStateEntity> {
 
     /**
      * 获取路口最新状态
      */
     @Select("SELECT * FROM cross_state WHERE cross_id = #{crossId} ORDER BY created_time DESC LIMIT 1")
-    CrossState findLatestByCrossId(@Param("crossId") String crossId);
+    CrossStateEntity findLatestByCrossId(@Param("crossId") String crossId);
 
     /**
      * 查询所有在线路口
@@ -26,7 +25,7 @@ public interface CrossStateRepository extends BaseMapper<CrossState> {
     @Select("SELECT DISTINCT cs1.* FROM cross_state cs1 " +
             "WHERE cs1.value = 'Online' " +
             "AND cs1.created_time = (SELECT MAX(cs2.created_time) FROM cross_state cs2 WHERE cs2.cross_id = cs1.cross_id)")
-    List<CrossState> findAllOnline();
+    List<CrossStateEntity> findAllOnline();
 
     /**
      * 查询离线路口
@@ -34,7 +33,7 @@ public interface CrossStateRepository extends BaseMapper<CrossState> {
     @Select("SELECT DISTINCT cs1.* FROM cross_state cs1 " +
             "WHERE cs1.value IN ('Offline', 'Error') " +
             "AND cs1.created_time = (SELECT MAX(cs2.created_time) FROM cross_state cs2 WHERE cs2.cross_id = cs1.cross_id)")
-    List<CrossState> findAllOffline();
+    List<CrossStateEntity> findAllOffline();
 
     /**
      * 根据区域查询路口状态
@@ -44,7 +43,7 @@ public interface CrossStateRepository extends BaseMapper<CrossState> {
             "WHERE rc.region_id = #{regionId} " +
             "AND cs.created_time = (SELECT MAX(cs2.created_time) FROM cross_state cs2 WHERE cs2.cross_id = cs.cross_id) " +
             "ORDER BY cs.cross_id")
-    List<CrossState> findLatestByRegionId(@Param("regionId") String regionId);
+    List<CrossStateEntity> findLatestByRegionId(@Param("regionId") String regionId);
 
     /**
      * 统计各状态路口数量
