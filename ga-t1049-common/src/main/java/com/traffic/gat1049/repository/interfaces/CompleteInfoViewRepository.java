@@ -111,4 +111,92 @@ public interface CompleteInfoViewRepository {
             "WHERE vpc.region_id = #{regionId} " +
             "GROUP BY vpc.region_id")
     Map<String, Object> getCrossStatusStatisticsByRegion(@Param("regionId") String regionId);
+
+    // ==================== 路口相关视图方法 ====================
+
+    /**
+     * 查询所有路口概览信息（使用现有视图或简化查询）
+     */
+    @Select("SELECT * FROM v_cross_param_complete ORDER BY cross_id")
+    List<Map<String, Object>> findAllCrossOverview();
+
+    /**
+     * 查询指定路口概览信息（使用现有视图）
+     */
+    @Select("SELECT * FROM v_cross_param_complete WHERE cross_id = #{crossId}")
+    Map<String, Object> findCrossOverviewById(@Param("crossId") String crossId);
+
+    /**
+     * 根据条件查询路口概览信息
+     * 支持的条件：cross_state, signal_controller_id 等
+     */
+    @Select("<script>" +
+            "SELECT " +
+            "cp.cross_id, cp.cross_name, cp.longitude, cp.latitude, " +
+            "cs.value as cross_state, cs.created_time as last_update_time, " +
+            "sgc.signal_controller_id, " +
+            "COUNT(DISTINCT lp.lane_no) as lane_count, " +
+            "COUNT(DISTINCT lgp.lamp_group_no) as signal_group_count " +
+            "FROM cross_param cp " +
+            "LEFT JOIN cross_state cs ON cp.cross_id = cs.cross_id " +
+            "LEFT JOIN signal_controller_cross sgc ON cp.cross_id = sgc.cross_id AND sgc.is_main = 1 " +
+            "LEFT JOIN lane_param lp ON cp.cross_id = lp.cross_id " +
+            "LEFT JOIN lamp_group_param lgp ON cp.cross_id = lgp.cross_id " +
+            "<where>" +
+            "<if test='cross_state != null and cross_state != \"\"'>" +
+            "AND cs.value = #{cross_state}" +
+            "</if>" +
+            "<if test='signal_controller_id != null and signal_controller_id != \"\"'>" +
+            "AND sgc.signal_controller_id = #{signal_controller_id}" +
+            "</if>" +
+            "<if test='cross_name != null and cross_name != \"\"'>" +
+            "AND cp.cross_name LIKE CONCAT('%', #{cross_name}, '%')" +
+            "</if>" +
+            "</where>" +
+            "GROUP BY cp.cross_id, cs.value, cs.created_time, sgc.signal_controller_id " +
+            "ORDER BY cp.cross_id" +
+            "</script>")
+    List<Map<String, Object>> findCrossOverviewByCondition(Map<String, Object> conditions);
+
+    // ==================== 统计查询方法 ====================
+
+    /**
+     * 查询在线路口数量
+     */
+    @Select("SELECT COUNT(DISTINCT cp.cross_id) " +
+            "FROM cross_param cp " +
+            "LEFT JOIN cross_state cs ON cp.cross_id = cs.cross_id " +
+            "WHERE cs.value = 'Online'")
+    Integer countOnlineCrosses();
+
+    /**
+     * 查询离线路口数量
+     */
+    @Select("SELECT COUNT(DISTINCT cp.cross_id) " +
+            "FROM cross_param cp " +
+            "LEFT JOIN cross_state cs ON cp.cross_id = cs.cross_id " +
+            "WHERE cs.value = 'Offline' OR cs.value IS NULL")
+    Integer countOfflineCrosses();
+
+    /**
+     * 查询路口统计信息
+     */
+    @Select("SELECT " +
+            "COUNT(*) as total_crosses, " +
+            "COUNT(CASE WHEN cs.value = 'Online' THEN 1 END) as online_crosses, " +
+            "COUNT(CASE WHEN cs.value = 'Offline' THEN 1 END) as offline_crosses, " +
+            "COUNT(CASE WHEN cs.value = 'Error' THEN 1 END) as error_crosses, " +
+            "AVG(lane_counts.lane_count) as avg_lane_count, " +
+            "AVG(signal_counts.signal_group_count) as avg_signal_group_count " +
+            "FROM cross_param cp " +
+            "LEFT JOIN cross_state cs ON cp.cross_id = cs.cross_id " +
+            "LEFT JOIN (" +
+            "  SELECT cross_id, COUNT(*) as lane_count " +
+            "  FROM lane_param GROUP BY cross_id" +
+            ") lane_counts ON cp.cross_id = lane_counts.cross_id " +
+            "LEFT JOIN (" +
+            "  SELECT cross_id, COUNT(*) as signal_group_count " +
+            "  FROM lamp_group_param GROUP BY cross_id" +
+            ") signal_counts ON cp.cross_id = signal_counts.cross_id")
+    Map<String, Object> getCrossStatistics();
 }
