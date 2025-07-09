@@ -1,0 +1,123 @@
+package com.traffic.gat1049.data.converter.impl;
+
+import com.traffic.gat1049.data.converter.base.AbstractEntityConverter;
+import com.traffic.gat1049.exception.DataConversionException;
+import com.traffic.gat1049.protocol.model.intersection.LampGroupParam;
+import com.traffic.gat1049.repository.entity.LampGroupParamEntity;
+import com.traffic.gat1049.model.enums.Direction;
+import com.traffic.gat1049.model.enums.LampGroupType;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
+/**
+ * 信号灯组参数转换器实现
+ * 演示枚举类型转换模式
+ */
+@Component
+public class LampGroupParamConverter extends AbstractEntityConverter<LampGroupParamEntity, LampGroupParam> {
+
+    @Override
+    public LampGroupParam toProtocol(LampGroupParamEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        try {
+            LampGroupParam protocol = new LampGroupParam();
+
+            // 基础字段映射
+            protocol.setCrossId(entity.getCrossId());
+            protocol.setLampGroupNo(entity.getLampGroupNo());
+
+            // 枚举类型转换
+            if (entity.getDirectionNo() != null) {
+                protocol.setDirection(Direction.fromCode(entity.getDirectionNo().toString()));
+            }
+
+            if (entity.getLampGroupType() != null) {
+                protocol.setType(LampGroupType.fromCode(entity.getLampGroupType().toString()));
+            }
+
+            validateConversion(entity, protocol);
+
+            logger.debug("信号灯组参数实体转协议成功: crossId={}, lampGroupNo={}",
+                    entity.getCrossId(), entity.getLampGroupNo());
+            return protocol;
+
+        } catch (Exception e) {
+            logger.error("信号灯组参数转换失败: crossId={}, lampGroupNo={}",
+                    entity.getCrossId(), entity.getLampGroupNo(), e);
+            throw new DataConversionException("信号灯组参数转换失败", e);
+        }
+    }
+
+    @Override
+    public LampGroupParamEntity toEntity(LampGroupParam protocol) {
+        if (protocol == null) {
+            return null;
+        }
+
+        try {
+            LampGroupParamEntity entity = new LampGroupParamEntity();
+
+            // 基础字段映射
+            entity.setCrossId(protocol.getCrossId());
+            entity.setLampGroupNo(protocol.getLampGroupNo());
+
+            // 枚举类型转换
+            if (protocol.getDirection() != null) {
+                entity.setDirectionNo(Integer.parseInt(protocol.getDirection().getCode()));
+            }
+
+            if (protocol.getType() != null) {
+                entity.setLampGroupType(Integer.parseInt(protocol.getType().getCode()));
+            }
+
+            // 设置审计字段
+            setEntityAuditFields(entity, true);
+
+            validateConversion(entity, protocol);
+
+            logger.debug("信号灯组参数协议转实体成功: crossId={}, lampGroupNo={}",
+                    protocol.getCrossId(), protocol.getLampGroupNo());
+            return entity;
+
+        } catch (Exception e) {
+            logger.error("信号灯组参数转换失败: crossId={}, lampGroupNo={}",
+                    protocol.getCrossId(), protocol.getLampGroupNo(), e);
+            throw new DataConversionException("信号灯组参数转换失败", e);
+        }
+    }
+
+    @Override
+    public void updateEntity(LampGroupParam protocol, LampGroupParamEntity entity) {
+        if (protocol == null || entity == null) {
+            throw new DataConversionException("更新参数不能为null");
+        }
+
+        try {
+            // 灯组编号不可更新（业务主键）
+
+            // 更新方向
+            if (protocol.getDirection() != null) {
+                entity.setDirectionNo(Integer.parseInt(protocol.getDirection().getCode()));
+            }
+
+            // 更新类型
+            if (protocol.getType() != null) {
+                entity.setLampGroupType(Integer.parseInt(protocol.getType().getCode()));
+            }
+
+            // 更新修改时间
+            setEntityAuditFields(entity, false);
+
+            logger.debug("信号灯组参数实体更新成功: crossId={}, lampGroupNo={}",
+                    entity.getCrossId(), entity.getLampGroupNo());
+
+        } catch (Exception e) {
+            logger.error("信号灯组参数更新失败: crossId={}, lampGroupNo={}",
+                    entity.getCrossId(), entity.getLampGroupNo(), e);
+            throw new DataConversionException("信号灯组参数更新失败", e);
+        }
+    }
+}
