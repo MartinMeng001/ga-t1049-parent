@@ -26,6 +26,10 @@
         <logback.version>1.2.12</logback.version>
         <junit.version>5.9.3</junit.version>
         <mockito.version>4.11.0</mockito.version>
+        <!-- 新增数据库相关版本 -->
+        <mysql.version>8.0.33</mysql.version>
+        <mybatis-plus.version>3.5.3.1</mybatis-plus.version>
+        <druid.version>1.2.18</druid.version>
     </properties>
 
     <modules>
@@ -68,6 +72,26 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- 🔥 新增：数据库相关依赖版本管理 -->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+
+            <!-- MyBatis Plus -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+
+            <!-- Druid连接池 (可选) -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-starter</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
             <!-- 日志 -->
             <dependency>
                 <groupId>org.slf4j</groupId>

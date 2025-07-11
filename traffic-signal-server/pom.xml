@@ -25,24 +25,24 @@
         </dependency>
 
         <!-- 新增适配器支持 -->
-        <dependency>
-            <groupId>com.traffic</groupId>
-            <artifactId>adapter-common</artifactId>
-            <optional>true</optional>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.traffic</groupId>-->
+<!--            <artifactId>adapter-common</artifactId>-->
+<!--            <optional>true</optional>-->
+<!--        </dependency>-->
 
-        <!-- 可选的适配器依赖 -->
-        <dependency>
-            <groupId>com.traffic</groupId>
-            <artifactId>hisense-adapter</artifactId>
-            <optional>true</optional>
-        </dependency>
+<!--        &lt;!&ndash; 可选的适配器依赖 &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>com.traffic</groupId>-->
+<!--            <artifactId>hisense-adapter</artifactId>-->
+<!--            <optional>true</optional>-->
+<!--        </dependency>-->
 
-        <dependency>
-            <groupId>com.traffic</groupId>
-            <artifactId>ehualu-adapter</artifactId>
-            <optional>true</optional>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.traffic</groupId>-->
+<!--            <artifactId>ehualu-adapter</artifactId>-->
+<!--            <optional>true</optional>-->
+<!--        </dependency>-->
         
         <!-- Spring Boot Starters -->
         <dependency>
@@ -61,18 +61,39 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        
-        <!-- 数据库 -->
+
+        <!-- 🔥 数据库依赖 -->
+        <!-- MySQL驱动 -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- MyBatis Plus (如果使用) -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+        </dependency>
+
+        <!-- 数据库连接池 Druid (可选，推荐) -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- Redis (如果使用缓存) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- H2数据库 (开发和测试用) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>mysql</groupId>-->
-<!--            <artifactId>mysql-connector-java</artifactId>-->
-<!--            <scope>runtime</scope>-->
-<!--        </dependency>-->
         
         <!-- Netty (TCP通信) -->
         <dependency>
