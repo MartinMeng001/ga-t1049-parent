@@ -10,8 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import javax.annotation.PostConstruct;
 
@@ -20,9 +22,11 @@ import javax.annotation.PostConstruct;
  * 集成GA/T 1049.1通用通信协议
  */
 @SpringBootApplication
+@EnableJpaRepositories(basePackages = "com.traffic.gat1049.repository")
+@EntityScan(basePackages = "com.traffic.gat1049.repository.entity")
 @ComponentScan(basePackages = {
         "com.traffic.server",
-        "com.traffic.gat1049"
+        "com.traffic.gat1049" // 扫描common模块的组件
 })
 @Import({
         ApplicationConfig.class,

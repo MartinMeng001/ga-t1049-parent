@@ -19,24 +19,31 @@ spring:
   application:
     name: traffic-signal-server
 
-#  datasource:
-#    url: jdbc:h2:mem:testdb
-#    driver-class-name: org.h2.Driver
-#    username: sa
-#    password:
-#
-#  jpa:
-#    hibernate:
-#      ddl-auto: create-drop
-#    show-sql: true
-#    properties:
-#      hibernate:
-#        format_sql: true
+  datasource:
+    url: jdbc:mysql://192.168.1.254:3306/traffic_signal_control?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: sdsb12345+
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
-#  h2:
-#    console:
-#      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
 
+  redis:
+    host: 192.168.2.32
+    port: 6379
+    password: sdsb12345+
+    database: 0
+
+# MyBatis Plus配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
 # TCP服务器配置
 tcp:
   server:
