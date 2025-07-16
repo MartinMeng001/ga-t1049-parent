@@ -1,0 +1,39 @@
+# WebService适配器配置
+adapter:
+  webservice:
+    # 默认端口
+    default-port: "8080"
+    # 服务路径
+    service-path: "/SignalListenServer/SignalListenDelegate?wsdl"
+    # 命名空间
+    name-space: "http://webservice/"
+    # 连接超时时间（毫秒）
+    connection-timeout: 30000
+    # 读取超时时间（毫秒）
+    read-timeout: 60000
+    # 启用日志记录
+    enable-logging: true
+    # 重试配置
+    retry:
+      max-attempts: 3
+      delay: 1000
+    # 连接池配置
+    pool:
+      max-total: 100
+      max-idle: 50
+      min-idle: 10
+
+# 日志配置
+logging:
+  level:
+    com.traffic.device.adapter.webservice: DEBUG
+    javax.xml.soap: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Spring配置
+spring:
+  application:
+    name: webservice-adapter
+  profiles:
+    active: webservice
