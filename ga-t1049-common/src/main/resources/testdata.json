@@ -244,84 +244,192 @@
       "CrossID": "11010180001001",
       "LampGroupNo": 1,
       "Direction": "1",
-      "Type": "21"
+      "Type": "22"
     },
     {
       "CrossID": "11010180001001",
       "LampGroupNo": 2,
       "Direction": "1",
-      "Type": "22"
+      "Type": "21"
     },
     {
       "CrossID": "11010180001001",
       "LampGroupNo": 3,
-      "Direction": "2",
-      "Type": "21"
+      "Direction": "1",
+      "Type": "23"
     },
     {
       "CrossID": "11010180001001",
       "LampGroupNo": 4,
-      "Direction": "2",
-      "Type": "22"
+      "Direction": "1",
+      "Type": "30"
     },
     {
       "CrossID": "11010180001001",
       "LampGroupNo": 5,
-      "Direction": "3",
-      "Type": "21"
+      "Direction": "1",
+      "Type": "32"
     },
     {
       "CrossID": "11010180001001",
       "LampGroupNo": 6,
-      "Direction": "3",
-      "Type": "22"
+      "Direction": "1",
+      "Type": "80"
     },
     {
       "CrossID": "11010180001001",
       "LampGroupNo": 7,
-      "Direction": "4",
-      "Type": "21"
+      "Direction": "1",
+      "Type": "41"
     },
     {
       "CrossID": "11010180001001",
       "LampGroupNo": 8,
-      "Direction": "4",
-      "Type": "22"
-    },
-    {
-      "CrossID": "11010180001002",
-      "LampGroupNo": 1,
       "Direction": "1",
-      "Type": "21"
+      "Type": "42"
     },
     {
-      "CrossID": "11010180001002",
-      "LampGroupNo": 2,
+      "CrossID": "11010180001001",
+      "LampGroupNo": 9,
       "Direction": "1",
       "Type": "22"
     },
     {
-      "CrossID": "11010180001002",
-      "LampGroupNo": 3,
-      "Direction": "2",
+      "CrossID": "11010180001001",
+      "LampGroupNo": 10,
+      "Direction": "1",
       "Type": "21"
     },
     {
-      "CrossID": "11010180001002",
-      "LampGroupNo": 4,
-      "Direction": "2",
+      "CrossID": "11010180001001",
+      "LampGroupNo": 11,
+      "Direction": "1",
+      "Type": "23"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 12,
+      "Direction": "1",
+      "Type": "30"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 13,
+      "Direction": "1",
+      "Type": "32"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 14,
+      "Direction": "1",
+      "Type": "80"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 15,
+      "Direction": "1",
+      "Type": "41"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 16,
+      "Direction": "1",
+      "Type": "42"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 17,
+      "Direction": "1",
       "Type": "22"
     },
     {
-      "CrossID": "11010180001002",
-      "LampGroupNo": 5,
-      "Direction": "3",
+      "CrossID": "11010180001001",
+      "LampGroupNo": 18,
+      "Direction": "1",
       "Type": "21"
     },
     {
-      "CrossID": "11010180001002",
-      "LampGroupNo": 6,
-      "Direction": "3",
+      "CrossID": "11010180001001",
+      "LampGroupNo": 19,
+      "Direction": "1",
+      "Type": "23"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 20,
+      "Direction": "1",
+      "Type": "30"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 21,
+      "Direction": "1",
+      "Type": "32"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 22,
+      "Direction": "1",
+      "Type": "80"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 23,
+      "Direction": "1",
+      "Type": "41"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 24,
+      "Direction": "1",
+      "Type": "42"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 25,
+      "Direction": "7",
+      "Type": "22"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 26,
+      "Direction": "7",
+      "Type": "22"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 27,
+      "Direction": "7",
+      "Type": "22"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 28,
+      "Direction": "7",
+      "Type": "22"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 29,
+      "Direction": "7",
+      "Type": "22"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 30,
+      "Direction": "7",
+      "Type": "22"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 31,
+      "Direction": "7",
+      "Type": "22"
+    },
+    {
+      "CrossID": "11010180001001",
+      "LampGroupNo": 32,
+      "Direction": "7",
       "Type": "22"
     }
   ],

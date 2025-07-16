@@ -1,0 +1,7 @@
+# Auto Configuration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.traffic.device.adapter.webservice.config.WebServiceAdapterAutoConfiguration
+
+# Adapter Registration
+com.traffic.gat1049.device.adapter.interfaces.SignalControllerAdapter=\
+com.traffic.device.adapter.webservice.WebServiceSignalControllerAdapter

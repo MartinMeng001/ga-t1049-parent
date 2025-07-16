@@ -29,13 +29,13 @@ public class LampGroupParamConverter extends AbstractEntityConverter<LampGroupPa
             protocol.setCrossId(entity.getCrossId());
             protocol.setLampGroupNo(entity.getLampGroupNo());
 
-            // 枚举类型转换
-            if (entity.getDirectionNo() != null) {
-                protocol.setDirection(Direction.fromCode(entity.getDirectionNo().toString()));
+            // 枚举类型转换 - 从数据库的字符串字段转换为枚举
+            if (StringUtils.hasText(entity.getDirection())) {
+                protocol.setDirection(Direction.fromCode(entity.getDirection()));
             }
 
-            if (entity.getLampGroupType() != null) {
-                protocol.setType(LampGroupType.fromCode(entity.getLampGroupType().toString()));
+            if (StringUtils.hasText(entity.getType())) {
+                protocol.setType(LampGroupType.fromCode(entity.getType()));
             }
 
             validateConversion(entity, protocol);
@@ -64,13 +64,13 @@ public class LampGroupParamConverter extends AbstractEntityConverter<LampGroupPa
             entity.setCrossId(protocol.getCrossId());
             entity.setLampGroupNo(protocol.getLampGroupNo());
 
-            // 枚举类型转换
+            // 枚举类型转换 - 从枚举转换为数据库的字符串字段
             if (protocol.getDirection() != null) {
-                entity.setDirectionNo(Integer.parseInt(protocol.getDirection().getCode()));
+                entity.setDirection(protocol.getDirection().getCode());
             }
 
             if (protocol.getType() != null) {
-                entity.setLampGroupType(Integer.parseInt(protocol.getType().getCode()));
+                entity.setType(protocol.getType().getCode());
             }
 
             // 设置审计字段
@@ -98,14 +98,14 @@ public class LampGroupParamConverter extends AbstractEntityConverter<LampGroupPa
         try {
             // 灯组编号不可更新（业务主键）
 
-            // 更新方向
+            // 更新方向 - 直接使用字符串代码
             if (protocol.getDirection() != null) {
-                entity.setDirectionNo(Integer.parseInt(protocol.getDirection().getCode()));
+                entity.setDirection(protocol.getDirection().getCode());
             }
 
-            // 更新类型
+            // 更新类型 - 直接使用字符串代码
             if (protocol.getType() != null) {
-                entity.setLampGroupType(Integer.parseInt(protocol.getType().getCode()));
+                entity.setType(protocol.getType().getCode());
             }
 
             // 更新修改时间
@@ -118,6 +118,37 @@ public class LampGroupParamConverter extends AbstractEntityConverter<LampGroupPa
             logger.error("信号灯组参数更新失败: crossId={}, lampGroupNo={}",
                     entity.getCrossId(), entity.getLampGroupNo(), e);
             throw new DataConversionException("信号灯组参数更新失败", e);
+        }
+    }
+
+    /**
+     * 验证转换结果
+     */
+    protected void validateConversion(LampGroupParamEntity entity, LampGroupParam protocol) {
+        if (entity == null || protocol == null) {
+            throw new DataConversionException("转换结果不能为null");
+        }
+
+        // 验证关键字段是否正确转换
+        if (!entity.getCrossId().equals(protocol.getCrossId())) {
+            throw new DataConversionException("路口编号转换失败");
+        }
+
+        if (!entity.getLampGroupNo().equals(protocol.getLampGroupNo())) {
+            throw new DataConversionException("灯组编号转换失败");
+        }
+
+        // 验证枚举转换
+        if (protocol.getDirection() != null && entity.getDirection() != null) {
+            if (!entity.getDirection().equals(protocol.getDirection().getCode())) {
+                throw new DataConversionException("方向枚举转换失败");
+            }
+        }
+
+        if (protocol.getType() != null && entity.getType() != null) {
+            if (!entity.getType().equals(protocol.getType().getCode())) {
+                throw new DataConversionException("类型枚举转换失败");
+            }
         }
     }
 }

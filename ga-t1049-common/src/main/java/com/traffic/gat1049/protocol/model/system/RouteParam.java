@@ -22,10 +22,10 @@ import java.util.List;
 public class RouteParam {//extends BaseParam
 
     /**
-     * 线路编号 - 全局唯一，取值6位行政区划代码+3位数字
+     * 线路编号 - 全局唯一，取值6位行政区划代码+5位数字
      */
     @NotBlank(message = "线路编号不能为空")
-    @Pattern(regexp = "\\d{9}", message = "线路编号格式错误，应为9位数字")
+    @Pattern(regexp = "\\d{11}", message = "线路编号格式错误，应为9位数字")
     @XmlElement(name = "RouteID", required = true)
     @JsonProperty("RouteID")
     private String routeId;
