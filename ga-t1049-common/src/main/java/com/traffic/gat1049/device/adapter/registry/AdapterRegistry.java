@@ -216,8 +216,8 @@ public class AdapterRegistry {
      * 获取支持的品牌列表
      * @return 品牌列表
      */
-    public String[] getSupportedBrands() {
-        return adapters.keySet().toArray(new String[0]);
+    public List<String> getSupportedBrands() {
+        return new ArrayList<>(adapters.keySet());
     }
 
     /**
