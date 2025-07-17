@@ -18,6 +18,10 @@ public class DeviceConnectionInfo {
      */
     private String deviceId;
 
+    /*
+     * ServerIP
+     */
+    private String ipServer;
     /**
      * 设备IP地址
      */

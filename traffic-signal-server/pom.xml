@@ -31,6 +31,11 @@
 <!--            <optional>true</optional>-->
 <!--        </dependency>-->
 
+        <dependency>
+            <groupId>com.traffic</groupId>
+            <artifactId>generic-adapter</artifactId>
+        </dependency>
+
 <!--        &lt;!&ndash; 可选的适配器依赖 &ndash;&gt;-->
 <!--        <dependency>-->
 <!--            <groupId>com.traffic</groupId>-->
@@ -114,6 +119,7 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
+
     </dependencies>
 
     <build>

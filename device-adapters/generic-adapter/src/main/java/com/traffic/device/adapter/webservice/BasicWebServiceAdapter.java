@@ -9,8 +9,10 @@ import com.traffic.gat1049.device.adapter.annotation.ProtocolVersion;
 import com.traffic.gat1049.device.adapter.base.BaseSignalControllerAdapter;
 import com.traffic.gat1049.device.adapter.model.*;
 import com.traffic.gat1049.device.adapter.registry.AdapterInfo;
+import com.traffic.gat1049.device.adapter.registry.AdapterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -44,11 +46,15 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
     private String servicePath = "/SignalListenServer/SignalListenDelegate?wsdl";
     private String nameSpace = "http://webservice/";
 
-//    @PostConstruct
-//    public void init() {
-//        // 适配器初始化后自动注册到注册表
-//        adapterRegistry.register(this);
-//    }
+    @Autowired
+    private AdapterRegistry adapterRegistry;
+
+    @PostConstruct
+    public void autoRegister() {
+        // 适配器初始化后自动注册到注册表
+        logger.info("开始自动注册适配器: {}", this.getClass().getSimpleName());
+        adapterRegistry.register(this);
+    }
     @Override
     protected AdapterInfo createAdapterInfo() {
         return AdapterInfo.builder()
@@ -82,8 +88,32 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
 
     @Override
     public ConnectionResult connect(DeviceConnectionInfo deviceInfo) {
-        // 实现海信设备的连接逻辑
-        return ConnectionResult.success(deviceInfo.getDeviceId(), deviceInfo);
+        try {
+            // 实现双百设备的连接逻辑
+            String serverIP = "";
+            if(deviceInfo.getIpServer()!=null&&!deviceInfo.getIpServer().equals("")){serverIP = deviceInfo.getIpServer();}
+            else serverIP = deviceInfo.getIpAddress();
+            boolean connected = connectDevice(serverIP, deviceInfo.getDeviceId());
+
+            if (connected) {
+                return ConnectionResult.builder()
+                        .success(true)
+                        .deviceId(deviceInfo.getDeviceId())
+                        .message("双百设备连接成功")
+                        .connectionInfo(deviceInfo)  // 这里可以设置连接信息
+                        .connectionTimeMs(System.currentTimeMillis()) // 可以记录连接耗时
+                        .createTime(LocalDateTime.now())
+                        .build();
+            } else {
+                return ConnectionResult.failure(deviceInfo.getDeviceId(),
+                        "CONNECTION_FAILED", "双百设备连接失败");
+            }
+
+        } catch (Exception e) {
+            logger.error("连接双百设备异常", e);
+            return ConnectionResult.failure(deviceInfo.getDeviceId(),
+                    "CONNECTION_EXCEPTION", "连接异常: " + e.getMessage());
+        }
     }
 
     @Override
@@ -548,11 +578,6 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
         }
 
         return runtimeInfo;
-    }
-
-    @Override
-    public ConnectionResult connect(DeviceConnectionInfo deviceInfo) {
-        return null;
     }
 
     @Override

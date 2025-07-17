@@ -170,6 +170,54 @@ public class DeviceManagementService {
                     "连接异常: " + e.getMessage());
         }
     }
+    public ConnectionResult connectDevice(String controllerId, String brand, String ipServer, Integer port, String ipDevice) {
+        try {
+            logger.info("正在连接设备: controllerId={}, brand={}, ip={}, port={}, ipDevice={}",
+                    controllerId, brand, ipServer, port, ipDevice);
+
+            // 获取适配器
+            SignalControllerAdapter adapter = getAdapter(brand);
+            if (adapter == null) {
+                return ConnectionResult.failure(controllerId, "ADAPTER_NOT_FOUND",
+                        "未找到品牌 " + brand + " 的适配器");
+            }
+
+            // 创建连接信息
+            DeviceConnectionInfo connectionInfo = DeviceConnectionInfo.builder()
+                    .deviceId(controllerId)
+                    .ipAddress(ipDevice)
+                    .ipServer(ipServer)
+                    .port(port)
+                    .connectionType("TCP")
+                    .timeoutSeconds(30)
+                    .maxRetryCount(3)
+                    .build();
+
+            // 执行连接
+            ConnectionResult result = adapter.connect(connectionInfo);
+
+            if (result.isSuccess()) {
+                // 缓存连接信息和品牌映射
+                deviceConnections.put(controllerId, connectionInfo);
+                deviceBrandMapping.put(controllerId, brand);
+
+                // 发布连接事件
+                publishConnectionEvent(controllerId, brand, true, connectionInfo, "连接成功");
+
+                logger.info("设备连接成功: {}", controllerId);
+                //return ConnectionResult.success(controllerId, )
+            } else {
+                logger.warn("设备连接失败: controllerId={}, error={}", controllerId, result.getMessage());
+            }
+
+            return result;
+
+        } catch (Exception e) {
+            logger.error("连接设备异常: controllerId={}", controllerId, e);
+            return ConnectionResult.failure(controllerId, "CONNECTION_EXCEPTION",
+                    "连接异常: " + e.getMessage());
+        }
+    }
 
     /**
      * 断开设备连接
@@ -670,52 +718,52 @@ public class DeviceManagementService {
     /**
      * 完整的配置同步流程
      */
-    public SyncResult syncPlanConfigComplete(String crossId, List<PlanParam> planParams) {
-        try {
-            // 1. 同步到数据库
-            SyncResult dbResult = configSyncService.syncPlanConfigToDatabase(crossId, planParams);
-            if (!dbResult.isSuccess()) {
-                return dbResult;
-            }
-
-            // 2. 获取设备适配器
-            SignalControllerAdapter adapter = adapterRegistry.getAdapterByCrossId(crossId);
-            if (adapter == null) {
-                logger.warn("未找到路口{}的适配器", crossId);
-                return SyncResult.success("数据已保存到数据库，但未找到设备适配器");
-            }
-
-            // 3. 同步到设备
-            DeviceConfigData configData = buildDeviceConfigData(crossId, planParams);
-            SyncResult deviceResult = adapter.syncConfigToDevice(crossId, configData);
-
-            // 4. 记录同步结果
-            recordSyncResult(crossId, "PlanParam", dbResult, deviceResult);
-
-            if (deviceResult.isSuccess()) {
-                return SyncResult.success("配置同步到数据库和设备均成功");
-            } else {
-                return SyncResult.partial("配置已保存到数据库，但同步到设备失败: " + deviceResult.getMessage());
-            }
-
-        } catch (Exception e) {
-            logger.error("配置同步失败: crossId={}", crossId, e);
-            return SyncResult.failure("配置同步失败: " + e.getMessage());
-        }
-    }
+//    public SyncResult syncPlanConfigComplete(String crossId, List<PlanParam> planParams) {
+//        try {
+//            // 1. 同步到数据库
+//            SyncResult dbResult = configSyncService.syncPlanConfigToDatabase(crossId, planParams);
+//            if (!dbResult.isSuccess()) {
+//                return dbResult;
+//            }
+//
+//            // 2. 获取设备适配器
+//            SignalControllerAdapter adapter = adapterRegistry.getAdapterByCrossId(crossId);
+//            if (adapter == null) {
+//                logger.warn("未找到路口{}的适配器", crossId);
+//                return SyncResult.success("数据已保存到数据库，但未找到设备适配器");
+//            }
+//
+//            // 3. 同步到设备
+//            DeviceConfigData configData = buildDeviceConfigData(crossId, planParams);
+//            SyncResult deviceResult = adapter.syncConfigToDevice(crossId, configData);
+//
+//            // 4. 记录同步结果
+//            recordSyncResult(crossId, "PlanParam", dbResult, deviceResult);
+//
+//            if (deviceResult.isSuccess()) {
+//                return SyncResult.success("配置同步到数据库和设备均成功");
+//            } else {
+//                return SyncResult.partial("配置已保存到数据库，但同步到设备失败: " + deviceResult.getMessage());
+//            }
+//
+//        } catch (Exception e) {
+//            logger.error("配置同步失败: crossId={}", crossId, e);
+//            return SyncResult.failure("配置同步失败: " + e.getMessage());
+//        }
+//    }
 
     /**
      * 构建设备配置数据
      */
-    private DeviceConfigData buildDeviceConfigData(String crossId, List<PlanParam> planParams) {
-        DeviceConfigData configData = new DeviceConfigData();
-        configData.setPlans(planParams);
-
-        // 可能需要加载其他相关配置
-        configData.setCrossParam(loadCrossParam(crossId));
-        configData.setSignalGroups(loadSignalGroups(crossId));
-        configData.setStages(loadStages(crossId));
-
-        return configData;
-    }
+//    private DeviceConfigData buildDeviceConfigData(String crossId, List<PlanParam> planParams) {
+//        DeviceConfigData configData = new DeviceConfigData();
+//        configData.setPlans(planParams);
+//
+//        // 可能需要加载其他相关配置
+//        configData.setCrossParam(loadCrossParam(crossId));
+//        configData.setSignalGroups(loadSignalGroups(crossId));
+//        configData.setStages(loadStages(crossId));
+//
+//        return configData;
+//    }
 }

@@ -19,10 +19,10 @@
 
     <dependencies>
         <!-- 适配器公共模块 -->
-        <dependency>
-            <groupId>com.traffic</groupId>
-            <artifactId>adapter-common</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.traffic</groupId>-->
+<!--            <artifactId>adapter-common</artifactId>-->
+<!--        </dependency>-->
 
         <!-- 海信专用依赖 (如果有) -->
         <!--

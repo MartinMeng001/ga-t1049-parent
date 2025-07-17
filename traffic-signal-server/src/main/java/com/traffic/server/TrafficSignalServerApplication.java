@@ -26,7 +26,8 @@ import javax.annotation.PostConstruct;
 @EntityScan(basePackages = "com.traffic.gat1049.repository.entity")
 @ComponentScan(basePackages = {
         "com.traffic.server",
-        "com.traffic.gat1049" // 扫描common模块的组件
+        "com.traffic.gat1049", // 扫描common模块的组件
+        "com.traffic.device.adapter"    // 🔥 新增：适配器包扫描
 })
 @Import({
         ApplicationConfig.class,
