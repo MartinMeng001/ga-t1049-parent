@@ -1,5 +1,12 @@
 package com.traffic.gat1049.device.adapter.model;
 
+import com.traffic.gat1049.protocol.model.intersection.CrossParam;
+import com.traffic.gat1049.protocol.model.intersection.DetectorParam;
+import com.traffic.gat1049.protocol.model.intersection.LampGroupParam;
+import com.traffic.gat1049.protocol.model.signal.PlanParam;
+import com.traffic.gat1049.protocol.model.signal.SignalGroupParam;
+import com.traffic.gat1049.protocol.model.signal.StageParam;
+import com.traffic.gat1049.protocol.model.system.SysInfo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Builder;
@@ -57,7 +64,7 @@ public class DeviceConfigData {
     /**
      * 系统配置
      */
-    private SystemConfig systemConfig;
+    private SysInfo systemConfig;
 
     /**
      * 配置版本号
@@ -109,61 +116,5 @@ public class DeviceConfigData {
         private int planCount;
         private int lampGroupCount;
         private int detectorCount;
-    }
-
-    // 内部类定义配置参数（这些应该引用实际的协议模型类）
-    @Data
-    public static class CrossParam {
-        private String crossId;
-        private String crossName;
-        private Integer signalGroupCount;
-        private Integer stageCount;
-        // 其他路口参数...
-    }
-
-    @Data
-    public static class SignalGroupParam {
-        private Integer signalGroupNo;
-        private String signalGroupName;
-        private Integer minGreen;
-        private Integer maxGreen;
-        // 其他信号组参数...
-    }
-
-    @Data
-    public static class StageParam {
-        private Integer stageNo;
-        private String stageName;
-        private Integer stageTime;
-        // 其他阶段参数...
-    }
-
-    @Data
-    public static class PlanParam {
-        private Integer planNo;
-        private String planName;
-        private Integer cycleTime;
-        // 其他方案参数...
-    }
-
-    @Data
-    public static class LampGroupParam {
-        private Integer lampGroupNo;
-        private String lampGroupName;
-        // 其他灯组参数...
-    }
-
-    @Data
-    public static class DetectorParam {
-        private Integer detectorNo;
-        private String detectorName;
-        // 其他检测器参数...
-    }
-
-    @Data
-    public static class SystemConfig {
-        private String systemVersion;
-        private Map<String, Object> parameters;
-        // 其他系统配置...
     }
 }

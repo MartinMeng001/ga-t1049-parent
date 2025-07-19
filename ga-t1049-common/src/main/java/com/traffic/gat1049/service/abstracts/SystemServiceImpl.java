@@ -9,6 +9,7 @@ import com.traffic.gat1049.model.enums.SystemState;
 import com.traffic.gat1049.service.interfaces.SystemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
@@ -17,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * 系统服务实现
  * 已更新以支持新的SysState定义（包含Time字段）
  */
+@Service
 public class SystemServiceImpl implements SystemService {
 
     private static final Logger logger = LoggerFactory.getLogger(SystemServiceImpl.class);

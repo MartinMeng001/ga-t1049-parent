@@ -11,6 +11,7 @@ import com.traffic.gat1049.protocol.constants.GatConstants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
  * 推送通知服务实现
  * 负责向订阅的客户端推送各类运行数据
  */
-
+@Service
 public class PushNotificationServiceImpl implements PushNotificationService {
 
     private static final Logger logger = LoggerFactory.getLogger(PushNotificationServiceImpl.class);

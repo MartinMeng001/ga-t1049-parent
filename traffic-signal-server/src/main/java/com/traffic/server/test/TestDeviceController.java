@@ -1,5 +1,8 @@
 package com.traffic.server.test;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.traffic.device.adapter.webservice.BasicWebServiceAdapter;
 import com.traffic.gat1049.device.adapter.registry.AdapterRegistry;
 import com.traffic.gat1049.device.management.DeviceManagementService;
@@ -50,7 +53,57 @@ public class TestDeviceController {
             ));
         }
     }
+    /**
+     * 获取方案
+     */
+    @PostMapping("scheme")
+    public ResponseEntity<Map<String, Object>> getScheme(
+            @RequestBody WebServiceTestRequest request
+    ) {
+        try {
+            logger.info("接收设备读取配置请求: {}", request);
 
+            String ip = request.getIpAddress();
+            String ipServer = request.getIpServer();
+            String crossId = request.getCrossId();
+            String sigid = request.getSigid();
+            String controllerId = request.getControllerId();
+            int schemeId = request.getSchemeId();
+            int ctrlmode = request.getCtrlMode();
+            int schemeId4DB = request.getSchemeId4DB();
+
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode node = mapper.createObjectNode();
+            node.put("ip", ip);
+            node.put("ipServer", ipServer);
+            node.put("crossid", crossId);
+            node.put("sigid", sigid);
+            node.put("controllerId", controllerId);
+            node.put("SCHEMEID", schemeId);
+            node.put("CTRLMODE", ctrlmode);
+            node.put("SCHEMEID4DB", schemeId4DB);
+
+            SyncResult result = deviceManagementService.readConfigFromDevice("SHUNBY", node);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", result.isSuccess());
+            response.put("deviceId", result.getDeviceId());
+            response.put("message", result.getMessage());
+
+            if (!result.isSuccess()) {
+                response.put("errorCode", result.getErrorCode());
+            }
+
+            return ResponseEntity.ok(response);
+        }catch (Exception e) {
+            logger.error("读取设备异常", e);
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "error", "读取设备异常: " + e.getMessage()
+            ));
+        }
+
+    }
     /**
      * 连接设备
      */
@@ -224,13 +277,37 @@ public class TestDeviceController {
      * WebService测试请求
      */
     public static class WebServiceTestRequest {
+        private String crossId;
         private String ipAddress;
         private String controllerId;
+        private String sigid;
+        private String ipServer;
+        private int schemeId;
+        private int ctrlMode;
+        private int schemeId4DB;
+
+        public String getCrossId(){ return crossId; }
+        public void setCrossId(String crossId){ this.crossId = crossId; }
 
         public String getIpAddress() { return ipAddress; }
         public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
 
         public String getControllerId() { return controllerId; }
         public void setControllerId(String controllerId) { this.controllerId = controllerId; }
+
+        public String getSigid() { return sigid; }
+        public void setSigid(String sigid) { this.sigid = sigid; }
+
+        public String getIpServer() { return ipServer; }
+        public void setIpServer(String ipServer) { this.ipServer = ipServer; }
+
+        public int getSchemeId() { return schemeId; }
+        public void setSchemeId(int schemeId) { this.schemeId = schemeId; }
+
+        public int getCtrlMode() { return ctrlMode; }
+        public void setCtrlMode(int ctrlMode) { this.ctrlMode = ctrlMode; }
+
+        public int getSchemeId4DB() { return schemeId4DB; }
+        public void setSchemeId4DB(int schemeId4DB) { this.schemeId4DB = schemeId4DB; }
     }
 }

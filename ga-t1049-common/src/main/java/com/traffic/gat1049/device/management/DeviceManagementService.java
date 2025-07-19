@@ -1,5 +1,8 @@
 package com.traffic.gat1049.device.management;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.traffic.gat1049.device.adapter.interfaces.SignalControllerAdapter;
 import com.traffic.gat1049.device.adapter.registry.AdapterRegistry;
 import com.traffic.gat1049.device.adapter.model.*;
@@ -296,7 +299,27 @@ public class DeviceManagementService {
     // =================================================================
     // 配置同步管理
     // =================================================================
+    public SyncResult readConfigFromDevice(String brand, JsonNode param){
+        try{
+            logger.info("读取设备: controllerId={}, brand={}, ip={}, sigid={}",
+                    param.get("controllerId").asText(), brand,
+                    param.get("ip").asText(), param.get("sigid").asText());
 
+            // 获取适配器
+            SignalControllerAdapter adapter = getAdapter(brand);
+            if (adapter == null) {
+                return SyncResult.failure(param.get("controllerId").asText(), "ADAPTER_NOT_FOUND",
+                        "未找到品牌 " + brand + " 的适配器");
+            }
+
+            SyncResult result = adapter.readConfigData(param);
+            return result;
+        }catch (Exception e){
+            logger.error("读取设备配置异常: controllerId={}", param.get("controllerId").asText(), e);
+            return SyncResult.failure(param.get("controllerId").asText(), "READ_EXCEPTION",
+                    "读取异常: " + e.getMessage());
+        }
+    }
     /**
      * 同步配置到设备
      */

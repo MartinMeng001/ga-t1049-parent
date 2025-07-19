@@ -6,6 +6,7 @@ import com.traffic.gat1049.service.interfaces.RunInfoRetransService;
 import com.traffic.gat1049.service.interfaces.TrafficDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -16,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * 重传运行信息服务实现
  */
-
+@Service
 public class RunInfoRetransServiceImpl implements RunInfoRetransService {
 
     private static final Logger logger = LoggerFactory.getLogger(RunInfoRetransServiceImpl.class);

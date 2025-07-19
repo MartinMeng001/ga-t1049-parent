@@ -22,6 +22,12 @@ public interface LampGroupRepository extends BaseMapper<LampGroupParamEntity> {
     List<LampGroupParamEntity> findByCrossId(@Param("crossId") String crossId);
 
     /**
+     * 根据路口ID查询所有基础信号灯组lamp_group_no<80
+     */
+    @Select("SELECT * FROM lamp_group_param WHERE cross_id = #{crossId} AND lamp_group_no < 80 ORDER BY lamp_group_no")
+    List<LampGroupParamEntity> findAllBasicByCrossId(@Param("crossId") String crossId);
+
+    /**
      * 查询路口所有信号组（包含关联灯组）
      * 返回DTO对象，一次查询获取所有需要的数据
      */
@@ -160,6 +166,30 @@ public interface LampGroupRepository extends BaseMapper<LampGroupParamEntity> {
     Boolean existsByCrossIdAndLampGroupNo(@Param("crossId") String crossId, @Param("lampGroupNo") Integer lampGroupNo);
 
     /**
+     * 根据路口ID、方向和类型查询单个信号灯组
+     * 理论上这个组合应该只返回一个唯一的灯组
+     */
+    @Select("SELECT * FROM lamp_group_param WHERE cross_id = #{crossId} AND direction = #{direction} AND type = #{type} LIMIT 1")
+    LampGroupParamEntity findByCrossIdAndDirectionAndType(@Param("crossId") String crossId,
+                                                          @Param("direction") String direction,
+                                                          @Param("type") String type);
+
+    /**
+     * 检查指定路口、方向和类型的灯组是否存在
+     */
+    @Select("SELECT COUNT(*) > 0 FROM lamp_group_param WHERE cross_id = #{crossId} AND direction = #{direction} AND type = #{type}")
+    Boolean existsByCrossIdAndDirectionAndType(@Param("crossId") String crossId,
+                                               @Param("direction") String direction,
+                                               @Param("type") String type);
+
+    /**
+     * 根据路口ID、方向和类型查询所有匹配的信号灯组（如果需要查看是否有重复数据）
+     */
+    @Select("SELECT * FROM lamp_group_param WHERE cross_id = #{crossId} AND direction = #{direction} AND type = #{type} ORDER BY lamp_group_no")
+    List<LampGroupParamEntity> findAllByCrossIdAndDirectionAndType(@Param("crossId") String crossId,
+                                                                   @Param("direction") String direction,
+                                                                   @Param("type") String type);
+    /**
      * 删除指定路口的所有信号灯组
      */
     @Delete("DELETE FROM lamp_group_param WHERE cross_id = #{crossId}")
@@ -231,10 +261,10 @@ public interface LampGroupRepository extends BaseMapper<LampGroupParamEntity> {
     /**
      * 根据方向和类型组合查询
      */
-    @Select("SELECT * FROM lamp_group_param WHERE cross_id = #{crossId} AND direction = #{direction} AND type = #{type} ORDER BY lamp_group_no")
-    List<LampGroupParamEntity> findByCrossIdAndDirectionAndType(@Param("crossId") String crossId,
-                                                                @Param("direction") String direction,
-                                                                @Param("type") String type);
+//    @Select("SELECT * FROM lamp_group_param WHERE cross_id = #{crossId} AND direction = #{direction} AND type = #{type} ORDER BY lamp_group_no")
+//    List<LampGroupParamEntity> findByCrossIdAndDirectionAndType(@Param("crossId") String crossId,
+//                                                                @Param("direction") String direction,
+//                                                                @Param("type") String type);
 
     /**
      * 查询所有不同的方向值

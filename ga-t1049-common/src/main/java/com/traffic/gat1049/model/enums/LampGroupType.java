@@ -52,4 +52,16 @@ public enum LampGroupType {
         }
         throw new IllegalArgumentException("Unknown lamp group type code: " + code);
     }
+
+    public static LampGroupType from5UType(String type){
+        if("Straight".equalsIgnoreCase(type)){ return MOTOR_STRAIGHT; }
+        if("TurnLeft".equalsIgnoreCase(type)){ return MOTOR_LEFT; }
+        if("TurnRight".equalsIgnoreCase(type)){ return MOTOR_RIGHT; }
+        if("Sidewalk".equalsIgnoreCase(type)){ return PEDESTRIAN_ENTRANCE; }
+        if("NonMotorized".equalsIgnoreCase(type)){ return NON_MOTOR; }
+        if("TurnRound".equalsIgnoreCase(type)){ return U_TURN; }
+        if("Extend1".equalsIgnoreCase(type)){ return PEDESTRIAN_EXIT; }
+        if("Extend2".equalsIgnoreCase(type)){ return NON_MOTOR_LEFT; }
+        throw new IllegalArgumentException("Unknown 5U lamp group type code: " + type);
+    }
 }

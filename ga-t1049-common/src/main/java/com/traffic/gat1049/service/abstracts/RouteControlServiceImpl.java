@@ -12,6 +12,7 @@ import com.traffic.gat1049.protocol.model.runtime.RouteSpeed;
 import com.traffic.gat1049.service.interfaces.RouteControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
  * 干线控制服务实现
  * 参照 CrossServiceImpl 的实现模式
  */
+@Service
 public class RouteControlServiceImpl implements RouteControlService {
 
     private static final Logger logger = LoggerFactory.getLogger(RouteControlServiceImpl.class);

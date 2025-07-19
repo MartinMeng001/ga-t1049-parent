@@ -40,4 +40,12 @@ public enum Direction {
         }
         throw new IllegalArgumentException("Unknown direction code: " + code);
     }
+
+    public static Direction from5UDirection(String direction){
+        if("North".equalsIgnoreCase(direction)){ return NORTH; }
+        if("East".equalsIgnoreCase(direction)){ return EAST; }
+        if("South".equalsIgnoreCase(direction)){ return SOUTH; }
+        if("West".equalsIgnoreCase(direction)){ return WEST; }
+        throw new IllegalArgumentException("Unknown 5U direction: " + direction);
+    }
 }

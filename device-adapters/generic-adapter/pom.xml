@@ -19,10 +19,10 @@
 
     <dependencies>
         <!-- 适配器公共模块 -->
-<!--        <dependency>-->
-<!--            <groupId>com.traffic</groupId>-->
-<!--            <artifactId>adapter-common</artifactId>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.traffic</groupId>
+            <artifactId>adapter-common</artifactId>
+        </dependency>
         <!-- GA/T 1049 公共模块 -->
         <dependency>
             <groupId>com.traffic</groupId>
@@ -41,11 +41,18 @@
             <artifactId>spring-boot-starter-web-services</artifactId>
         </dependency>
 
-        <!-- FastJSON -->
+        <!-- JSON处理 - 统一使用Jackson -->
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>1.2.83</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
         <!-- SOAP API -->

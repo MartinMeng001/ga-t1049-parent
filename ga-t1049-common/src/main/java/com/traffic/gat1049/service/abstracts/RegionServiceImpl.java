@@ -11,6 +11,7 @@ import com.traffic.gat1049.service.interfaces.RegionService;
 import com.traffic.gat1049.service.interfaces.SubRegionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 /**
  * 区域服务实现
  */
+@Service
 public class RegionServiceImpl implements RegionService {
 
     private static final Logger logger = LoggerFactory.getLogger(RegionServiceImpl.class);

@@ -22,6 +22,15 @@ public interface LampGroupService extends BaseService<LampGroupParam, String> {
     List<LampGroupParam> findByCrossId(String crossId) throws BusinessException;
 
     /**
+     * 根据路口编号获取基础信号灯组列表
+     *
+     * @param crossId 路口编号
+     * @return 信号灯组参数列表
+     * @throws BusinessException 业务异常
+     */
+    List<LampGroupParam> findAllBasicByCrossId(String crossId) throws BusinessException;
+
+    /**
      * 根据路口编号和信号灯组序号获取信号灯组
      *
      * @param crossId 路口编号
@@ -69,6 +78,16 @@ public interface LampGroupService extends BaseService<LampGroupParam, String> {
      */
     List<LampGroupParam> findByCrossIdAndType(String crossId, LampGroupType type) throws BusinessException;
 
+    /**
+     * 根据路口编号，方向和信号灯组类型查询信号灯组
+     *
+     * @param crossId 路口编号
+     * @param direction 路口方向
+     * @param type 信号灯组类型
+     * @return 信号灯组参数
+     * @throws BusinessException 业务异常
+     */
+    LampGroupParam findByCrossIdAndDirectionAndType(String crossId, Direction direction, LampGroupType type) throws BusinessException;
     /**
      * 删除指定路口的所有信号灯组
      *

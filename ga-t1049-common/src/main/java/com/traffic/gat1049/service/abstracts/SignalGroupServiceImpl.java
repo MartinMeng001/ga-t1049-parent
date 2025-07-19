@@ -1,6 +1,7 @@
 package com.traffic.gat1049.service.abstracts;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.traffic.gat1049.data.converter.impl.SignalGroupParamConverter;
 import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.exception.DataNotFoundException;
@@ -9,9 +10,13 @@ import com.traffic.gat1049.protocol.model.signal.SignalGroupParam;
 import com.traffic.gat1049.protocol.model.runtime.CrossSignalGroupStatus;
 import com.traffic.gat1049.protocol.model.signal.SignalGroupStatus;
 import com.traffic.gat1049.protocol.util.LampStatusUtil;
+import com.traffic.gat1049.repository.entity.SignalGroupParamEntity;
+import com.traffic.gat1049.repository.interfaces.SignalGroupParamRepository;
 import com.traffic.gat1049.service.interfaces.SignalGroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -23,6 +28,7 @@ import java.util.stream.Collectors;
  * 信号组服务实现
  * 更新以支持GA/T 1049.2最新标准
  */
+@Service
 public class SignalGroupServiceImpl implements SignalGroupService {
 
     private static final Logger logger = LoggerFactory.getLogger(SignalGroupServiceImpl.class);
@@ -32,6 +38,11 @@ public class SignalGroupServiceImpl implements SignalGroupService {
 
     private ComprehensiveTestDataProviderImpl dataPrider = ComprehensiveTestDataProviderImpl.getInstance();
 
+    @Autowired
+    private SignalGroupParamRepository signalGroupParamRepository;
+
+    @Autowired
+    private SignalGroupParamConverter converter;
     // 信号组参数存储 - 使用"crossId:signalGroupNo"作为key
     private final Map<String, SignalGroupParam> signalGroupStorage = new ConcurrentHashMap<>();
 
@@ -55,7 +66,26 @@ public class SignalGroupServiceImpl implements SignalGroupService {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
-        return dataPrider.getSignalGroupsByCrossId(crossId);
+        List<SignalGroupParamEntity> entities = signalGroupParamRepository.findByCrossId(crossId);
+        if(entities == null){
+            throw new DataNotFoundException("SignalGroupParam");
+        }
+        List<SignalGroupParam> result = converter.toProtocolList(entities);
+        return result;
+        //return dataPrider.getSignalGroupsByCrossId(crossId);
+    }
+
+    @Override
+    public List<SignalGroupParam> findMainByCrossId(String crossId) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new ValidationException("crossId", "路口编号不能为空");
+        }
+        List<SignalGroupParamEntity> entities = signalGroupParamRepository.findMainByCrossId(crossId);
+        if(entities == null){
+            throw new DataNotFoundException("SignalGroupParam");
+        }
+        List<SignalGroupParam> result = converter.toProtocolList(entities);
+        return result;
     }
 
     @Override

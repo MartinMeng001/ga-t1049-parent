@@ -105,7 +105,18 @@ public class LampGroupParam {//extends BaseParam
     public void setType(LampGroupType type) {
         this.type = type;
     }
-
+    /**
+     * 判断当前信号灯组参数的进口方向和信号灯组类型是否与传入的参数相等。
+     *
+     * @param otherDirection 传入的进口方向
+     * @param otherType 传入的信号灯组类型
+     * @return 如果direction和type都相等则返回true，否则返回false。
+     */
+    public boolean matchesDirectionAndType(Direction otherDirection, LampGroupType otherType) {
+        // 使用 Objects.equals 避免 NullPointerException，即使其中一个或两个参数为 null 也能正确比较
+        return java.util.Objects.equals(this.direction, otherDirection) &&
+                java.util.Objects.equals(this.type, otherType);
+    }
     @Override
     public String toString() {
         return "LampGroup{" +

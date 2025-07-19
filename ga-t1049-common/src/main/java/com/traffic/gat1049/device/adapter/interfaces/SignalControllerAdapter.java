@@ -7,7 +7,7 @@ import java.util.List;
  * 信号机适配器接口
  * 定义了与信号机设备通信的标准接口
  */
-public interface SignalControllerAdapter extends DeviceAdapter {
+public interface SignalControllerAdapter<P> extends DeviceAdapter {
 
     /**
      * 连接信号机设备
@@ -46,6 +46,13 @@ public interface SignalControllerAdapter extends DeviceAdapter {
     DeviceStatusData readDeviceStatus(String controllerId);
 
     /**
+     * 从设备读取配置数据数据
+     * @param inputParam 协议需求参数
+     * @return 实时数据
+     */
+    SyncResult readConfigData(P inputParam);
+
+    /**
      * 从设备读取实时数据
      * @param controllerId 信号机ID
      * @return 实时数据
@@ -80,4 +87,18 @@ public interface SignalControllerAdapter extends DeviceAdapter {
      * @return 同步结果列表
      */
     List<SyncResult> batchSyncConfig(List<BatchSyncRequest> syncRequests);
+
+    // 需要提供一些方案转换方式，每个适配器都必须提供该方式的具体实现，将信号机的方案转化为标准的1049方案，这种转化应该是双向的
+    /**
+     * 转换信号机方案为1049方案
+     * @param controllerPlan 信号机方案参数
+     * @return 1049方案参数
+     */
+    DevicePlanData toStdPlan(Object controllerPlan);
+    /**
+     * 下发方案到信号机
+     * @param plan 1049信号机方案参数
+     * @return 下发结果
+     */
+    SyncResult execToControllerPlan(DevicePlanData plan);
 }

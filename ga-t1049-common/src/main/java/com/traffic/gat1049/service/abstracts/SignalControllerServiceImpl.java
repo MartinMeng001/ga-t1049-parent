@@ -13,6 +13,7 @@ import com.traffic.gat1049.model.enums.CommMode;
 import com.traffic.gat1049.model.enums.ControllerErrorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
  * 信号机服务实现
  * 更新以支持新的SignalController标准定义
  */
+@Service
 public class SignalControllerServiceImpl implements SignalControllerService {
 
     private static final Logger logger = LoggerFactory.getLogger(SignalControllerServiceImpl.class);

@@ -350,8 +350,8 @@ public class TestLampGroupService {
 
         try {
             // 1. 查询指定方向和类型的信号灯组
-            List<LampGroupParamEntity> eastMotorGroups = lampGroupRepository.findByCrossIdAndDirectionAndType(crossId, "E", "01");
-            results.put("eastMotorGroups", eastMotorGroups);
+//            List<LampGroupParamEntity> eastMotorGroups = lampGroupRepository.findByCrossIdAndDirectionAndType(crossId, "E", "01");
+//            results.put("eastMotorGroups", eastMotorGroups);
 
             // 2. 查询完整信息（包含关联的信号组）
             List<LampGroupRepository.LampGroupWithSignalGroups> completeInfo =

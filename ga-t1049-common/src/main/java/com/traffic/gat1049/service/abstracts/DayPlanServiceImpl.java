@@ -10,6 +10,7 @@ import com.traffic.gat1049.protocol.model.signal.Period;
 import com.traffic.gat1049.service.interfaces.DayPlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 日计划服务实现
  */
+@Service
 public class DayPlanServiceImpl implements DayPlanService {
 
     private static final Logger logger = LoggerFactory.getLogger(DayPlanServiceImpl.class);
