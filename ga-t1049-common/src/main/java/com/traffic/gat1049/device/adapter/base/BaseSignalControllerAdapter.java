@@ -13,8 +13,8 @@ import java.util.concurrent.ConcurrentMap;
  * 信号机适配器基类
  * 提供信号机适配器的通用实现
  */
-public abstract class BaseSignalControllerAdapter extends AbstractDeviceAdapter
-        implements SignalControllerAdapter {
+public abstract class BaseSignalControllerAdapter<P> extends AbstractDeviceAdapter
+        implements SignalControllerAdapter<P> {
 
     /**
      * 连接管理 - 维护设备连接状态

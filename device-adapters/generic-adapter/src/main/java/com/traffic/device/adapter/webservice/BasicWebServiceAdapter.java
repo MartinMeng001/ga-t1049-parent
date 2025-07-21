@@ -1,8 +1,13 @@
 package com.traffic.device.adapter.webservice;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.traffic.device.adapter.common.converter.impl.DataConverter;
+import com.traffic.device.adapter.common.utils.SignalGroupUtil;
+import com.traffic.device.adapter.webservice.deviceprotocol.u5.BasicPhaseTable;
+import com.traffic.device.adapter.webservice.deviceprotocol.u5.SchemeData5U;
 import com.traffic.gat1049.device.adapter.annotation.AdapterComponent;
 import com.traffic.gat1049.device.adapter.annotation.DeviceBrand;
 import com.traffic.gat1049.device.adapter.annotation.ProtocolVersion;
@@ -10,10 +15,12 @@ import com.traffic.gat1049.device.adapter.base.BaseSignalControllerAdapter;
 import com.traffic.gat1049.device.adapter.model.*;
 import com.traffic.gat1049.device.adapter.registry.AdapterInfo;
 import com.traffic.gat1049.device.adapter.registry.AdapterRegistry;
+import com.traffic.gat1049.protocol.model.intersection.LampGroupParam;
+import com.traffic.gat1049.protocol.model.signal.SignalGroupParam;
+import com.traffic.gat1049.service.interfaces.LampGroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.xml.soap.*;
@@ -23,8 +30,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -34,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @AdapterComponent(brand = "SHUNBY", version = "1.0", description = "双百平台适配器")
 @DeviceBrand("SHUNBY")
 @ProtocolVersion({"1.0", "2.0"})
-public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
+public class BasicWebServiceAdapter extends BaseSignalControllerAdapter<JsonNode> {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicWebServiceAdapter.class);
 
@@ -48,6 +54,9 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
 
     @Autowired
     private AdapterRegistry adapterRegistry;
+
+    @Autowired
+    private DataConverter dataConverter;
 
     @PostConstruct
     public void autoRegister() {
@@ -67,7 +76,7 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
     }
     @Override
     protected void doInitialize() throws Exception {
-        // 海信特定的初始化逻辑
+        // 双百特定的初始化逻辑
         logger.info("双百平台适配器...");
     }
 
@@ -115,6 +124,19 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
                     "CONNECTION_EXCEPTION", "连接异常: " + e.getMessage());
         }
     }
+    @Override
+    public SyncResult readConfigData(JsonNode inputParam) {
+        try {
+            boolean result = getDeviceStatus(inputParam);
+            if (result) {
+                return SyncResult.success("temp", "读取方案成功");
+            }
+            return SyncResult.failure("temp", "READ_FAILUE", "读取方案失败");
+        }catch (Exception e){
+            logger.error("双百设备方案读取异常", e);
+            return SyncResult.failure("temp", "READ_EXCEPTION", "读取参数异常:" + e.getMessage());
+        }
+    }
 
     @Override
     public DisconnectionResult disconnect(String controllerId) {
@@ -143,6 +165,27 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
 
     @Override
     public DeviceCapabilities getDeviceCapabilities(String controllerId) {
+        return null;
+    }
+
+    @Override
+    public DevicePlanData toStdPlan(Object controllerPlan) {
+        try {
+            if (controllerPlan instanceof SchemeData5U) {
+                SchemeData5U schemeData5U = (SchemeData5U) controllerPlan;
+                List<LampGroupParam> all_lamps = dataConverter.getLampGroupStandardData(schemeData5U.getCrossId());
+                // 转换灯组
+                // 转换阶段
+                // 转换方案
+            }
+        }catch (Exception e){
+            logger.error(e.getMessage(), e);
+        }
+        return null;
+    }
+
+    @Override
+    public SyncResult execToControllerPlan(DevicePlanData plan) {
         return null;
     }
 
@@ -197,35 +240,45 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
     }
 
     /**
-     * 获取设备状态数据
-     * @param ip 设备IP
-     * @param sigId 信号机ID
-     * @return 设备状态的JSON对象，如果获取失败返回null
+     * 获取配时方案数据
+     * @param param 传入参数对象
+     * @return 设备方案读取成功或者失败
      */
-    public JSONObject getDeviceStatus(String ip, Integer sigId) {
+    public boolean getDeviceStatus(JsonNode param) {
         try {
+            String sigId = param.get("sigid").asText();
+            String ip = param.get("ip").asText();
+            String crossid = param.get("crossid").asText();
+            String ipServer = param.get("ipServer").asText();
             logger.info("开始获取设备状态: IP={}, SigId={}", ip, sigId);
 
             // 创建查询请求
-            JSONObject request = new JSONObject();
-            request.put("SIGID", sigId);
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode node = mapper.createObjectNode();
+            node.put("SIGID", sigId);
+            node.put("SCHEMEID", param.get("SCHEMEID").asInt());
+            node.put("CTRLMODE", param.get("CTRLMODE").asInt());
+            node.put("SCHEMEID4DB", param.get("SCHEMEID4DB").asInt());
 
-            logger.info("查询设备状态请求: {}", request.toJSONString());
+            logger.info("查询设备状态请求: {}", mapper.writeValueAsString(node));
 
             // 调用WebService获取配时方案信息（包含状态）
-            JSONObject response = callGetSignalScheme(request, ip);
+            boolean response = callGetSignalScheme(node, crossid, ip, ipServer);
 
-            if (response != null) {
-                logger.info("设备状态响应: {}", response.toJSONString());
-                return response;
+            if (response) {
+                logger.info("设备状态响应: {}", response);
+                //return response;
+                return true;
             } else {
                 logger.warn("未获取到设备状态数据: IP={}, SigId={}", ip, sigId);
-                return null;
+                //return null;
+                return false;
             }
 
         } catch (Exception e) {
-            logger.error("读取WebService信号机状态异常: IP={}, SigId={}", ip, sigId, e);
-            return null;
+            logger.error("读取WebService信号机状态异常: ", e);
+            //return null;
+            return false;
         }
     }
 
@@ -235,44 +288,44 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
      * @param sigId 信号机ID
      * @return 包含各种实时数据的Map
      */
-    public Map<String, JSONObject> getDeviceRuntimeData(String ip, Integer sigId) {
-        try {
-            logger.info("开始获取设备实时数据: IP={}, SigId={}", ip, sigId);
-
-            JSONObject request = new JSONObject();
-            request.put("SIGID", sigId);
-
-            // 获取多种实时数据
-            Map<String, JSONObject> runtimeDataMap = new HashMap<>();
-
-            // 1. 获取通道配置
-            JSONObject channelData = callGetChannels5U(request, ip);
-            if (channelData != null) {
-                runtimeDataMap.put("channels", channelData);
-                logger.info("✅ 通道配置获取成功");
-            }
-
-            // 2. 获取车道信息
-            JSONObject lanesData = callGetCrossLanes5U(request, ip);
-            if (lanesData != null) {
-                runtimeDataMap.put("lanes", lanesData);
-                logger.info("✅ 车道信息获取成功");
-            }
-
-            // 3. 获取相位信息
-            JSONObject phasesData = callGetCrossPhases5U(request, ip);
-            if (phasesData != null) {
-                runtimeDataMap.put("phases", phasesData);
-                logger.info("✅ 相位信息获取成功");
-            }
-
-            return runtimeDataMap;
-
-        } catch (Exception e) {
-            logger.error("读取WebService信号机实时数据异常: IP={}, SigId={}", ip, sigId, e);
-            return new HashMap<>();
-        }
-    }
+//    public Map<String, JSONObject> getDeviceRuntimeData(String ip, Integer sigId) {
+//        try {
+//            logger.info("开始获取设备实时数据: IP={}, SigId={}", ip, sigId);
+//
+//            JSONObject request = new JSONObject();
+//            request.put("SIGID", sigId);
+//
+//            // 获取多种实时数据
+//            Map<String, JSONObject> runtimeDataMap = new HashMap<>();
+//
+//            // 1. 获取通道配置
+//            JSONObject channelData = callGetChannels5U(request, ip);
+//            if (channelData != null) {
+//                runtimeDataMap.put("channels", channelData);
+//                logger.info("✅ 通道配置获取成功");
+//            }
+//
+//            // 2. 获取车道信息
+//            JSONObject lanesData = callGetCrossLanes5U(request, ip);
+//            if (lanesData != null) {
+//                runtimeDataMap.put("lanes", lanesData);
+//                logger.info("✅ 车道信息获取成功");
+//            }
+//
+//            // 3. 获取相位信息
+//            JSONObject phasesData = callGetCrossPhases5U(request, ip);
+//            if (phasesData != null) {
+//                runtimeDataMap.put("phases", phasesData);
+//                logger.info("✅ 相位信息获取成功");
+//            }
+//
+//            return runtimeDataMap;
+//
+//        } catch (Exception e) {
+//            logger.error("读取WebService信号机实时数据异常: IP={}, SigId={}", ip, sigId, e);
+//            return new HashMap<>();
+//        }
+//    }
 
     /**
      * 获取当前连接的设备数量
@@ -305,17 +358,20 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
             String result = callWebService(ip, "SayHello", params);
             logger.info("HelloWorld响应: {}", result);
 
-            JSONObject obj = JSON.parseObject(result);
-            JSONArray rows = obj.getJSONArray("rows");
-
-            if (rows != null) {
-                logger.info("成功获取到{}个交叉口数据", rows.size());
-                return true;
-            } else {
-                logger.warn("HelloWorld响应中未找到rows数组");
-                return false;
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode jsonNode = mapper.readTree(result);
+            JsonNode dataNode = jsonNode.get("rows");
+            if(dataNode!=null && dataNode.isArray()){
+                ArrayNode rows = (ArrayNode) dataNode;
+                if (rows != null) {
+                    logger.info("成功获取到{}个交叉口数据", rows.size());
+                    return true;
+                } else {
+                    logger.warn("HelloWorld响应中未找到rows数组");
+                    return false;
+                }
             }
-
+            return false;
         } catch (Exception e) {
             logger.error("HelloWorld测试失败: {}", ip, e);
             return false;
@@ -325,98 +381,157 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
     /**
      * 获取配时方案（包含设备状态信息）
      */
-    private JSONObject callGetSignalScheme(JSONObject request, String ip) {
+    public boolean callGetSignalScheme(JsonNode request, String crossId, String ip, String ipServer) {
         try {
+            ObjectMapper mapper = new ObjectMapper();
             HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", request.toJSONString());
+            params.put("arg0", mapper.writeValueAsString(request));
             params.put("arg1", ip);
 
-            String result = callWebService(ip, "GetSignalScheme", params);
-            JSONObject response = JSON.parseObject(result);
+            String result = callWebService(ipServer, "GetSignalScheme", params);
+            JsonNode response = mapper.readTree(result);
 
-            if (response != null && "ok".equals(response.getString("success"))) {
-                return response;
+            if (response != null && "ok".equals(response.get("success").asText())) {
+                BasicPhaseTable basicPhaseTable = new BasicPhaseTable();
+                List<LampGroupParam> allLamps = dataConverter.getLampGroupStandardData(crossId);
+                basicPhaseTable.setAllLamps(allLamps);
+                SchemeData5U scheme5U = new SchemeData5U(basicPhaseTable);
+                scheme5U.setSchemeInfo(response, crossId);
+//                JsonNode phases = response.path("resultA").path("PhaseList");//response.get("PhaseList");
+//                if (phases == null || !phases.isArray()) return false;
+//                ArrayNode stageArray = (ArrayNode) phases;
+//                // 转换灯组
+//                Set<Integer> allLamps = new HashSet<>();
+//                for(int i=0;i<stageArray.size();i++){
+//                    JsonNode stage = stageArray.get(i);
+//                    JsonNode lightgroups = stage.get("LanePassage");
+//                    if (lightgroups == null || !lightgroups.isObject()) continue;
+//                    Set<Integer> lamps = new HashSet<>();
+//                    JsonNode north = lightgroups.get("North");
+//                    JsonNode east = lightgroups.get("East");
+//                    JsonNode south = lightgroups.get("South");
+//                    JsonNode west = lightgroups.get("West");
+//                    boolean updatedAll = false;
+//                    if(i==0) updatedAll = true;
+//                    parseDirection(crossId, "North", north, lamps, allLamps, updatedAll);
+//                    parseDirection(crossId, "East", east, lamps, allLamps, updatedAll);
+//                    parseDirection(crossId, "South", south, lamps, allLamps, updatedAll);
+//                    parseDirection(crossId, "West", west, lamps,allLamps, updatedAll);
+//                    allLamps.removeAll(lamps);
+//                    logger.info("The stage {} lamps list is: {}", i+1, lamps);
+//                    int mainSignalGroupNo = SignalGroupUtil.isMainSignalGroup(lamps);
+//                    int rightSignalGroupNo = SignalGroupUtil.isRightSignalGroup(lamps);
+//                    int pedestrianSignalGroupNo = SignalGroupUtil.isPedestrianSignalGroup(lamps);
+//                    logger.info("The mainSignalGroupNo {}, rightSignalGroupNo {}, pedestrianSignalGroupNo {}", mainSignalGroupNo, rightSignalGroupNo, pedestrianSignalGroupNo);
+//                }
+//                if(allLamps.isEmpty()) return true;
+                //logger.info("The remain stage lamps list is: {}", allLamps);
+                // 转换信号组
+                // 转换方案参数
+                //return response;
+                return true;
             } else {
-                logger.warn("获取配时方案失败: {}", response != null ? response.getString("message") : "无响应");
-                return null;
+                logger.warn("获取配时方案失败: {}", response != null ? response.get("message").asText() : "无响应");
+                //return null;
             }
         } catch (Exception e) {
             logger.error("获取配时方案异常", e);
-            return null;
+            //return null;
+        }
+        return false;
+    }
+    protected void parseDirection(String crossId, String direction, JsonNode data, Set<Integer> lamps, Set<Integer> allLamps, boolean updatedAll){
+        try {
+            parseFlow(crossId, direction, "Straight", data, lamps, allLamps, updatedAll);
+            parseFlow(crossId, direction, "TurnLeft", data, lamps, allLamps, updatedAll);
+            parseFlow(crossId, direction, "TurnRight", data, lamps, allLamps, updatedAll);
+            parseFlow(crossId, direction, "Sidewalk", data, lamps, allLamps, updatedAll);
+            parseFlow(crossId, direction, "NonMotorized", data, lamps, allLamps, updatedAll);
+            parseFlow(crossId, direction, "TurnRound", data, lamps, allLamps, updatedAll);
+            parseFlow(crossId, direction, "Extend1", data, lamps, allLamps, updatedAll);
+            parseFlow(crossId, direction, "Extend2", data, lamps, allLamps, updatedAll);
+
+        }catch (Exception e){e.printStackTrace();}
+    }
+    protected void parseFlow(String crossId, String direction, String flow, JsonNode data, Set<Integer> lamps, Set<Integer> allLamps, boolean updatedAll) throws Exception {
+        if(!"Red".equals(data.get(flow).asText())){
+            lamps.add(dataConverter.getLightGroupNoByDirectionFlow(crossId, direction, flow));
+        }
+        if(updatedAll){
+            allLamps.add(dataConverter.getLightGroupNoByDirectionFlow(crossId, direction, flow));
         }
     }
-
     /**
      * 获取通道配置
      */
-    private JSONObject callGetChannels5U(JSONObject request, String ip) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", request.toJSONString());
-            params.put("arg1", ip);
-
-            String result = callWebService(ip, "ChannelConfigurationGet", params);
-            JSONObject response = JSON.parseObject(result);
-
-            if (response != null && "ok".equals(response.getString("success"))) {
-                return response;
-            } else {
-                logger.warn("获取通道配置失败: {}", response != null ? response.getString("message") : "无响应");
-                return null;
-            }
-        } catch (Exception e) {
-            logger.error("获取通道配置异常", e);
-            return null;
-        }
-    }
+//    private JSONObject callGetChannels5U(JSONObject request, String ip) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", request.toJSONString());
+//            params.put("arg1", ip);
+//
+//            String result = callWebService(ip, "ChannelConfigurationGet", params);
+//            JSONObject response = JSON.parseObject(result);
+//
+//            if (response != null && "ok".equals(response.getString("success"))) {
+//                return response;
+//            } else {
+//                logger.warn("获取通道配置失败: {}", response != null ? response.getString("message") : "无响应");
+//                return null;
+//            }
+//        } catch (Exception e) {
+//            logger.error("获取通道配置异常", e);
+//            return null;
+//        }
+//    }
 
     /**
      * 获取车道信息
      */
-    private JSONObject callGetCrossLanes5U(JSONObject request, String ip) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", request.toJSONString());
-            params.put("arg1", ip);
-
-            String result = callWebService(ip, "getBasicDataLanesDB", params);
-            JSONObject response = JSON.parseObject(result);
-
-            if (response != null && "ok".equals(response.getString("success"))) {
-                return response;
-            } else {
-                logger.warn("获取车道信息失败: {}", response != null ? response.getString("message") : "无响应");
-                return null;
-            }
-        } catch (Exception e) {
-            logger.error("获取车道信息异常", e);
-            return null;
-        }
-    }
+//    private JSONObject callGetCrossLanes5U(JSONObject request, String ip) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", request.toJSONString());
+//            params.put("arg1", ip);
+//
+//            String result = callWebService(ip, "getBasicDataLanesDB", params);
+//            JSONObject response = JSON.parseObject(result);
+//
+//            if (response != null && "ok".equals(response.getString("success"))) {
+//                return response;
+//            } else {
+//                logger.warn("获取车道信息失败: {}", response != null ? response.getString("message") : "无响应");
+//                return null;
+//            }
+//        } catch (Exception e) {
+//            logger.error("获取车道信息异常", e);
+//            return null;
+//        }
+//    }
 
     /**
      * 获取相位信息
      */
-    private JSONObject callGetCrossPhases5U(JSONObject request, String ip) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", request.toJSONString());
-            params.put("arg1", ip);
-
-            String result = callWebService(ip, "getBasicDataPhasesDB", params);
-            JSONObject response = JSON.parseObject(result);
-
-            if (response != null && "ok".equals(response.getString("success"))) {
-                return response;
-            } else {
-                logger.warn("获取相位信息失败: {}", response != null ? response.getString("message") : "无响应");
-                return null;
-            }
-        } catch (Exception e) {
-            logger.error("获取相位信息异常", e);
-            return null;
-        }
-    }
+//    private JSONObject callGetCrossPhases5U(JSONObject request, String ip) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", request.toJSONString());
+//            params.put("arg1", ip);
+//
+//            String result = callWebService(ip, "getBasicDataPhasesDB", params);
+//            JSONObject response = JSON.parseObject(result);
+//
+//            if (response != null && "ok".equals(response.getString("success"))) {
+//                return response;
+//            } else {
+//                logger.warn("获取相位信息失败: {}", response != null ? response.getString("message") : "无响应");
+//                return null;
+//            }
+//        } catch (Exception e) {
+//            logger.error("获取相位信息异常", e);
+//            return null;
+//        }
+//    }
 
     // ================================================================
     // 核心WebService调用方法（基于您的DynamicWebService改造）
@@ -513,72 +628,72 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter {
     /**
      * 解析设备状态响应，提取关键信息
      */
-    public Map<String, Object> parseDeviceStatus(JSONObject statusResponse) {
-        Map<String, Object> statusInfo = new HashMap<>();
-
-        if (statusResponse == null) {
-            return statusInfo;
-        }
-
-        try {
-            statusInfo.put("success", statusResponse.getString("success"));
-            statusInfo.put("timestamp", LocalDateTime.now().toString());
-
-            if (statusResponse.containsKey("resultA")) {
-                JSONObject resultA = statusResponse.getJSONObject("resultA");
-                if (resultA != null) {
-                    statusInfo.put("currentScheme", resultA.getInteger("SchemeNo"));
-                    statusInfo.put("currentStage", resultA.getInteger("CurrentStage"));
-                    statusInfo.put("remainTime", resultA.getInteger("RemainTime"));
-                    statusInfo.put("controlMode", resultA.getInteger("ControlMode"));
-                }
-            }
-
-        } catch (Exception e) {
-            logger.error("解析设备状态响应异常", e);
-            statusInfo.put("error", e.getMessage());
-        }
-
-        return statusInfo;
-    }
+//    public Map<String, Object> parseDeviceStatus(JSONObject statusResponse) {
+//        Map<String, Object> statusInfo = new HashMap<>();
+//
+//        if (statusResponse == null) {
+//            return statusInfo;
+//        }
+//
+//        try {
+//            statusInfo.put("success", statusResponse.getString("success"));
+//            statusInfo.put("timestamp", LocalDateTime.now().toString());
+//
+//            if (statusResponse.containsKey("resultA")) {
+//                JSONObject resultA = statusResponse.getJSONObject("resultA");
+//                if (resultA != null) {
+//                    statusInfo.put("currentScheme", resultA.getInteger("SchemeNo"));
+//                    statusInfo.put("currentStage", resultA.getInteger("CurrentStage"));
+//                    statusInfo.put("remainTime", resultA.getInteger("RemainTime"));
+//                    statusInfo.put("controlMode", resultA.getInteger("ControlMode"));
+//                }
+//            }
+//
+//        } catch (Exception e) {
+//            logger.error("解析设备状态响应异常", e);
+//            statusInfo.put("error", e.getMessage());
+//        }
+//
+//        return statusInfo;
+//    }
 
     /**
      * 解析运行时数据，提取关键信息
      */
-    public Map<String, Object> parseRuntimeData(Map<String, JSONObject> runtimeDataMap) {
-        Map<String, Object> runtimeInfo = new HashMap<>();
-
-        try {
-            runtimeInfo.put("timestamp", LocalDateTime.now().toString());
-            runtimeInfo.put("dataTypes", runtimeDataMap.keySet());
-
-            // 统计每种数据类型的条目数
-            for (Map.Entry<String, JSONObject> entry : runtimeDataMap.entrySet()) {
-                String dataType = entry.getKey();
-                JSONObject data = entry.getValue();
-
-                if (data != null && "ok".equals(data.getString("success"))) {
-                    runtimeInfo.put(dataType + "_status", "success");
-
-                    // 尝试提取数据条目数
-                    if (data.containsKey("resultA")) {
-                        JSONObject resultA = data.getJSONObject("resultA");
-                        if (resultA != null) {
-                            runtimeInfo.put(dataType + "_data", resultA.toString());
-                        }
-                    }
-                } else {
-                    runtimeInfo.put(dataType + "_status", "failed");
-                }
-            }
-
-        } catch (Exception e) {
-            logger.error("解析运行时数据异常", e);
-            runtimeInfo.put("error", e.getMessage());
-        }
-
-        return runtimeInfo;
-    }
+//    public Map<String, Object> parseRuntimeData(Map<String, JSONObject> runtimeDataMap) {
+//        Map<String, Object> runtimeInfo = new HashMap<>();
+//
+//        try {
+//            runtimeInfo.put("timestamp", LocalDateTime.now().toString());
+//            runtimeInfo.put("dataTypes", runtimeDataMap.keySet());
+//
+//            // 统计每种数据类型的条目数
+//            for (Map.Entry<String, JSONObject> entry : runtimeDataMap.entrySet()) {
+//                String dataType = entry.getKey();
+//                JSONObject data = entry.getValue();
+//
+//                if (data != null && "ok".equals(data.getString("success"))) {
+//                    runtimeInfo.put(dataType + "_status", "success");
+//
+//                    // 尝试提取数据条目数
+//                    if (data.containsKey("resultA")) {
+//                        JSONObject resultA = data.getJSONObject("resultA");
+//                        if (resultA != null) {
+//                            runtimeInfo.put(dataType + "_data", resultA.toString());
+//                        }
+//                    }
+//                } else {
+//                    runtimeInfo.put(dataType + "_status", "failed");
+//                }
+//            }
+//
+//        } catch (Exception e) {
+//            logger.error("解析运行时数据异常", e);
+//            runtimeInfo.put("error", e.getMessage());
+//        }
+//
+//        return runtimeInfo;
+//    }
 
     @Override
     public String[] getSupportedDeviceTypes() {

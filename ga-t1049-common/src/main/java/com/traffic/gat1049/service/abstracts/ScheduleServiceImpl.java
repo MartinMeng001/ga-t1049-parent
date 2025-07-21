@@ -10,6 +10,7 @@ import com.traffic.gat1049.model.enums.OperationType;
 import com.traffic.gat1049.service.interfaces.ScheduleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.MonthDay;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 /**
  * 调度服务实现 - 使用MonthDay统一处理startDay和endDay
  */
+@Service
 public class ScheduleServiceImpl implements ScheduleService {
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduleServiceImpl.class);

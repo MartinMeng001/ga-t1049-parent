@@ -9,10 +9,8 @@ import com.traffic.gat1049.repository.interfaces.SignalGroupParamRepository;
 import com.traffic.server.test.dto.CreateSignalGroupRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.*;

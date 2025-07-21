@@ -16,6 +16,7 @@ import com.traffic.gat1049.model.vo.CrossInfoVo;
 import com.traffic.gat1049.service.interfaces.CrossService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 /**
  * 路口服务实现
  */
+@Service
 public class CrossServiceImpl implements CrossService {
 
     private static final Logger logger = LoggerFactory.getLogger(CrossServiceImpl.class);

@@ -13,6 +13,7 @@ import com.traffic.gat1049.service.interfaces.ControlModeService;
 import com.traffic.gat1049.service.interfaces.PlanService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 /**
  * 控制模式服务实现
  */
+@Service
 public class ControlModeServiceImpl implements ControlModeService {
 
     private static final Logger logger = LoggerFactory.getLogger(ControlModeServiceImpl.class);

@@ -1,8 +1,8 @@
 package com.traffic.device.adapter.webservice.test;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import javax.xml.soap.*;
 import javax.xml.transform.Source;
@@ -69,10 +69,12 @@ public class StandaloneWebServiceTester {
             String result = callWebService(url, "SayHello", params);
             System.out.println("SayHello响应: " + result);
 
-            JSONObject obj = JSON.parseObject(result);
-            JSONArray rows = obj.getJSONArray("rows");
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode nodes = mapper.readTree(result);
+            JsonNode arraynode = nodes.get("rows");
 
-            if (rows != null) {
+            if (arraynode != null) {
+                ArrayNode rows = (ArrayNode) arraynode;
                 System.out.println("获取到 " + rows.size() + " 个交叉口数据");
                 return true;
             } else {
@@ -111,11 +113,12 @@ public class StandaloneWebServiceTester {
             String result = callWebService(url, methodName, params);
 
             if (result != null && !result.isEmpty()) {
-                JSONObject obj = JSON.parseObject(result);
-                if ("ok".equals(obj.getString("success"))) {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode obj = mapper.readTree(result);
+                if ("ok".equals(obj.get("success").asText())) {
                     System.out.println("✅ " + description + " 成功");
                 } else {
-                    System.out.println("⚠️ " + description + " 失败: " + obj.getString("message"));
+                    System.out.println("⚠️ " + description + " 失败: " + obj.get("message").asText());
                 }
             } else {
                 System.out.println("⚠️ " + description + " 无响应数据");

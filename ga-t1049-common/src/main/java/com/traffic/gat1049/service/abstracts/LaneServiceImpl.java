@@ -15,6 +15,7 @@ import com.traffic.gat1049.model.enums.VarLaneMode;
 import com.traffic.gat1049.service.interfaces.LaneService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 /**
  * 车道服务实现
  */
+@Service
 public class LaneServiceImpl implements LaneService {
 
     private static final Logger logger = LoggerFactory.getLogger(LaneServiceImpl.class);

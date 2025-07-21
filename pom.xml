@@ -26,6 +26,9 @@
         <logback.version>1.2.12</logback.version>
         <junit.version>5.9.3</junit.version>
         <mockito.version>4.11.0</mockito.version>
+        <!-- JSON库版本统一管理 -->
+        <jackson.version>2.15.2</jackson.version>
+        <fastjson.version>1.2.83</fastjson.version>
         <!-- 新增数据库相关版本 -->
         <mysql.version>8.0.33</mysql.version>
         <mybatis-plus.version>3.5.3.1</mybatis-plus.version>
@@ -56,11 +59,11 @@
                 <artifactId>ga-t1049-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>com.traffic</groupId>-->
-<!--                <artifactId>adapter-common</artifactId>-->
-<!--                <version>${project.version}</version>-->
-<!--            </dependency>-->
+            <dependency>
+                <groupId>com.traffic</groupId>
+                <artifactId>adapter-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 <!--            <dependency>-->
 <!--                <groupId>com.traffic</groupId>-->
 <!--                <artifactId>hisense-adapter</artifactId>-->
@@ -104,6 +107,32 @@
                 <version>${slf4j.version}</version>
             </dependency>
 
+            <!-- Jackson - 项目主要JSON库 -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-xml</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
             <!-- 测试依赖 - 关键修复点 -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>

@@ -9,6 +9,7 @@ import com.traffic.gat1049.protocol.model.system.SubRegionParam;
 import com.traffic.gat1049.service.interfaces.SubRegionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 /**
  * 子区服务实现
  */
+@Service
 public class SubRegionServiceImpl implements SubRegionService {
 
     private static final Logger logger = LoggerFactory.getLogger(SubRegionServiceImpl.class);

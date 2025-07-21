@@ -11,6 +11,7 @@ import com.traffic.gat1049.service.interfaces.DoorStatusService;
 import com.traffic.gat1049.service.interfaces.SignalControllerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 /**
  * 信号机柜门状态服务实现
  */
+@Service
 public class DoorStatusServiceImpl implements DoorStatusService {
 
     private static final Logger logger = LoggerFactory.getLogger(DoorStatusServiceImpl.class);

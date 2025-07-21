@@ -1,9 +1,7 @@
 package com.traffic.device.adapter.webservice.converter;
 
-import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -23,23 +21,23 @@ public class WebServiceDataConverter {
 //        return request;
 //    }
 
-    public JSONObject convertDayPlansToRequest(List<Object> dayPlans, Integer sigId) {
-        JSONObject request = new JSONObject();
-        request.put("SIGID", sigId);
+//    public JSONObject convertDayPlansToRequest(List<Object> dayPlans, Integer sigId) {
+//        JSONObject request = new JSONObject();
+//        request.put("SIGID", sigId);
+//
+//        // 转换日计划数据
+//
+//        return request;
+//    }
 
-        // 转换日计划数据
-
-        return request;
-    }
-
-    public JSONObject convertWeekSchedulesToRequest(List<Object> weekSchedules, Integer sigId) {
-        JSONObject request = new JSONObject();
-        request.put("SIGID", sigId);
-
-        // 转换周计划数据
-
-        return request;
-    }
+//    public JSONObject convertWeekSchedulesToRequest(List<Object> weekSchedules, Integer sigId) {
+//        JSONObject request = new JSONObject();
+//        request.put("SIGID", sigId);
+//
+//        // 转换周计划数据
+//
+//        return request;
+//    }
 
 //    public DeviceStatusData convertToDeviceStatus(JSONObject response, String controllerId) {
 //        DeviceStatusData statusData = new DeviceStatusData();

@@ -1,7 +1,8 @@
 package com.traffic.device.adapter.webservice.client;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -36,172 +37,174 @@ public class WebServiceClient {
             params.put("arg0", "");
 
             String result = callWebService("SayHello", params);
-            JSONObject obj = JSON.parseObject(result);
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode jsonnode = mapper.readTree(result);
+            JsonNode arraynode = jsonnode.get("rows");
 
-            return obj != null && obj.getJSONArray("rows") != null;
+            return jsonnode != null && arraynode != null;
         } catch (Exception e) {
             logger.error("WebService连接测试失败", e);
             return false;
         }
     }
 
-    public JSONObject getChannels5U(JSONObject reqObj, String ip) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", reqObj.toJSONString());
-            params.put("arg1", ip);
+//    public JSONObject getChannels5U(JSONObject reqObj, String ip) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", reqObj.toJSONString());
+//            params.put("arg1", ip);
+//
+//            String result = callWebService("ChannelConfigurationGet", params);
+//            return JSON.parseObject(result);
+//        } catch (Exception e) {
+//            logger.error("获取通道配置失败", e);
+//            return null;
+//        }
+//    }
 
-            String result = callWebService("ChannelConfigurationGet", params);
-            return JSON.parseObject(result);
-        } catch (Exception e) {
-            logger.error("获取通道配置失败", e);
-            return null;
-        }
-    }
+//    public JSONObject getSchemes5U(JSONObject reqObj, String ip, boolean beSensor) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", reqObj.toJSONString());
+//            params.put("arg1", ip);
+//
+//            String result = callWebService("GetSignalScheme", params);
+//            return JSON.parseObject(result);
+//        } catch (Exception e) {
+//            logger.error("获取配时方案失败", e);
+//            return null;
+//        }
+//    }
 
-    public JSONObject getSchemes5U(JSONObject reqObj, String ip, boolean beSensor) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", reqObj.toJSONString());
-            params.put("arg1", ip);
+//    public int setSchemes5U(JSONObject reqObj, String ip) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", reqObj.toJSONString());
+//            params.put("arg1", ip);
+//
+//            String result = callWebService("SetSignalSchemeNew", params);
+//            JSONObject obj = JSON.parseObject(result);
+//
+//            return "ok".equals(obj.getString("success")) ? 1 : 0;
+//        } catch (Exception e) {
+//            logger.error("设置配时方案失败", e);
+//            return 0;
+//        }
+//    }
 
-            String result = callWebService("GetSignalScheme", params);
-            return JSON.parseObject(result);
-        } catch (Exception e) {
-            logger.error("获取配时方案失败", e);
-            return null;
-        }
-    }
+//    public int setDayPlan5U(JSONObject reqObj, String ip) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", reqObj.toJSONString());
+//            params.put("arg1", ip);
+//
+//            String result = callWebService("DailyPlanSet", params);
+//            JSONObject obj = JSON.parseObject(result);
+//
+//            return "ok".equals(obj.getString("success")) ? 1 : 0;
+//        } catch (Exception e) {
+//            logger.error("设置日计划失败", e);
+//            return 0;
+//        }
+//    }
 
-    public int setSchemes5U(JSONObject reqObj, String ip) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", reqObj.toJSONString());
-            params.put("arg1", ip);
+//    public int setWeekSchedule5U(JSONObject reqObj, String ip) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", reqObj.toJSONString());
+//            params.put("arg1", ip);
+//
+//            String result = callWebService("DailyScheduleForWeeklySet", params);
+//            JSONObject obj = JSON.parseObject(result);
+//
+//            return "ok".equals(obj.getString("success")) ? 1 : 0;
+//        } catch (Exception e) {
+//            logger.error("设置周计划失败", e);
+//            return 0;
+//        }
+//    }
 
-            String result = callWebService("SetSignalSchemeNew", params);
-            JSONObject obj = JSON.parseObject(result);
+//    public JSONObject getCrossLanes5U(JSONObject reqObj, String ip) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", reqObj.toJSONString());
+//            params.put("arg1", ip);
+//
+//            String result = callWebService("getBasicDataLanesDB", params);
+//            return JSON.parseObject(result);
+//        } catch (Exception e) {
+//            logger.error("获取车道信息失败", e);
+//            return null;
+//        }
+//    }
 
-            return "ok".equals(obj.getString("success")) ? 1 : 0;
-        } catch (Exception e) {
-            logger.error("设置配时方案失败", e);
-            return 0;
-        }
-    }
+//    public JSONObject getCrossPhases5U(JSONObject reqObj, String ip) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", reqObj.toJSONString());
+//            params.put("arg1", ip);
+//
+//            String result = callWebService("getBasicDataPhasesDB", params);
+//            return JSON.parseObject(result);
+//        } catch (Exception e) {
+//            logger.error("获取相位信息失败", e);
+//            return null;
+//        }
+//    }
 
-    public int setDayPlan5U(JSONObject reqObj, String ip) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", reqObj.toJSONString());
-            params.put("arg1", ip);
+//    public int setCustomGuardControl(JSONObject guard) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", guard.toJSONString());
+//
+//            String result = callWebService("SetCustomGuardControl", params);
+//            JSONObject obj = JSON.parseObject(result);
+//
+//            return "ok".equals(obj.getString("success")) ? 1 : 0;
+//        } catch (Exception e) {
+//            logger.error("设置自定义手动控制失败", e);
+//            return 0;
+//        }
+//    }
 
-            String result = callWebService("DailyPlanSet", params);
-            JSONObject obj = JSON.parseObject(result);
+//    public int setGuardControl(JSONObject guard) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", guard.toJSONString());
+//
+//            String result = callWebService("SetGuardControl", params);
+//            JSONObject obj = JSON.parseObject(result);
+//
+//            return "ok".equals(obj.getString("success")) ? 1 : 0;
+//        } catch (Exception e) {
+//            logger.error("设置手动控制失败", e);
+//            return 0;
+//        }
+//    }
 
-            return "ok".equals(obj.getString("success")) ? 1 : 0;
-        } catch (Exception e) {
-            logger.error("设置日计划失败", e);
-            return 0;
-        }
-    }
+//    public int setSpecialGuardControl(JSONObject reqObj, String ip) {
+//        try {
+//            HashMap<String, String> params = new HashMap<>();
+//            params.put("arg0", reqObj.toJSONString());
+//            params.put("arg1", ip);
+//
+//            String result = callWebService("SpecialHoursSet", params);
+//            JSONObject obj = JSON.parseObject(result);
+//
+//            return "ok".equals(obj.getString("success")) ? 1 : 0;
+//        } catch (Exception e) {
+//            logger.error("设置特殊时段控制失败", e);
+//            return 0;
+//        }
+//    }
 
-    public int setWeekSchedule5U(JSONObject reqObj, String ip) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", reqObj.toJSONString());
-            params.put("arg1", ip);
-
-            String result = callWebService("DailyScheduleForWeeklySet", params);
-            JSONObject obj = JSON.parseObject(result);
-
-            return "ok".equals(obj.getString("success")) ? 1 : 0;
-        } catch (Exception e) {
-            logger.error("设置周计划失败", e);
-            return 0;
-        }
-    }
-
-    public JSONObject getCrossLanes5U(JSONObject reqObj, String ip) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", reqObj.toJSONString());
-            params.put("arg1", ip);
-
-            String result = callWebService("getBasicDataLanesDB", params);
-            return JSON.parseObject(result);
-        } catch (Exception e) {
-            logger.error("获取车道信息失败", e);
-            return null;
-        }
-    }
-
-    public JSONObject getCrossPhases5U(JSONObject reqObj, String ip) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", reqObj.toJSONString());
-            params.put("arg1", ip);
-
-            String result = callWebService("getBasicDataPhasesDB", params);
-            return JSON.parseObject(result);
-        } catch (Exception e) {
-            logger.error("获取相位信息失败", e);
-            return null;
-        }
-    }
-
-    public int setCustomGuardControl(JSONObject guard) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", guard.toJSONString());
-
-            String result = callWebService("SetCustomGuardControl", params);
-            JSONObject obj = JSON.parseObject(result);
-
-            return "ok".equals(obj.getString("success")) ? 1 : 0;
-        } catch (Exception e) {
-            logger.error("设置自定义手动控制失败", e);
-            return 0;
-        }
-    }
-
-    public int setGuardControl(JSONObject guard) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", guard.toJSONString());
-
-            String result = callWebService("SetGuardControl", params);
-            JSONObject obj = JSON.parseObject(result);
-
-            return "ok".equals(obj.getString("success")) ? 1 : 0;
-        } catch (Exception e) {
-            logger.error("设置手动控制失败", e);
-            return 0;
-        }
-    }
-
-    public int setSpecialGuardControl(JSONObject reqObj, String ip) {
-        try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("arg0", reqObj.toJSONString());
-            params.put("arg1", ip);
-
-            String result = callWebService("SpecialHoursSet", params);
-            JSONObject obj = JSON.parseObject(result);
-
-            return "ok".equals(obj.getString("success")) ? 1 : 0;
-        } catch (Exception e) {
-            logger.error("设置特殊时段控制失败", e);
-            return 0;
-        }
-    }
-
-    public int guardControl(String ip, int mode, int period) {
-        JSONObject ret = new JSONObject();
-        ret.put("CheckSignalIP", ip);
-        ret.put("mode", mode);
-        ret.put("period", period);
-        return setGuardControl(ret);
-    }
+//    public int guardControl(String ip, int mode, int period) {
+//        JSONObject ret = new JSONObject();
+//        ret.put("CheckSignalIP", ip);
+//        ret.put("mode", mode);
+//        ret.put("period", period);
+//        return setGuardControl(ret);
+//    }
 
     // 核心WebService调用方法
     private String callWebService(String methodName, HashMap<String, String> params) throws Exception {

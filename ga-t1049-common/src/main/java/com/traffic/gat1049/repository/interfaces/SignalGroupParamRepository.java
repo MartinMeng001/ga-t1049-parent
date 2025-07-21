@@ -75,6 +75,12 @@ public interface SignalGroupParamRepository extends BaseMapper<SignalGroupParamE
     List<SignalGroupParamEntity> findByCrossId(@Param("crossId") String crossId);
 
     /**
+     * 根据路口ID查询所有主信号组
+     */
+    @Select("SELECT * FROM signal_group_param WHERE cross_id = #{crossId} AND signal_group_no >= 80 AND signal_group_no < 90  ORDER BY signal_group_no")
+    List<SignalGroupParamEntity> findMainByCrossId(@Param("crossId") String crossId);
+
+    /**
      * 根据路口ID和信号组编号查询
      */
     @Select("SELECT * FROM signal_group_param WHERE cross_id = #{crossId} AND signal_group_no = #{signalGroupNo}")

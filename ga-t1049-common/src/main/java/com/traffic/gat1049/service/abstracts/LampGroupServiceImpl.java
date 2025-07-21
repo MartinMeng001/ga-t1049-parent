@@ -1,17 +1,26 @@
 package com.traffic.gat1049.service.abstracts;
 
+import com.traffic.gat1049.data.converter.impl.LampGroupParamConverter;
 import com.traffic.gat1049.data.provider.impl.ComprehensiveTestDataProviderImpl;
 import com.traffic.gat1049.exception.BusinessException;
+import com.traffic.gat1049.exception.DataConversionException;
 import com.traffic.gat1049.exception.DataNotFoundException;
 import com.traffic.gat1049.exception.ValidationException;
 import com.traffic.gat1049.model.dto.PageRequestDto;
 import com.traffic.gat1049.model.enums.Direction;
 import com.traffic.gat1049.model.enums.LampGroupType;
 import com.traffic.gat1049.protocol.model.intersection.LampGroupParam;
+import com.traffic.gat1049.repository.entity.LampGroupParamEntity;
+import com.traffic.gat1049.repository.interfaces.LampGroupRepository;
 import com.traffic.gat1049.service.interfaces.LampGroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -19,16 +28,22 @@ import java.util.stream.Collectors;
 /**
  * 信号灯组服务实现
  */
+@Service
 public class LampGroupServiceImpl implements LampGroupService {
 
     private static final Logger logger = LoggerFactory.getLogger(LampGroupServiceImpl.class);
     private ComprehensiveTestDataProviderImpl dataPrider = ComprehensiveTestDataProviderImpl.getInstance();
     // 信号灯组存储 - 使用复合键：crossId + "-" + lampGroupNo
     private final Map<String, LampGroupParam> lampGroupStorage = new ConcurrentHashMap<>();
+    @Autowired
+    private LampGroupRepository lampGroupRepository;
+
+    @Autowired
+    private LampGroupParamConverter converter;
 
     public LampGroupServiceImpl() throws BusinessException {
         // 初始化一些示例数据
-        initializeSampleData();
+        // initializeSampleData();
     }
 
     @Override
@@ -37,12 +52,32 @@ public class LampGroupServiceImpl implements LampGroupService {
             throw new ValidationException("id", "信号灯组ID不能为空");
         }
 
-        LampGroupParam lampGroup = lampGroupStorage.get(id);
-        if (lampGroup == null) {
-            throw new DataNotFoundException("LampGroupParam", id);
-        }
+        try {
+            // 将字符串ID转换为整数（假设ID是数据库主键）
+            Integer primaryKeyId = Integer.valueOf(id);
 
-        return lampGroup;
+            // 使用MyBatis Plus的selectById方法
+            LampGroupParamEntity entity = lampGroupRepository.selectById(primaryKeyId);
+
+            if (entity == null) {
+                throw new DataNotFoundException("LampGroupParam", id);
+            }
+
+            // 使用转换器将实体转换为协议对象
+            LampGroupParam result = converter.toProtocol(entity);
+
+            logger.debug("根据ID查询信号灯组成功: id={}, crossId={}, lampGroupNo={}",
+                    id, result.getCrossId(), result.getLampGroupNo());
+
+            return result;
+
+        } catch (NumberFormatException e) {
+            logger.error("ID格式错误: id={}", id, e);
+            throw new ValidationException("id", "信号灯组ID格式不正确，必须是数字");
+        } catch (Exception e) {
+            logger.error("根据ID查询信号灯组失败: id={}", id, e);
+            throw new BusinessException("QUERY_FAILED", "查询信号灯组失败: " + e.getMessage());
+        }
     }
 
     @Override
@@ -68,32 +103,54 @@ public class LampGroupServiceImpl implements LampGroupService {
     }
 
     @Override
+    @Transactional
     public LampGroupParam save(LampGroupParam lampGroup) throws BusinessException {
         if (lampGroup == null) {
             throw new ValidationException("lampGroup", "信号灯组参数不能为空");
         }
 
+        // 1. 参数验证
         validateLampGroup(lampGroup);
 
-        String key = generateKey(lampGroup.getCrossId(), lampGroup.getLampGroupNo());
+        // 2. 业务逻辑验证：检查是否已存在
+        validateLampGroupUniqueness(lampGroup);
 
-        // 检查是否已存在
-        if (lampGroupStorage.containsKey(key)) {
-            throw new BusinessException("DUPLICATE_LAMP_GROUP",
-                    String.format("信号灯组已存在: crossId=%s, lampGroupNo=%d",
-                            lampGroup.getCrossId(), lampGroup.getLampGroupNo()));
+        try {
+            // 3. 转换为数据库实体
+            LampGroupParamEntity entity = converter.toEntity(lampGroup);
+
+            // 4. 设置默认值
+            setDefaultValues(entity);
+
+            // 5. 保存到数据库
+            int result = lampGroupRepository.insert(entity);
+            if (result <= 0) {
+                throw new BusinessException("SAVE_FAILED", "保存信号灯组失败，数据库操作返回0");
+            }
+
+            // 6. 转换并返回结果
+            LampGroupParam savedLampGroup = converter.toProtocol(entity);
+
+            logger.info("成功保存信号灯组: crossId={}, lampGroupNo={}, id={}",
+                    savedLampGroup.getCrossId(),
+                    savedLampGroup.getLampGroupNo(),
+                    entity.getId());
+
+            return savedLampGroup;
+
+        } catch (DataAccessException e) {
+            logger.error("数据库操作失败: crossId={}, lampGroupNo={}",
+                    lampGroup.getCrossId(), lampGroup.getLampGroupNo(), e);
+            throw new BusinessException("DATABASE_ERROR", "数据库操作失败: " + e.getMessage(), e);
+        } catch (DataConversionException e) {
+            logger.error("数据转换失败: crossId={}, lampGroupNo={}",
+                    lampGroup.getCrossId(), lampGroup.getLampGroupNo(), e);
+            throw new BusinessException("CONVERSION_ERROR", "数据转换失败: " + e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("保存信号灯组时发生未知错误: crossId={}, lampGroupNo={}",
+                    lampGroup.getCrossId(), lampGroup.getLampGroupNo(), e);
+            throw new BusinessException("UNKNOWN_ERROR", "保存失败: " + e.getMessage(), e);
         }
-
-        //lampGroup.setCreateTime(LocalDateTime.now());
-        //lampGroup.setUpdateTime(LocalDateTime.now());
-
-        lampGroupStorage.put(key, lampGroup);
-
-        logger.info("保存信号灯组: crossId={}, lampGroupNo={}, direction={}, type={}",
-                lampGroup.getCrossId(), lampGroup.getLampGroupNo(),
-                lampGroup.getDirection(), lampGroup.getType());
-
-        return lampGroup;
     }
 
     @Override
@@ -152,11 +209,29 @@ public class LampGroupServiceImpl implements LampGroupService {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
         }
-        return dataPrider.getLampGroupsByCrossId(crossId);
-//        return lampGroupStorage.values().stream()
-//                .filter(lampGroup -> crossId.equals(lampGroup.getCrossId()))
-//                .sorted(Comparator.comparing(LampGroup::getLampGroupNo))
-//                .collect(Collectors.toList());
+        List<LampGroupParamEntity> entities = lampGroupRepository.findByCrossId(crossId);
+        if (entities == null) {
+            throw new DataNotFoundException("LampGroupParam");
+        }
+
+        // 使用转换器将实体转换为协议对象
+        List<LampGroupParam> result = converter.toProtocolList(entities);
+        return result;
+    }
+
+    @Override
+    public List<LampGroupParam> findAllBasicByCrossId(String crossId) throws BusinessException {
+        if(crossId == null || crossId.trim().isEmpty()){
+            throw new ValidationException("crossId", "路口编号不能为空");
+        }
+        List<LampGroupParamEntity> entities = lampGroupRepository.findAllBasicByCrossId(crossId);
+        if(entities == null){
+            throw new DataNotFoundException("LampGroupParam");
+        }
+
+        // 使用转换器将实体转换为协议对象
+        List<LampGroupParam> result = converter.toProtocolList(entities);
+        return result;
     }
 
     @Override
@@ -234,6 +309,40 @@ public class LampGroupServiceImpl implements LampGroupService {
     }
 
     @Override
+    public LampGroupParam findByCrossIdAndDirectionAndType(String crossId, Direction direction, LampGroupType type) throws BusinessException {
+        if (crossId == null || crossId.trim().isEmpty()) {
+            throw new ValidationException("crossId", "路口编号不能为空");
+        }
+        if (type == null) {
+            throw new ValidationException("type", "信号灯组类型不能为空");
+        }
+        if (direction == null) {
+            throw new ValidationException("direction", "进口方向不能为空");
+        }
+        try {
+            // 将字符串ID转换为整数（假设ID是数据库主键）
+            // 使用MyBatis Plus的selectById方法
+            LampGroupParamEntity entity = lampGroupRepository.findByCrossIdAndDirectionAndType(crossId, direction.getCode(), type.getCode());
+
+            if (entity == null) {
+                throw new DataNotFoundException("LampGroupParam");
+            }
+
+            // 使用转换器将实体转换为协议对象
+            LampGroupParam result = converter.toProtocol(entity);
+
+            logger.debug("根据ID查询信号灯组成功: crossId={}, lampGroupNo={}",
+                    result.getCrossId(), result.getLampGroupNo());
+
+            return result;
+
+        } catch (Exception e) {
+            logger.error("根据CrossID查询信号灯组失败: id={}", crossId, e);
+            throw new BusinessException("QUERY_FAILED", "查询信号灯组失败: " + e.getMessage());
+        }
+    }
+
+    @Override
     public void deleteByCrossId(String crossId) throws BusinessException {
         if (crossId == null || crossId.trim().isEmpty()) {
             throw new ValidationException("crossId", "路口编号不能为空");
@@ -307,6 +416,53 @@ public class LampGroupServiceImpl implements LampGroupService {
         }
     }
 
+    /**
+     * 验证信号灯组的唯一性
+     */
+    private void validateLampGroupUniqueness(LampGroupParam lampGroup) throws BusinessException {
+        try {
+            // 检查是否已存在相同的路口编号和信号灯组序号
+            Boolean exists = lampGroupRepository.existsByCrossIdAndLampGroupNo(
+                    lampGroup.getCrossId(),
+                    lampGroup.getLampGroupNo());
+
+            if (exists != null && exists) {
+                throw new BusinessException("DUPLICATE_LAMP_GROUP",
+                        String.format("信号灯组已存在: crossId=%s, lampGroupNo=%d",
+                                lampGroup.getCrossId(), lampGroup.getLampGroupNo()));
+            }
+
+            logger.debug("信号灯组唯一性验证通过: crossId={}, lampGroupNo={}",
+                    lampGroup.getCrossId(), lampGroup.getLampGroupNo());
+
+        } catch (BusinessException e) {
+            throw e; // 重新抛出业务异常
+        } catch (Exception e) {
+            logger.error("验证信号灯组唯一性时发生错误", e);
+            throw new BusinessException("VALIDATION_ERROR", "唯一性验证失败: " + e.getMessage(), e);
+        }
+    }
+    /**
+     * 设置实体的默认值
+     */
+    private void setDefaultValues(LampGroupParamEntity entity) {
+        // 设置有效标志为1（有效）
+        if (entity.getValid() == null) {
+            entity.setValid(1);
+        }
+
+        // 设置创建和更新时间（如果转换器没有设置的话）
+        LocalDateTime now = LocalDateTime.now();
+        if (entity.getCreatedTime() == null) {
+            entity.setCreatedTime(now);
+        }
+        if (entity.getUpdatedTime() == null) {
+            entity.setUpdatedTime(now);
+        }
+
+        logger.debug("设置默认值完成: valid={}, createdTime={}",
+                entity.getValid(), entity.getCreatedTime());
+    }
     /**
      * 生成存储键
      */

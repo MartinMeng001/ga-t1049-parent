@@ -11,6 +11,7 @@ import com.traffic.gat1049.model.enums.PedestrianAttribute;
 import com.traffic.gat1049.service.interfaces.PedestrianService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 /**
  * 人行横道服务实现
  */
+@Service
 public class PedestrianServiceImpl implements PedestrianService {
 
     private static final Logger logger = LoggerFactory.getLogger(PedestrianServiceImpl.class);

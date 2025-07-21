@@ -13,6 +13,7 @@ import com.traffic.gat1049.service.interfaces.StageService;
 import com.traffic.gat1049.model.enums.LampStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 /**
  * 阶段服务实现
  */
+@Service
 public class StageServiceImpl implements StageService {
 
     private static final Logger logger = LoggerFactory.getLogger(StageServiceImpl.class);

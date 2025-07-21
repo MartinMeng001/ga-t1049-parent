@@ -4,6 +4,7 @@ import com.traffic.gat1049.exception.BusinessException;
 import com.traffic.gat1049.protocol.model.system.SysInfo;
 import com.traffic.gat1049.protocol.model.system.SysState;
 import com.traffic.gat1049.model.enums.SystemState;
+import org.springframework.stereotype.Service;
 
 /**
  * 系统服务接口

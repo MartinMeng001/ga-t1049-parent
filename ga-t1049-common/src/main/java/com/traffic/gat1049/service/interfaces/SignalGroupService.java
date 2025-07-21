@@ -29,6 +29,15 @@ public interface SignalGroupService {
     List<SignalGroupParam> findByCrossId(String crossId) throws BusinessException;
 
     /**
+     * 根据路口编号获取主信号组
+     *
+     * @param crossId 路口编号
+     * @return 信号组参数列表
+     * @throws BusinessException 业务异常
+     */
+    List<SignalGroupParam> findMainByCrossId(String crossId) throws BusinessException;
+
+    /**
      * 根据路口编号和信号组序号获取信号组
      *
      * @param crossId 路口编号
