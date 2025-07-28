@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.traffic.device.adapter.common.converter.impl.DataConverter;
-import com.traffic.device.adapter.common.utils.SignalGroupUtil;
-import com.traffic.device.adapter.webservice.deviceprotocol.u5.BasicPhaseTable;
-import com.traffic.device.adapter.webservice.deviceprotocol.u5.SchemeData5U;
+import com.traffic.device.adapter.webservice.deviceprotocol.u5.dayplan.DayPlanData5U;
+import com.traffic.device.adapter.webservice.deviceprotocol.u5.scheme.BasicPhaseTable;
+import com.traffic.device.adapter.webservice.deviceprotocol.u5.scheme.SchemeData5U;
 import com.traffic.gat1049.device.adapter.annotation.AdapterComponent;
 import com.traffic.gat1049.device.adapter.annotation.DeviceBrand;
 import com.traffic.gat1049.device.adapter.annotation.ProtocolVersion;
@@ -16,8 +16,6 @@ import com.traffic.gat1049.device.adapter.model.*;
 import com.traffic.gat1049.device.adapter.registry.AdapterInfo;
 import com.traffic.gat1049.device.adapter.registry.AdapterRegistry;
 import com.traffic.gat1049.protocol.model.intersection.LampGroupParam;
-import com.traffic.gat1049.protocol.model.signal.SignalGroupParam;
-import com.traffic.gat1049.service.interfaces.LampGroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,7 +123,7 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter<JsonNode
         }
     }
     @Override
-    public SyncResult readConfigData(JsonNode inputParam) {
+    public ConfigResult<MixedConfigData> readConfigData(JsonNode inputParam) {
         try {
             boolean result = getDeviceStatus(inputParam);
             if (result) {
@@ -436,6 +434,65 @@ public class BasicWebServiceAdapter extends BaseSignalControllerAdapter<JsonNode
             }
         } catch (Exception e) {
             logger.error("获取配时方案异常", e);
+            //return null;
+        }
+        return false;
+    }
+    /**
+     * 获取日计划（包含设备状态信息）
+     */
+    public boolean callGetSignalDayPlan(JsonNode request, String crossId, String ip, String ipServer) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            HashMap<String, String> params = new HashMap<>();
+            params.put("arg0", mapper.writeValueAsString(request));
+            params.put("arg1", ip);
+
+            String result = callWebService(ipServer, "DailyPlanGet", params);
+            JsonNode response = mapper.readTree(result);
+
+            if (response != null && "ok".equals(response.get("success").asText())) {
+                DayPlanData5U dayplan5u = new DayPlanData5U();
+                dayplan5u.setCrossID(crossId);
+                dayplan5u.setDayPlanInfo(response);
+                dayplan5u.setSIGID(request.get("SIGID").asInt());
+
+                return true;
+            } else {
+                logger.warn("获取日计划失败: {}", response != null ? response.get("message").asText() : "无响应");
+                //return null;
+            }
+        } catch (Exception e) {
+            logger.error("获取日计划异常", e);
+            //return null;
+        }
+        return false;
+    }
+    /**
+     * 设置日计划（包含设备状态信息）
+     */
+    public boolean callSetSignalDayPlan(JsonNode request, String crossId, String ip, String ipServer) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            HashMap<String, String> params = new HashMap<>();
+            params.put("arg0", mapper.writeValueAsString(request));
+            params.put("arg1", ip);
+
+            String result = callWebService(ipServer, "DailyPlanSet", params);
+            JsonNode response = mapper.readTree(result);
+
+            if (response != null && "ok".equals(response.get("success").asText())) {
+                DayPlanData5U dayplan5u = new DayPlanData5U();
+                dayplan5u.setDayPlanInfo(response);
+                dayplan5u.setSIGID(request.get("SIGID").asInt());
+
+                return true;
+            } else {
+                logger.warn("设置日计划失败: {}", response != null ? response.get("message").asText() : "无响应");
+                //return null;
+            }
+        } catch (Exception e) {
+            logger.error("设置日计划异常", e);
             //return null;
         }
         return false;

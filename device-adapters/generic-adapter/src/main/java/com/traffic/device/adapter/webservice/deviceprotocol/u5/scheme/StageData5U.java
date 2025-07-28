@@ -1,4 +1,4 @@
-package com.traffic.device.adapter.webservice.deviceprotocol.u5;
+package com.traffic.device.adapter.webservice.deviceprotocol.u5.scheme;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -172,6 +172,7 @@ public class StageData5U {
     public StageParam getStageParamGAT1049(){
         StageParam ret = new StageParam();
         ret.setStageNo(stageidZdk);
+        return ret;
     }
     public JsonNode getStageItemGAT1049(){
         ObjectMapper mapper = new ObjectMapper();

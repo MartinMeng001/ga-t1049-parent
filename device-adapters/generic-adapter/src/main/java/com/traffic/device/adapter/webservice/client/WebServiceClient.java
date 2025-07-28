@@ -48,163 +48,81 @@ public class WebServiceClient {
         }
     }
 
-//    public JSONObject getChannels5U(JSONObject reqObj, String ip) {
-//        try {
-//            HashMap<String, String> params = new HashMap<>();
-//            params.put("arg0", reqObj.toJSONString());
-//            params.put("arg1", ip);
-//
-//            String result = callWebService("ChannelConfigurationGet", params);
-//            return JSON.parseObject(result);
-//        } catch (Exception e) {
-//            logger.error("获取通道配置失败", e);
-//            return null;
-//        }
-//    }
+    public int setWeekSchedule5U(ObjectNode reqObj, String ip) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            HashMap<String, String> params = new HashMap<>();
+            params.put("arg0", mapper.writeValueAsString(reqObj));
+            params.put("arg1", ip);
 
-//    public JSONObject getSchemes5U(JSONObject reqObj, String ip, boolean beSensor) {
-//        try {
-//            HashMap<String, String> params = new HashMap<>();
-//            params.put("arg0", reqObj.toJSONString());
-//            params.put("arg1", ip);
-//
-//            String result = callWebService("GetSignalScheme", params);
-//            return JSON.parseObject(result);
-//        } catch (Exception e) {
-//            logger.error("获取配时方案失败", e);
-//            return null;
-//        }
-//    }
+            String result = callWebService("DailyScheduleForWeeklySet", params);
+            ObjectNode obj = mapper.valueToTree(result);
 
-//    public int setSchemes5U(JSONObject reqObj, String ip) {
-//        try {
-//            HashMap<String, String> params = new HashMap<>();
-//            params.put("arg0", reqObj.toJSONString());
-//            params.put("arg1", ip);
-//
-//            String result = callWebService("SetSignalSchemeNew", params);
-//            JSONObject obj = JSON.parseObject(result);
-//
-//            return "ok".equals(obj.getString("success")) ? 1 : 0;
-//        } catch (Exception e) {
-//            logger.error("设置配时方案失败", e);
-//            return 0;
-//        }
-//    }
+            return "ok".equals(obj.get("success").asText()) ? 1 : 0;
+        } catch (Exception e) {
+            logger.error("设置周计划失败", e);
+            return 0;
+        }
+    }
 
-//    public int setDayPlan5U(JSONObject reqObj, String ip) {
-//        try {
-//            HashMap<String, String> params = new HashMap<>();
-//            params.put("arg0", reqObj.toJSONString());
-//            params.put("arg1", ip);
-//
-//            String result = callWebService("DailyPlanSet", params);
-//            JSONObject obj = JSON.parseObject(result);
-//
-//            return "ok".equals(obj.getString("success")) ? 1 : 0;
-//        } catch (Exception e) {
-//            logger.error("设置日计划失败", e);
-//            return 0;
-//        }
-//    }
+    public int setCustomGuardControl(ObjectNode guard) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            HashMap<String, String> params = new HashMap<>();
+            params.put("arg0", mapper.writeValueAsString(guard));
 
-//    public int setWeekSchedule5U(JSONObject reqObj, String ip) {
-//        try {
-//            HashMap<String, String> params = new HashMap<>();
-//            params.put("arg0", reqObj.toJSONString());
-//            params.put("arg1", ip);
-//
-//            String result = callWebService("DailyScheduleForWeeklySet", params);
-//            JSONObject obj = JSON.parseObject(result);
-//
-//            return "ok".equals(obj.getString("success")) ? 1 : 0;
-//        } catch (Exception e) {
-//            logger.error("设置周计划失败", e);
-//            return 0;
-//        }
-//    }
+            String result = callWebService("SetCustomGuardControl", params);
+            ObjectNode obj = mapper.valueToTree(result);
 
-//    public JSONObject getCrossLanes5U(JSONObject reqObj, String ip) {
-//        try {
-//            HashMap<String, String> params = new HashMap<>();
-//            params.put("arg0", reqObj.toJSONString());
-//            params.put("arg1", ip);
-//
-//            String result = callWebService("getBasicDataLanesDB", params);
-//            return JSON.parseObject(result);
-//        } catch (Exception e) {
-//            logger.error("获取车道信息失败", e);
-//            return null;
-//        }
-//    }
+            return "ok".equals(obj.get("success").asText()) ? 1 : 0;
+        } catch (Exception e) {
+            logger.error("设置自定义手动控制失败", e);
+            return 0;
+        }
+    }
 
-//    public JSONObject getCrossPhases5U(JSONObject reqObj, String ip) {
-//        try {
-//            HashMap<String, String> params = new HashMap<>();
-//            params.put("arg0", reqObj.toJSONString());
-//            params.put("arg1", ip);
-//
-//            String result = callWebService("getBasicDataPhasesDB", params);
-//            return JSON.parseObject(result);
-//        } catch (Exception e) {
-//            logger.error("获取相位信息失败", e);
-//            return null;
-//        }
-//    }
+    public int setGuardControl(ObjectNode guard) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            HashMap<String, String> params = new HashMap<>();
+            params.put("arg0", mapper.writeValueAsString(guard));
 
-//    public int setCustomGuardControl(JSONObject guard) {
-//        try {
-//            HashMap<String, String> params = new HashMap<>();
-//            params.put("arg0", guard.toJSONString());
-//
-//            String result = callWebService("SetCustomGuardControl", params);
-//            JSONObject obj = JSON.parseObject(result);
-//
-//            return "ok".equals(obj.getString("success")) ? 1 : 0;
-//        } catch (Exception e) {
-//            logger.error("设置自定义手动控制失败", e);
-//            return 0;
-//        }
-//    }
+            String result = callWebService("SetGuardControl", params);
+            ObjectNode obj = mapper.valueToTree(result);
 
-//    public int setGuardControl(JSONObject guard) {
-//        try {
-//            HashMap<String, String> params = new HashMap<>();
-//            params.put("arg0", guard.toJSONString());
-//
-//            String result = callWebService("SetGuardControl", params);
-//            JSONObject obj = JSON.parseObject(result);
-//
-//            return "ok".equals(obj.getString("success")) ? 1 : 0;
-//        } catch (Exception e) {
-//            logger.error("设置手动控制失败", e);
-//            return 0;
-//        }
-//    }
+            return "ok".equals(obj.get("success").asText()) ? 1 : 0;
+        } catch (Exception e) {
+            logger.error("设置手动控制失败", e);
+            return 0;
+        }
+    }
 
-//    public int setSpecialGuardControl(JSONObject reqObj, String ip) {
-//        try {
-//            HashMap<String, String> params = new HashMap<>();
-//            params.put("arg0", reqObj.toJSONString());
-//            params.put("arg1", ip);
-//
-//            String result = callWebService("SpecialHoursSet", params);
-//            JSONObject obj = JSON.parseObject(result);
-//
-//            return "ok".equals(obj.getString("success")) ? 1 : 0;
-//        } catch (Exception e) {
-//            logger.error("设置特殊时段控制失败", e);
-//            return 0;
-//        }
-//    }
+    public int setSpecialGuardControl(ObjectNode reqObj, String ip) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            HashMap<String, String> params = new HashMap<>();
+            params.put("arg0", mapper.writeValueAsString(reqObj));
+            params.put("arg1", ip);
 
-//    public int guardControl(String ip, int mode, int period) {
-//        JSONObject ret = new JSONObject();
-//        ret.put("CheckSignalIP", ip);
-//        ret.put("mode", mode);
-//        ret.put("period", period);
-//        return setGuardControl(ret);
-//    }
+            String result = callWebService("SpecialHoursSet", params);
+            ObjectNode obj = mapper.valueToTree(result);
+
+            return "ok".equals(obj.get("success").asText()) ? 1 : 0;
+        } catch (Exception e) {
+            logger.error("设置特殊时段控制失败", e);
+            return 0;
+        }
+    }
+
+    public int guardControl(String ip, int mode, int period) {
+        ObjectMapper mapper = new ObjectMapper();
+
+        ObjectNode ret = mapper.createObjectNode();
+        ret.put("CheckSignalIP", ip);
+        ret.put("mode", mode);
+        ret.put("period", period);
+        return setGuardControl(ret);
+    }
 
     // 核心WebService调用方法
     private String callWebService(String methodName, HashMap<String, String> params) throws Exception {

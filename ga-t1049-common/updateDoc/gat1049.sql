@@ -68,6 +68,7 @@ CREATE TABLE sys_info
     sys_name     VARCHAR(50) NOT NULL COMMENT '系统名称',
     sys_version  VARCHAR(10) NOT NULL COMMENT '系统版本号',
     supplier     VARCHAR(50) NOT NULL COMMENT '供应商',
+    server_ip VARCHAR(20) COMMENT '服务器IP地址',
     is_active    TINYINT(1) DEFAULT 1 COMMENT '系统是否激活：1-激活；0-停用',
     description  TEXT COMMENT '系统描述',
     created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

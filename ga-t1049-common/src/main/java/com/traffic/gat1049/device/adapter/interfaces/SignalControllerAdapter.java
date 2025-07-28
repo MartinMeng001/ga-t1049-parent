@@ -50,7 +50,7 @@ public interface SignalControllerAdapter<P> extends DeviceAdapter {
      * @param inputParam 协议需求参数
      * @return 实时数据
      */
-    SyncResult readConfigData(P inputParam);
+    ConfigResult<MixedConfigData> readConfigData(P inputParam);
 
     /**
      * 从设备读取实时数据

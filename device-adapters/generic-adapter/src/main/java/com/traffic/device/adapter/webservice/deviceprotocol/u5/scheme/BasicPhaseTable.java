@@ -1,6 +1,5 @@
-package com.traffic.device.adapter.webservice.deviceprotocol.u5;
+package com.traffic.device.adapter.webservice.deviceprotocol.u5.scheme;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.traffic.gat1049.model.enums.Direction;
 import com.traffic.gat1049.model.enums.LampGroupType;
 import com.traffic.gat1049.protocol.model.intersection.LampGroupParam;

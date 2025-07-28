@@ -1,4 +1,4 @@
-package com.traffic.device.adapter.webservice.deviceprotocol.u5;
+package com.traffic.device.adapter.webservice.deviceprotocol.u5.scheme;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
